@@ -8,15 +8,19 @@ libs <- c('data.table',
           'ggplot2')
 lapply(libs, require, character.only = TRUE)
 
-utm21N <- '+proj=utm +zone=21 ellps=WGS84'
-
 trp <- fread("output/trp.csv")
+lifetime_clean <- fread("output/lifetime_clean.csv")
 
 source("functions/GetHRBy.R")
 
+## birth year df
+byear <- lifetime_clean[,c("squirrel_id", "grid", "byear")]
 
 ## add column to count number of locs 
 trp16 <- trp[gr == "AG" & year == "2016"][,N := .N, by = c("squirrel_id", "gr", "year")]
+
+## add byear to trp data
+merge(trp16, byear, by = "squirrel_id")
 
 ## remove NAs from coords
 trp16 <- trp16[!is.na(locYnum)]
