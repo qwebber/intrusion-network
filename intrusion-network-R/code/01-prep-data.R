@@ -26,12 +26,12 @@ trp <- tbl(con, "trapping") %>%
 setDT(trp)
 
 ## add julian date, year, drop NAs
-trp<-trp %>% 
+trp <-trp %>% 
   mutate(date=ymd(date),
          julian = yday(date),
          year = year(date),
          squirrel_id = as.factor(squirrel_id)) %>% 
-  filter(year == 2016,
+  filter(year == 2016 | year == 2017,
          !is.na(squirrel_id),
          !is.na(locx),
          !is.na(locy),
@@ -82,14 +82,14 @@ behaviour<-behaviour %>%
 
 ## filter to 2016 as an example year
 behaviour_2016 <- behaviour %>% 
-  filter (year == 2016,
+  filter (year == 2016 | year == 2017,
           locx > -15,
           locx < 20,
           locy < 25,
           locy > -5,
           #behaviour == 2, ## vocalizations 
           #behaviour == 3, 
-          detail == 1, ## animal material 
+          #detail == 1, ## animal material 
           squirrel_id %in% census$squirrel_id 
           #locx> 0,
           #locx < 12,
