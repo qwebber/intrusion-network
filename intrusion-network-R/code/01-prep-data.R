@@ -20,7 +20,7 @@ con <- krsp_connect(host = "krsp.cepb5cjvqban.us-east-2.rds.amazonaws.com",
 ## Pull trapping data
 trp <- tbl(con, "trapping") %>%
   collect() %>% 
-  filter(gr %in% c("KL")) %>% 
+  filter(gr %in% c("KL","SU")) %>% 
   mutate(locx = loc_to_numeric(locx),
          locy = loc_to_numeric(locy)) 
 setDT(trp)
@@ -40,7 +40,7 @@ trp <-trp %>%
          locx > -15,
          locx < 20,
          locy < 25,
-         locy > -5) %>% 
+         locy > -10) %>% 
   droplevels()
 
 ## pull relevant variables
@@ -55,14 +55,14 @@ setnames(trp, "gr", "grid")
 
 ## pull census database
 census <- tbl(con, "census") %>% 
-  filter(gr %in% c ("KL"),
+  filter(gr %in% c ("KL", "SU"),
          census_date == "2016-05-15") %>% 
   collect() %>% 
   dplyr::select(squirrel_id)
 
 ## pull behaviour database
 behaviour <- tbl(con, "behaviour") %>% 
-  filter(grid %in% c("KL")) %>% 
+  filter(grid %in% c("KL", "SU")) %>% 
   collect() %>% 
   mutate(locx = loc_to_numeric(locx),
          locy = loc_to_numeric(locy)) 
@@ -71,7 +71,7 @@ setDT(behaviour)
 behaviour[, .N, by = "behaviour"]
 
 ## add julian date, year, drop NAs
-behaviour<-behaviour %>% 
+behaviour <- behaviour %>% 
   mutate(date=ymd(date),
          julian = yday(date),
          year = year(date),
@@ -90,15 +90,11 @@ behaviour_2016 <- behaviour %>%
           locx > -15,
           locx < 20,
           locy < 25,
-          locy > -5,
+          locy > -10,
           #behaviour == 2, ## vocalizations 
           #behaviour == 3, 
           #detail == 1, ## animal material 
           squirrel_id %in% census$squirrel_id 
-          #locx> 0,
-          #locx < 12,
-          #locy > 5,
-          #locy < 15
   ) %>%
   droplevels()
 
