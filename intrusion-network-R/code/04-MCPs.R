@@ -4,122 +4,103 @@
 ### Packages ----
 libs <- c('data.table', 
           'sp', 'adehabitatHR',
-          'igraph', 'spatsoc',
+          'sf',
           'ggplot2', 'krsp')
 lapply(libs, require, character.only = TRUE)
 
+df <- fread("output/spatial-locs-2016.csv")
 
+## filter for squirrels with at least 15 observations
+## first assign dummy column to count number of observations per ID in each year and grid
+df$row <- 1:nrow(df)
+df[, N := uniqueN(row), by = c("squirrel_id","grid", "year")]
 
-con <- krsp_connect (host = "krsp.cepb5cjvqban.us-east-2.rds.amazonaws.com",
-                     dbname ="krsp",
-                     username = Sys.getenv("krsp_user"),
-                     password = Sys.getenv("krsp_password")
-)
-
-## pull behaviour database
-behaviour <- tbl(con, "behaviour") %>% 
-  filter(grid %in% c ("KL")) %>% 
-  collect() %>% 
-  mutate(locx = loc_to_numeric(locx),
-         locy = as.numeric(locy)) 
-
-## pull census database
-census <- tbl(con, "census") %>% 
-  filter(gr %in% c ("KL"),
-         census_date == "2016-05-15") %>% 
-  collect() %>% 
-  dplyr::select(squirrel_id)
-
-## add julian date, year, drop NAs
-behaviour<-behaviour %>% 
-  mutate(date=ymd(date),
-         julian = yday(date),
-         year = year(date),
-         mode=as.factor(mode),
-         squirrel_id = as.factor(squirrel_id)) %>% 
-  filter(!is.na(squirrel_id),
-         !is.na(locx),
-         !is.na(locy)) %>% 
-  droplevels()
-
-## number of behaviours observed per yer 
-behaviour %>% 
-  group_by(year) %>% 
-  summarize(n = n()) %>% 
-  arrange (-n)
-
-## filter to 2016 as an example year
-behaviour_2016 <- behaviour %>% 
-  filter (year == 2016,
-          locx > -15,
-          locx < 20,
-          locy < 25,
-          #behaviour == 2, ## vocalizations 
-          detail == 1, ## animal material 
-          squirrel_id %in% census$squirrel_id 
-          #locx> 0,
-          #locx < 12,
-          #locy > 5,
-          #locy < 15
-  ) %>%
-  droplevels()
-
-
-splst <- behaviour_2016 %>% 
-  group_by(squirrel_id) %>% 
-  summarize(n = n()) %>% 
-  arrange(n) %>%
-  filter(n > 15) %>% 
-  dplyr::select(squirrel_id) %>% 
-  extract2(1) %>% 
-  as.character()
-# Squirrels with more than 30 observations in 2016
-
-
-behaviour_2016<-behaviour_2016 %>% 
-  filter(squirrel_id %in% splst) %>% 
-  droplevels()
+## drop all squirrels with <30 observations
+df <- df[N > 30]
 
 ## check to make sure there are no outliers
-ggplot(behaviour_2016) +
-  geom_point(aes(locx, locy, color = squirrel_id))
+ggplot(df) +
+  geom_point(aes(locx, locy, color = factor(squirrel_id)))
 
-#prj <- '+init=epsg:26911'
-#spdf <- SpatialPointsDataFrame(coordinates(cbind(behaviour_2016$locx, behaviour_2016$locy)),
-#                              data = behaviour_2016, proj4string = CRS(prj))
+df$squirrel_id <- as.factor(df$squirrel_id)
 
-#kd <- kernelUD(spdf[, 17], grid = 500, extent = 15) # squirrel_id is in column 17
+spdf <- SpatialPointsDataFrame(coordinates(cbind(df$locx, df$locy)),
+                              data = df[,c("locx", "locy", "squirrel_id")])
 
 source("functions/GetHRBy.R")
 
-#behaviour_2016$squirrel_id2 <- as.factor(paste(behaviour_2016$squirrel_id, behaviour_2016$year, sep = "_"))
+ud <- setDT(df)[, GetHRBy(squirrel_id, locx, locy, 50 ,"kernel")]
 
-ud <- setDT(behaviour_2016)[, GetHRBy(squirrel_id, locx, locy, 50 ,"kernel")]
+library(sf)
+# Get polygon
+polygon <- st_as_sf(ud)
+# convert to sf object
+colnames(polygon) <- c("id_polygons", "area" ,"geometry") # change colnames
+#polygon$id_polygons <- paste0("poly_", polygon$id_polygons) #  change polygon ID
 
-#image(kd)
-#plot(getverticeshr(kd, percent = 75), add = TRUE)
+## output area
+area <- data.table(polygon$id_polygons, polygon$area)
 
-#ud <- getverticeshr(kd, percent = 50)
+## drop area 
+drops <- c("area") # list of column names
+polygon <- polygon[,!(names(polygon) %in% drops)] #remove columns "name1" and "name2"
 
-#class(ud)
-#plot(ud)
-df <- fortify(ud)
+## convert points to sf
+points <- st_as_sf(spdf)
 
-territory_plot<-ggplot() +
-  geom_polygon(data = ud, aes(x = long, y = lat, fill = id, group = group), alpha = 0.4) +
-  geom_point(data = behaviour_2016, aes(locx, locy, color = squirrel_id), alpha = 0.5) +
-  coord_equal() +
-  #theme_void()+
-  xlab("X")+
-  #xlim(1,13) +
-  #ylim (4.5,14) +
-  ylab("Y")+
-  ggtitle("2016 Territories") +  
-  theme(legend.position = "none",
-        axis.text=element_text(size=10),
-        axis.title=element_text(size=12))
+# Intersection between polygon and points ---------------------------------
 
-print(territory_plot)
+intersection <- st_intersection(x = polygon, y = points)
+
+edge_list <- data.table(owner = intersection$id_polygons,
+                        intruder = intersection$squirrel_id)
+
+## assign TRUE or FALSE value to whether a squirrel is observed on 
+## it's own territory (TRUE) or another territory (FALSE)
+edge_list[, edge:= (owner==intruder)]
+
+edge_list$edge <- as.character(edge_list$edge)
+
+## re-assign TRUE and FALSE values to 0s and 1s
+edge_list$edge[edge_list$edge == "TRUE"] <- 0
+edge_list$edge[edge_list$edge == "FALSE"] <- 1
+
+## subset to only include intrusion events 
+edge_list <- edge_list[edge == 1][,c("edge") := NULL]
 
 
-saveRDS(vert.dt, "output/4-home-range-area.RDS")
+grph <- graph_from_edgelist(as.matrix(edge_list), directed=T)
+
+
+graph.strength(grph, mode = c("out"))
+
+library(ggraph)
+
+coordsMeans <- data.frame(squirrel_id = unique(df$squirrel_id),
+                                   locy = df[, median(locy), by = "squirrel_id"]$V1,
+                                   locx = df[, median(locx), by = "squirrel_id"]$V1)
+ids <- df[, .N, by = c("squirrel_id")][,c("N") := NULL]
+coordsMeans <- merge(ids, coordsMeans, by = "squirrel_id")
+KL2016 = create_layout(grph, layout = coordsMeans) # algorithm = 'kk')
+
+
+
+ggraph(grph) + 
+  geom_edge_link() + 
+  geom_node_point(#size = (graph.strength(grph)*0.1),
+                  alpha = 0.75) +
+ # scale_edge_width(range=c(0.1,2)) +
+  ggtitle("KL 2016") +
+  ylab('') +
+  xlab('') +
+  #coord_fixed() +
+  scale_color_viridis_d() +
+  theme(#legend.position = 'none',
+    legend.key = element_blank(),
+    axis.text=element_text(size=12, color = "black"),
+    axis.title=element_text(size=12),
+    strip.text = element_text(size=12,face = "bold"),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1))
+
