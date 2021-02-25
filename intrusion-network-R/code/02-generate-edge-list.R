@@ -1,6 +1,5 @@
 
 
-
 ### Packages ----
 libs <- c('data.table', 
           'sp', 'adehabitatHR',
@@ -31,7 +30,6 @@ source("functions/GetHRBy.R")
 
 ud <- setDT(df)[, GetHRBy(squirrel_id, locx, locy, 50 ,"kernel")]
 
-library(sf)
 # Get polygon
 polygon <- st_as_sf(ud)
 # convert to sf object
