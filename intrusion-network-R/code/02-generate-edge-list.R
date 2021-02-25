@@ -17,11 +17,14 @@ df[, N := uniqueN(row), by = c("squirrel_id","grid", "year")]
 ## drop all squirrels with <30 observations
 df <- df[N > 30]
 
+## order dataframe by grid and year
+df <- setDT(ddply(df, c('year', 'grid')))
+
 ## check to make sure there are no outliers
 ggplot(df) +
   geom_point(aes(locx, locy, color = factor(squirrel_id))) +
   theme(legend.position = 'none') +
-  facet_wrap(~year)
+  facet_wrap(~year*grid)
 
 df$squirrel_id <- as.character(df$squirrel_id)
 df$gr_year <- as.factor(paste(df$year, df$grid, sep = "_"))
@@ -35,11 +38,11 @@ source("functions/GetHRBy.R")
 ## parameters for kernel
 params = c(grid = 400, extent = 3)
 
-yr <- data.table(year = as.factor(paste(unique(df$year), unique(df$grid), sep = "_")))
+yr <- data.table(gr_year = as.factor(unique(df$gr_year)))
 
 ## generate list of spatial points dataframes
 out_spdf <- c()
-for(i in levels(yr$year)){ 
+for(i in levels(yr$gr_year)){ 
   
   df2 <- df[gr_year == i]
   
@@ -53,7 +56,7 @@ for(i in levels(yr$year)){
 
 ## generate list of kernels
 out_polygon <- c()
-for(i in levels(yr$year)){ 
+for(i in levels(yr$gr_year)){ 
   
   df3 <- df[gr_year == i]
   
@@ -77,9 +80,9 @@ for(i in levels(yr$year)){
 
 ## output area
 area <- c()
-for(i in 1:length(yr$year)){ 
+for(i in 1:length(yr$gr_year)){ 
 ar <- data.table(out_polygon[[i]]$id_polygons, out_polygon[[i]]$area)
-ar$gr_year <- yr$year[i]
+ar$gr_year <- yr$gr_year[i]
 setnames(ar, c("V1", "V2"), c("squirrel_id", "area_ha"))
 
 area[[i]] <- ar
@@ -89,30 +92,28 @@ area[[i]] <- ar
 ## convert from list to data.table
 area <- rbindlist(area)
 
+area[, c("year", "grid") := tstrsplit(gr_year, "_", fixed=TRUE)][,c("gr_year") := NULL]
+
 # export df of area
 fwrite(area, "output/territory-area.csv")
 
-## drop area 
-drops <- c("area") # list of column names
-polygon <- polygon[,!(names(polygon) %in% drops)] #remove columns "name1" and "name2"
-
-
 # Intersection between polygon and points ---------------------------------
 intersect_out <- c()
-for(i in 1:length(yr$year)){
+for(i in 1:length(yr$gr_year)){
   
   intersection <- st_intersection(x = out_polygon[[i]], y = out_spdf[[i]])
   
   intersect_out[[i]] <- intersection 
 }
 
+## name lists within intersect_out
+names(intersect_out) <- yr$gr_year
 
 edge_out <- c()
-for(i in 1:length(yr$year)){ 
-  
+for(i in 1:length(yr$gr_year)){ 
   ## generate edge list with territory owners and intruders
   edge_list <- data.table(owner = intersect_out[[i]]$id_polygons,
-                        intruder = intersect_out[[i]]$squirrel_id)
+                          intruder = intersect_out[[i]]$squirrel_id)
 
   ## assign TRUE or FALSE value to whether a squirrel is observed on 
   ## it's own territory (TRUE) or another territory (FALSE)
@@ -125,13 +126,12 @@ for(i in 1:length(yr$year)){
   edge_list$edge[edge_list$edge == "FALSE"] <- 1
 
   ## add year to list 
-  edge_list$year <- yr$year[i]
+  edge_list$year <- yr$gr_year[i]
   
   ## subset to only include intrusion events 
   edge_out[[i]] <- edge_list[edge == 1][,c("edge") := NULL]
 
 }
-
 
 ## export edge list
 saveRDS(edge_out, "output/edge_list.RDS")
