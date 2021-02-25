@@ -35,6 +35,8 @@ trp <-trp %>%
          !is.na(squirrel_id),
          !is.na(locx),
          !is.na(locy),
+         julian > 74, ## only include observations between March 15 and Sept 1
+         julian < 244,
          locx > -15,
          locx < 20,
          locy < 25,
@@ -83,6 +85,8 @@ behaviour<-behaviour %>%
 ## filter to 2016 as an example year
 behaviour_2016 <- behaviour %>% 
   filter (year == 2016 | year == 2017,
+          julian > 74, ## only include observations between March 15 and Sept 1
+          julian < 244,
           locx > -15,
           locx < 20,
           locy < 25,
