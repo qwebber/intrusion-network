@@ -23,35 +23,71 @@ ggplot(df) +
   theme(legend.position = 'none') +
   facet_wrap(~year)
 
-df$squirrel_id_yr <- as.factor(paste(df$squirrel_id, df$year))
+df$squirrel_id <- as.character(df$squirrel_id)
+df$gr_year <- as.factor(paste(df$year, df$grid, sep = "_"))
 
+## prj
 prj <- '+init=epsg:26911'
-spdf <- SpatialPointsDataFrame(coordinates(cbind(df$locx, df$locy)),
-                              data = df[,c("locx", "locy", "squirrel_id_yr")],
-                                        proj4string = CRS(prj))
 
+## load GetHRBy function
 source("functions/GetHRBy.R")
 
-## parameters
-params = c(grid = 700, extent = 3)
+## parameters for kernel
+params = c(grid = 400, extent = 3)
 
-## generate ranges by ID
-ud <- setDT(df)[, GetHRBy(squirrel_id_yr, locx, locy, 
+yr <- data.table(year = as.factor(paste(unique(df$year), unique(df$grid), sep = "_")))
+
+## generate list of spatial points dataframes
+out_spdf <- c()
+for(i in levels(yr$year)){ 
+  
+  df2 <- df[gr_year == i]
+  
+  spdf <- SpatialPointsDataFrame(coordinates(cbind(df2$locx, df2$locy)),
+                              data = df2[,c("locx", "locy", "squirrel_id")],
+                                        proj4string = CRS(prj))
+  
+  out_spdf[[i]] <- st_as_sf(spdf)
+  
+}
+
+## generate list of kernels
+out_polygon <- c()
+for(i in levels(yr$year)){ 
+  
+  df3 <- df[gr_year == i]
+  
+  ## generate ranges by ID
+  ud <- df3[, GetHRBy(squirrel_id, locx, locy, 
                           in.percent = 75, params = params,
                           type = "kernel")]
 
-## assign prj
-proj4string(ud) <- CRS(prj)
+  ## assign prj
+  proj4string(ud) <- CRS(prj)
 
-# Get polygon
-polygon <- st_as_sf(ud)
+  # Get polygon
+  polygon <- st_as_sf(ud)
 
-# convert to sf object
-colnames(polygon) <- c("id_polygons", "area" ,"geometry") # change colnames
+  # convert to sf object
+  colnames(polygon) <- c("id_polygons", "area" ,"geometry") # change colnames
+
+  out_polygon[[i]] <- polygon
+
+}
 
 ## output area
-area <- data.table(polygon$id_polygons, polygon$area)
-setnames(area, c("V1", "V2"), c("squirrel_id", "area_ha"))
+area <- c()
+for(i in 1:length(yr$year)){ 
+ar <- data.table(out_polygon[[i]]$id_polygons, out_polygon[[i]]$area)
+ar$gr_year <- yr$year[i]
+setnames(ar, c("V1", "V2"), c("squirrel_id", "area_ha"))
+
+area[[i]] <- ar
+
+}
+
+## convert from list to data.table
+area <- rbindlist(area)
 
 # export df of area
 fwrite(area, "output/territory-area.csv")
@@ -60,30 +96,44 @@ fwrite(area, "output/territory-area.csv")
 drops <- c("area") # list of column names
 polygon <- polygon[,!(names(polygon) %in% drops)] #remove columns "name1" and "name2"
 
-## convert points to sf
-points <- st_as_sf(spdf)
 
 # Intersection between polygon and points ---------------------------------
-intersection <- st_intersection(x = polygon, y = points)
+intersect_out <- c()
+for(i in 1:length(yr$year)){
+  
+  intersection <- st_intersection(x = out_polygon[[i]], y = out_spdf[[i]])
+  
+  intersect_out[[i]] <- intersection 
+}
 
-## generate edge list with territory owners and intruders
-edge_list <- data.table(owner = intersection$id_polygons,
-                        intruder = intersection$squirrel_id)
 
-## assign TRUE or FALSE value to whether a squirrel is observed on 
-## it's own territory (TRUE) or another territory (FALSE)
-edge_list[, edge:= (owner==intruder)]
+edge_out <- c()
+for(i in 1:length(yr$year)){ 
+  
+  ## generate edge list with territory owners and intruders
+  edge_list <- data.table(owner = intersect_out[[i]]$id_polygons,
+                        intruder = intersect_out[[i]]$squirrel_id)
 
-edge_list$edge <- as.character(edge_list$edge)
+  ## assign TRUE or FALSE value to whether a squirrel is observed on 
+  ## it's own territory (TRUE) or another territory (FALSE)
+  edge_list[, edge:= (owner==intruder)]
 
-## re-assign TRUE and FALSE values to 0s and 1s
-edge_list$edge[edge_list$edge == "TRUE"] <- 0
-edge_list$edge[edge_list$edge == "FALSE"] <- 1
+  edge_list$edge <- as.character(edge_list$edge)
 
-## subset to only include intrusion events 
-edge_list <- edge_list[edge == 1][,c("edge") := NULL]
+  ## re-assign TRUE and FALSE values to 0s and 1s
+  edge_list$edge[edge_list$edge == "TRUE"] <- 0
+  edge_list$edge[edge_list$edge == "FALSE"] <- 1
+
+  ## add year to list 
+  edge_list$year <- yr$year[i]
+  
+  ## subset to only include intrusion events 
+  edge_out[[i]] <- edge_list[edge == 1][,c("edge") := NULL]
+
+}
+
 
 ## export edge list
-fwrite(edge_list, "output/edge_list.csv")
+saveRDS(edge_out, "output/edge_list.RDS")
 
 
