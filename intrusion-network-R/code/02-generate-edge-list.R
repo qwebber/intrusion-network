@@ -31,7 +31,9 @@ spdf <- SpatialPointsDataFrame(coordinates(cbind(df$locx, df$locy)),
 source("functions/GetHRBy.R")
 
 ## generate ranges by ID
-ud <- setDT(df)[, GetHRBy(squirrel_id, locx, locy, 50 ,"kernel")]
+ud <- setDT(df)[, GetHRBy(squirrel_id, locx, locy, 
+                          in.percent = 50,
+                          type = "kernel")]
 
 ## assign prj
 proj4string(ud) <- CRS(prj)
@@ -46,12 +48,7 @@ colnames(polygon) <- c("id_polygons", "area" ,"geometry") # change colnames
 area <- data.table(polygon$id_polygons, polygon$area)
 setnames(area, c("V1", "V2"), c("squirrel_id", "area_ha"))
 
-round(area$area_ha, 8)
-
-ggplot(area) +
-  geom_point(aes(round(area$area_ha, 8), squirrel_id)) +
-  theme(axis.title.y = element_blank())
-
+# export df of area
 fwrite(area, "output/territory-area.csv")
 
 ## drop area 
@@ -81,11 +78,7 @@ edge_list$edge[edge_list$edge == "FALSE"] <- 1
 ## subset to only include intrusion events 
 edge_list <- edge_list[edge == 1][,c("edge") := NULL]
 
-
+## export edge list
 fwrite(edge_list, "output/edge_list.csv")
 
 
-grph <- graph_from_edgelist(as.matrix(edge_list), directed=T)
-
-
-graph.strength(grph, mode = c("out"))
