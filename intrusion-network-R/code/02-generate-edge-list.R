@@ -11,7 +11,7 @@ df <- fread("output/spatial-locs-2016.csv")
 
 ## filter for squirrels with at least 15 observations
 ## first assign dummy column to count number of observations per ID in each year and grid
-df$row <- 1:nrow(df)
+df[, row := seq_len(.N), by = c("grid", "year")]
 df[, N := uniqueN(row), by = c("squirrel_id","grid", "year")]
 
 ## drop all squirrels with <30 observations
@@ -19,20 +19,25 @@ df <- df[N > 30]
 
 ## check to make sure there are no outliers
 ggplot(df) +
-  geom_point(aes(locx, locy, color = factor(squirrel_id)))
+  geom_point(aes(locx, locy, color = factor(squirrel_id))) +
+  theme(legend.position = 'none') +
+  facet_wrap(~year)
 
-df$squirrel_id <- as.factor(df$squirrel_id)
+df$squirrel_id_yr <- as.factor(paste(df$squirrel_id, df$year))
 
 prj <- '+init=epsg:26911'
 spdf <- SpatialPointsDataFrame(coordinates(cbind(df$locx, df$locy)),
-                              data = df[,c("locx", "locy", "squirrel_id")],
+                              data = df[,c("locx", "locy", "squirrel_id_yr")],
                                         proj4string = CRS(prj))
 
 source("functions/GetHRBy.R")
 
+## parameters
+params = c(grid = 700, extent = 3)
+
 ## generate ranges by ID
-ud <- setDT(df)[, GetHRBy(squirrel_id, locx, locy, 
-                          in.percent = 50,
+ud <- setDT(df)[, GetHRBy(squirrel_id_yr, locx, locy, 
+                          in.percent = 75, params = params,
                           type = "kernel")]
 
 ## assign prj
