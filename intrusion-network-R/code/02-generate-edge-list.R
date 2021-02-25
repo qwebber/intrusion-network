@@ -129,7 +129,7 @@ for(i in 1:length(yr$gr_year)){
   edge_list$year <- yr$gr_year[i]
   
   ## subset to only include intrusion events 
-  edge_out[[i]] <- edge_list[edge == 1][,c("edge") := NULL]
+  edge_out[[i]] <- edge_list[edge == 1]
 
 }
 
