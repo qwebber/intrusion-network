@@ -1,26 +1,15 @@
 
 
 ### Packages ----
-libs <- c('data.table', 
-          'sp', 'adehabitatHR',
-          'sf','igraph',
+libs <- c('data.table', 'igraph',
           'ggplot2', 'krsp')
 lapply(libs, require, character.only = TRUE)
 
 ## load data
 edge_list <- readRDS("output/edge_list.RDS")
-df <- fread("output/spatial-locs-2016.csv")
-df[, row := seq_len(.N), by = c("grid", "year")]
-df[, N := uniqueN(row), by = c("squirrel_id","grid", "year")]
+yr <- fread("output/unique-grid-years.csv")
 
-## drop all squirrels with <30 observations
-df <- df[N > 30]
-
-df$gr_year <- as.factor(paste(df$year, df$grid, sep = "_"))
-
-## assign grid year
-yr <- data.table(gr_year = as.factor(unique(df$gr_year)))
-
+## number of unique grid-years
 n <- length(unique(yr$gr_year))
 
 ## generate list of spatial points dataframes
@@ -42,15 +31,26 @@ names(out_mats) <- yr$gr_year
 metrics <- c()
 for(i in 1:n){ 
   
-  grph <- graph.adjacency(out_mats[[i]], weighted = T, mode = "directed")
-
-  metrics[[i]] <- data.table(instrength = graph.strength(grph, mode = c("in")),
-                             outstrength = graph.strength(grph, mode = c("out")),
-                             evcent = evcent(grph)$vector,
-                             between = betweenness(grph, v = V(grph), directed = TRUE,
+  out_mats_in <- out_mats
+  out_mats_out <- out_mats
+  
+  out_mats_in[[i]][upper.tri(out_mats_in[[i]])] <- 0
+  out_mats_out[[i]][lower.tri(out_mats_out[[i]])] <- 0
+  
+  grph_out <- graph.adjacency(out_mats_out[[i]], weighted = T)
+  grph_in <- graph.adjacency(out_mats_in[[i]], weighted = T)
+  
+  metrics[[i]] <- data.table(outstrength = graph.strength(grph_out, mode = c("out")),
+                             instrength = graph.strength(grph_in, mode = c("in")),
+                             outevcent = evcent(grph_out)$vector,
+                             inevcent = evcent(grph_in)$vector,
+                             outbetween = betweenness(grph_out, v = V(grph_out), directed = TRUE,
                                            nobigint = TRUE, normalized = FALSE),
-                             squirrel_id = names(degree(grph)),
-                             obs = sum(out_mats[[i]]),
+                             inbetween = betweenness(grph_in, v = V(grph_in), directed = TRUE,
+                                                      nobigint = TRUE, normalized = FALSE),
+                             squirrel_id = names(degree(grph_out)),
+                             obs_out = sum(out_mats_out[[i]]),
+                             obs_in = sum(out_mats_in[[i]]),
                              gr_year = names(out_mats)[i])
 
 }
@@ -60,7 +60,7 @@ metrics2 <- rbindlist(metrics)
 metrics2[, c("year", "grid") := tstrsplit(gr_year, "_", fixed=TRUE)][,c("gr_year") := NULL]
 
 ggplot(metrics2) +
-  geom_point(aes(outstrength/obs, instrength/obs, color = grid)) +
+  geom_point(aes(outevcent, inevcent, color = grid)) +
   xlab('number of intrusions') +
   ylab('number of times being intruded') +
   facet_wrap(~year)
