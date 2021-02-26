@@ -84,7 +84,7 @@ behaviour <- behaviour %>%
   droplevels()
 
 ## filter to 2016 as an example year
-behaviour_2016 <- behaviour %>% 
+behaviour_all <- behaviour %>% 
   filter (year == 2012 | year == 2013 | year == 2014 | 
             year == 2015 | year == 2016 | year == 2017,
           julian > 74, ## only include observations between March 15 and Sept 1
@@ -101,12 +101,12 @@ behaviour_2016 <- behaviour %>%
   droplevels()
 
 ## pull relevant variables
-behaviour_2016 <- behaviour_2016[,c("squirrel_id", "locx", "locy", "grid",  
+behaviour_all <- behaviour_all[,c("squirrel_id", "locx", "locy", "grid",  
               "date", "julian", "year", "detail", "behaviour")]
 
-behaviour_2016$data <- "behaviour"
+behaviour_all$data <- "behaviour"
 
-df <- rbind(trp, behaviour_2016, fill = T)
+df <- rbind(trp, behaviour_all, fill = T)
 
-fwrite(df, "output/spatial-locs-2016.csv")
+fwrite(df, "output/spatial-locs.csv")
 
