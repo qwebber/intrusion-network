@@ -3,22 +3,11 @@
 ### Packages ----
 libs <- c('data.table', 
           'sp', 'adehabitatHR',
-          'sf', 'plyr',
+          'sf',
           'ggplot2', 'krsp')
 lapply(libs, require, character.only = TRUE)
 
 df <- fread("output/spatial-locs.csv")
-
-## filter for squirrels with at least 15 observations
-## first assign dummy column to count number of observations per ID in each year and grid
-df[, row := seq_len(.N), by = c("grid", "year")]
-df[, N := uniqueN(row), by = c("squirrel_id","grid", "year")]
-
-## drop all squirrels with <30 observations
-df <- df[N > 30]
-
-## order dataframe by grid and year
-df <- setDT(ddply(df, c('year', 'grid')))
 
 ## check to make sure there are no outliers
 ggplot(df) +
