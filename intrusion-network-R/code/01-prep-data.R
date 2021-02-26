@@ -31,9 +31,8 @@ trp <-trp %>%
          julian = yday(date),
          year = year(date),
          squirrel_id = as.factor(squirrel_id)) %>% 
-  filter(year == 2010 | year == 2011 | year == 2012 | 
-           year == 2013 | year == 2014 | year == 2015 |
-           year == 2016 | year == 2017,
+  filter(year == 2012 | year == 2013 | year == 2014 | 
+           year == 2015 | year == 2016 | year == 2017,
          !is.na(squirrel_id),
          !is.na(locx),
          !is.na(locy),
@@ -57,8 +56,8 @@ setnames(trp, "gr", "grid")
 
 ## pull census database
 census <- tbl(con, "census") %>% 
-  filter(gr %in% c ("KL", "SU"),
-         census_date == "2016-05-15") %>% 
+  filter(gr %in% c ("KL", "SU")) %>% #,
+         #census_date == "2016-05-15") %>% 
   collect() %>% 
   dplyr::select(squirrel_id)
 
@@ -86,9 +85,8 @@ behaviour <- behaviour %>%
 
 ## filter to 2016 as an example year
 behaviour_2016 <- behaviour %>% 
-  filter (year == 2010 | year == 2011 | year == 2012 | 
-          year == 2013 | year == 2014 | year == 2015 |
-          year == 2016 | year == 2017,
+  filter (year == 2012 | year == 2013 | year == 2014 | 
+            year == 2015 | year == 2016 | year == 2017,
           julian > 74, ## only include observations between March 15 and Sept 1
           julian < 244,
           locx > -15,
