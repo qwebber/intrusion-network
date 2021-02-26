@@ -49,6 +49,7 @@ for(i in 1:n){
                              inbetween = betweenness(grph_in, v = V(grph_in), directed = TRUE,
                                                       nobigint = TRUE, normalized = FALSE),
                              squirrel_id = names(degree(grph_out)),
+                             squirrel_id_check = names(degree(grph_in)),
                              obs_out = sum(out_mats_out[[i]]),
                              obs_in = sum(out_mats_in[[i]]),
                              gr_year = names(out_mats)[i])
@@ -56,11 +57,8 @@ for(i in 1:n){
 }
 
 
-metrics2 <- rbindlist(metrics)
+metrics2 <- rbindlist(metrics, fill = T)
 metrics2[, c("year", "grid") := tstrsplit(gr_year, "_", fixed=TRUE)][,c("gr_year") := NULL]
 
-ggplot(metrics2) +
-  geom_point(aes(outevcent, inevcent, color = grid)) +
-  xlab('number of intrusions') +
-  ylab('number of times being intruded') +
-  facet_wrap(~year)
+fwrite(metrics2, "output/metrics.csv")
+
