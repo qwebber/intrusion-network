@@ -3,11 +3,11 @@
 ### Packages ----
 libs <- c('data.table', 
           'sp', 'adehabitatHR',
-          'sf',
+          'sf', 'plyr',
           'ggplot2', 'krsp')
 lapply(libs, require, character.only = TRUE)
 
-df <- fread("output/spatial-locs-2016.csv")
+df <- fread("output/spatial-locs.csv")
 
 ## filter for squirrels with at least 15 observations
 ## first assign dummy column to count number of observations per ID in each year and grid
