@@ -56,6 +56,8 @@ for(i in levels(yr$gr_year)){
   
 }
 
+saveRDS(out_spdf, "output/edge_list_data/spdf.RDS")
+
 ## generate list of kernels
 out_polygon <- c()
 for(i in levels(yr$gr_year)){ 
@@ -79,6 +81,8 @@ for(i in levels(yr$gr_year)){
   out_polygon[[i]] <- polygon
 
 }
+
+saveRDS(out_polygon, "output/edge_list_data/polygons.RDS")
 
 ## output area
 area <- c()
@@ -110,6 +114,8 @@ for(i in 1:length(yr$gr_year)){
 
 ## name lists within intersect_out
 names(intersect_out) <- yr$gr_year
+
+saveRDS(intersect_out, "output/edge_list_data/intersect-pt-poly.RDS")
 
 edge_out <- c()
 for(i in 1:length(yr$gr_year)){ 
