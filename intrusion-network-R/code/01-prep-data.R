@@ -3,7 +3,7 @@
 
 ### Packages ----
 libs <- c('data.table', 'lubridate' ,'devtools',
-          'dplyr')
+          'dplyr', 'plyr')
 lapply(libs, require, character.only = TRUE)
 
 devtools::install_github("KluaneRedSquirrelProject/krsp")
@@ -16,6 +16,11 @@ con <- krsp_connect(host = "krsp.cepb5cjvqban.us-east-2.rds.amazonaws.com",
                      password = Sys.getenv("krsp_password")
 )
 
+
+#ped <- tbl(con, "pedigree_clean") %>%
+#  collect()
+
+#ped[squirrel_id == "10995"]
 
 ## Pull trapping data
 trp <- tbl(con, "trapping") %>%
@@ -107,6 +112,22 @@ behaviour_all <- behaviour_all[,c("squirrel_id", "locx", "locy", "grid",
 behaviour_all$data <- "behaviour"
 
 df <- rbind(trp, behaviour_all, fill = T)
+
+## filter for squirrels with at least 15 observations
+## first assign dummy column to count number of observations per ID in each year and grid
+df[, row := seq_len(.N), by = c("grid", "year")]
+df[, N := uniqueN(row), by = c("squirrel_id","grid", "year")]
+
+## drop all squirrels with <30 observations
+df <- df[N > 30]
+
+## drop instances where >10 observations in a day
+df[, rowDay := seq_len(.N), by = c("squirrel_id","julian","grid", "year")]
+
+df <- df[rowDay < 11]
+
+## order dataframe by grid and year
+df <- setDT(ddply(df, c('year', 'grid')))
 
 fwrite(df, "output/spatial-locs.csv")
 
