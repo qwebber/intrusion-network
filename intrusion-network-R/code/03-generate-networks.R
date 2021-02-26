@@ -28,6 +28,9 @@ for(i in 1:n){
 ## name matrices
 names(out_mats) <- yr$gr_year
 
+saveRDS(out_mats, "output/matrices/matrix_list.RDS")
+
+
 metrics <- c()
 for(i in 1:n){ 
   
