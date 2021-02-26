@@ -40,6 +40,8 @@ params = c(grid = 400, extent = 3)
 
 yr <- data.table(gr_year = as.factor(unique(df$gr_year)))
 
+fwrite(yr, "output/unique-grid-years.csv")
+
 ## generate list of spatial points dataframes
 out_spdf <- c()
 for(i in levels(yr$gr_year)){ 
