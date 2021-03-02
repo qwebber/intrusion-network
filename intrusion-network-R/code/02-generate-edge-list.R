@@ -38,7 +38,7 @@ for(i in levels(yr$gr_year)){
   df2 <- df[gr_year == i]
   
   spdf <- SpatialPointsDataFrame(coordinates(cbind(df2$locx, df2$locy)),
-                              data = df2[,c("locx", "locy", "squirrel_id")],
+                              data = df2[,c("julian","locx", "locy", "squirrel_id")],
                                         proj4string = CRS(prj))
   
   out_spdf[[i]] <- st_as_sf(spdf)
@@ -110,7 +110,10 @@ edge_out <- c()
 for(i in 1:length(yr$gr_year)){ 
   ## generate edge list with territory owners and intruders
   edge_list <- data.table(owner = intersect_out[[i]]$id_polygons,
-                          intruder = intersect_out[[i]]$squirrel_id)
+                          intruder = intersect_out[[i]]$squirrel_id,
+                          locx = intersect_out[[i]]$locx,
+                          locy = intersect_out[[i]]$locy,
+                          julian = intersect_out[[i]]$julian)
 
   ## assign TRUE or FALSE value to whether a squirrel is observed on 
   ## it's own territory (TRUE) or another territory (FALSE)
