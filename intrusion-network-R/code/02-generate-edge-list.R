@@ -125,8 +125,8 @@ for(i in 1:length(yr$gr_year)){
   ## add year to list 
   edge_list$year <- yr$gr_year[i]
   
-  ## subset to only include intrusion events 
-  edge_out[[i]] <- edge_list[edge == 1]
+  ## keep all points in file
+  edge_out[[i]] <- edge_list
 
 }
 
