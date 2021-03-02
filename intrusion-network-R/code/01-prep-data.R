@@ -16,12 +16,6 @@ con <- krsp_connect(host = "krsp.cepb5cjvqban.us-east-2.rds.amazonaws.com",
                      password = Sys.getenv("krsp_password")
 )
 
-
-#ped <- tbl(con, "pedigree_clean") %>%
-#  collect()
-
-#ped[squirrel_id == "10995"]
-
 ## Pull trapping data
 trp <- tbl(con, "trapping") %>%
   collect() %>% 
@@ -61,8 +55,14 @@ setnames(trp, "gr", "grid")
 
 ## pull census database
 census <- tbl(con, "census") %>% 
-  filter(gr %in% c ("KL", "SU")) %>% #,
-         #census_date == "2016-05-15") %>% 
+  filter(gr %in% c("KL", "SU"), #) %>% 
+            census_date == "2012-05-15" | census_date == "2012-05-31" |
+            census_date == "2013-05-15" | 
+            census_date == "2014-05-15" | census_date == "2014-05-21" |
+            census_date == "2015-05-15" | census_date == "2015-05-13" |
+            census_date == "2016-05-15" | 
+            census_date == "2017-05-15"
+  ) %>% 
   collect() %>% 
   dplyr::select(squirrel_id)
 
