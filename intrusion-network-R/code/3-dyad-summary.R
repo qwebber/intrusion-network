@@ -6,6 +6,13 @@ libs <- c('data.table',
 lapply(libs, require, character.only = TRUE)
 
 ## load pedigree data
+
+con <- krsp_connect(host = "krsp.cepb5cjvqban.us-east-2.rds.amazonaws.com",
+                    dbname ="krsp",
+                    username = Sys.getenv("krsp_user"),
+                    password = Sys.getenv("krsp_password")
+)
+
 ped <- tbl(con, "pedigree_clean") %>%
   collect()
 setDT(ped)
@@ -31,8 +38,25 @@ mom_offspring <- merge(edge_list, ped[,c("dyad", "mom")], by = "dyad")
 edge_list <- edge_list %>% 
                 filter(!dyad %in% mom_offspring$dyad)
 
+## summary of observations that occurred on own territory vs. on a different territory
+edge_list$territory <- as.factor(paste(edge_list$owner, 
+                                       edge_list$locx, 
+                                       edge_list$locy, 
+                                       edge_list$year, sep = "_"))
+
+edge_list[, c("year", "grid") := tstrsplit(year, "_", fixed=TRUE)]
+
 
 df <- fread("output/spatial-locs.csv")
+df$territory <- as.factor(paste(df$squirrel_id, 
+                                df$locx, 
+                                df$locy, 
+                                df$year, sep = "_"))
+
+
+
+merge(edge_list[year == "2016"], df[year == "2016"], by = "territory")
+
 
 df[, .N, by = c("year", "grid")]
 
