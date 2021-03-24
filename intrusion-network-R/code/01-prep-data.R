@@ -124,6 +124,8 @@ df <- df[N > 30]
 ## drop instances where >10 observations in a day
 df[, rowDay := seq_len(.N), by = c("squirrel_id","julian","grid", "year")]
 
+hist(df$rowDay)
+
 df <- df[rowDay < 11]
 
 ## order dataframe by grid and year
