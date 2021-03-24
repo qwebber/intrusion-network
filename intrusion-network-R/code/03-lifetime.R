@@ -539,5 +539,3 @@ rm(con, density, fla, flastall, food_add, grids_cone_data)
 write.csv(lifetime_clean, "output/lifetime_clean.csv")
 
 
-
-
