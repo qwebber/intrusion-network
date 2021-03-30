@@ -35,7 +35,7 @@ trp <-trp %>%
          !is.na(squirrel_id),
          !is.na(locx),
          !is.na(locy),
-         julian > 74, ## only include observations between March 15 and Sept 1
+         julian > 74, ## only include trapping between March 15 and Sept 1
          julian < 244,
          locx > -15,
          locx < 20,
