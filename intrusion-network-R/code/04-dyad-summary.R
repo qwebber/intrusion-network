@@ -108,6 +108,10 @@ on_territory <- df[, length(unique(squirrel_id)), by = c("year", "grid")]
 setnames(on_territory, "V1", "total_ids")
 on_territory$ids_on_terr <- edge_list[edge == 0][, length(unique(census)), by = c("year", "grid")]$V1
 
+## validation of number of squirrel census locs that were on/off territories
+on_territory$propOn <- on_territory$ids_on_terr/on_territory$total_ids
+
+
 
 
 ## merge file with edges to file with behaviours
