@@ -96,7 +96,18 @@ for(i in 1:length(yr$gr_year)){
 }
 
 edge_list <- rbindlist(edge_out)
-edge_list[, .N, by = ""]
+edge_list[, c("year", "grid") := tstrsplit(year, "_", fixed=TRUE)]
+
+
+edge_list[edge == 0][, .N, by = "year"]
+
+## load spatial data
+df <- fread("output/spatial-locs.csv")
+
+on_territory <- df[, length(unique(squirrel_id)), by = c("year", "grid")]
+setnames(on_territory, "V1", "total_ids")
+on_territory$ids_on_terr <- edge_list[edge == 0][, length(unique(census)), by = c("year", "grid")]$V1
+
 
 
 ## merge file with edges to file with behaviours
@@ -140,4 +151,6 @@ sum <- df_edges[, .N, by = c("edge", "behaviour")]
 ddply(sum, c('N'))
 
 
-ggplot()
+ggplot(census[gr_year == "2012_KL"]) + 
+  geom_jitter(aes(locx, locy, color = squirrel_id), height = 0.2, width = 0.3) 
+  theme(legend.position = 'none')
