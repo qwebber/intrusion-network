@@ -133,7 +133,31 @@ for(i in 1:length(yr$gr_year)){
 
 }
 
+edge_list <- rbindlist(edge_out)
+
+## Remove mom-offspring dyads
+
+## load lifetime data
+life <- fread("output/lifetime_clean.csv")
+
+## add column for unique dyad ID of moms and offspring
+life$dyad <- as.factor(paste(life$squirrel_id, life$dam_id, sep = "_"))
+life$mom <- "yes"
+
+## add column for unique dyad ID
+edge_list$dyad <- as.factor(paste(edge_list$owner, edge_list$intruder, sep = "_"))
+
+## merge to form file of just moms and their offspring
+mom_offspring <- merge(edge_list, life[,c("dyad", "mom")], by = "dyad")
+
+## generate new edgelist file without moms and their offspring
+edge_list <- edge_list %>% 
+  filter(!dyad %in% mom_offspring$dyad)
+
+## summary of observations that occurred on own territory vs. on a different territory
+edge_list[, c("year", "grid") := tstrsplit(year, "_", fixed=TRUE)]
+
 ## export edge list
-saveRDS(edge_out, "output/edge_list.RDS")
+saveRDS(edge_list, "output/edge_list.RDS")
 
 
