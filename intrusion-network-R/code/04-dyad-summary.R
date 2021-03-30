@@ -5,37 +5,6 @@ libs <- c('data.table',
           'ggplot2', 'krsp')
 lapply(libs, require, character.only = TRUE)
 
-## load lifetime data
-life <- fread("output/lifetime_clean.csv")
-
-## add column for unique dyad ID of moms and offspring
-life$dyad <- as.factor(paste(life$squirrel_id, life$dam_id, sep = "_"))
-life$mom <- "yes"
-
-## load data
-edge_list <- readRDS("output/edge_list.RDS")
-edge_list <- rbindlist(edge_list)
-
-## add column for unique dyad ID
-edge_list$dyad <- as.factor(paste(edge_list$owner, edge_list$intruder, sep = "_"))
-
-## merge to form file of just moms and their offspring
-mom_offspring <- merge(edge_list, life[,c("dyad", "mom")], by = "dyad")
-
-## generate new edgelist file without moms and their offspring
-edge_list <- edge_list %>% 
-                filter(!dyad %in% mom_offspring$dyad)
-
-## summary of observations that occurred on own territory vs. on a different territory
-edge_list[, c("year", "grid") := tstrsplit(year, "_", fixed=TRUE)]
-
-edge_list$territory <- as.factor(paste(edge_list$intruder, 
-                                       edge_list$locx, 
-                                       edge_list$locy, 
-                                       edge_list$julian, 
-                                       edge_list$year, sep = "_"))
-
-
 ## load spatial locs
 df <- fread("output/spatial-locs.csv")
 df$territory <- as.factor(paste(df$squirrel_id, 
