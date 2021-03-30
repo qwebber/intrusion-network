@@ -60,7 +60,7 @@ setnames(coordsMeans, c("locy", "locx"), c("y", "x"))
 KL2016 = create_layout(KL_2016out, layout = coordsMeans2) # algorithm = 'kk')
 
 
-aa <- ggplot(ud, aes(x = long, y = lat, fill = id, group = group)) + 
+ggplot(ud, aes(x = long, y = lat, fill = id, group = group)) + 
   geom_polygon(alpha = 0.4) +
   theme(legend.position = 'none')
 
