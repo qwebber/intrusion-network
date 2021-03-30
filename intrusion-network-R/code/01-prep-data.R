@@ -16,6 +16,7 @@ con <- krsp_connect(host = "krsp.cepb5cjvqban.us-east-2.rds.amazonaws.com",
                      password = Sys.getenv("krsp_password")
 )
 
+
 ## Pull trapping data
 trp <- tbl(con, "trapping") %>%
   collect() %>% 
@@ -90,8 +91,8 @@ behaviour <- behaviour %>%
 
 ## filter to 2016 as an example year
 behaviour_all <- behaviour %>% 
-  filter (year == 2012 | year == 2013 | year == 2014 | 
-            year == 2015 | year == 2016 | year == 2017,
+  filter (#year == 2012 | year == 2013 | year == 2014 | 
+          #  year == 2015 | year == 2016 | year == 2017,
           julian > 74, ## only include observations between March 15 and Sept 1
           julian < 244,
           locx > -15,
@@ -124,9 +125,7 @@ df <- df[N > 30]
 ## drop instances where >10 observations in a day
 df[, rowDay := seq_len(.N), by = c("squirrel_id","julian","grid", "year")]
 
-hist(df$rowDay)
-
-df <- df[rowDay < 11]
+df <- df[rowDay < 31]
 
 ## order dataframe by grid and year
 df <- setDT(ddply(df, c('year', 'grid')))
