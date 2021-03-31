@@ -31,8 +31,7 @@ trp <-trp %>%
          julian = yday(date),
          year = year(date),
          squirrel_id = as.factor(squirrel_id)) %>% 
-  filter(year == 2012 | year == 2013 | year == 2014 | 
-           year == 2015 | year == 2016 | year == 2017,
+  filter(
          !is.na(squirrel_id),
          !is.na(locx),
          !is.na(locy),
