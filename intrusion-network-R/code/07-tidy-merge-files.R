@@ -21,11 +21,6 @@ density$gr_year <- as.factor(paste(density$grid, density$year, sep = "_"))
 
 all <- merge(metrics, density[,c("V1", "year", "grid") := NULL], by = "gr_year")
 
-merge(all, life[,c("sex", "byear", "squirrel_id")], by = "squirrel_id", fill = T)
+#merge(all, life[,c("sex", "byear", "squirrel_id")], by = "squirrel_id", fill = T)
 
-
-mod1 <- lmer(outstrength ~ spr_density + (1|grid/squirrel_id), data = all)
-summary(mod1)
-
-
-
+fwrite(all, "output/final-df.csv")
