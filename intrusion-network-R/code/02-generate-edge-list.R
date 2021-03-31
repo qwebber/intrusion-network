@@ -25,7 +25,7 @@ prj <- '+init=epsg:26911'
 source("functions/GetHRBy.R")
 
 ## parameters for kernel
-params = c(grid = 400, extent = 3)
+params = c(grid = 400, extent = 7)
 
 yr <- data.table(gr_year = as.factor(unique(df$gr_year)))
 
