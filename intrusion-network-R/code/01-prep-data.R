@@ -118,6 +118,11 @@ df <- df[N > 30]
 ## drop instances where >10 observations in a day
 df[, rowDay := seq_len(.N), by = c("squirrel_id","julian","grid", "year")]
 
+## mean number of observations per squirrel per day
+idsDay <- df[, max(rowDay), by = c("squirrel_id", "julian", "year", "grid")]
+range(idsDay$V1)
+
+## remove any observations more than 30 in a day
 df <- df[rowDay < 31]
 
 ## check number of IDs per grid-year
