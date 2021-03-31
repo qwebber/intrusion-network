@@ -129,11 +129,11 @@ df2 <- df[NID > 11]
 ## number of unique years
 length(unique(df2$year))
 
-## number of trapping events
+## number of trappingevents/behavioural observations
 df2[, .N, by = c("data")]
 
 ## order dataframe by grid and year
-df <- setDT(ddply(df, c('year', 'grid')))
+df2 <- setDT(ddply(df2, c('year', 'grid')))
 
-fwrite(df, "output/spatial-locs.csv")
+fwrite(df2, "output/spatial-locs.csv")
 
