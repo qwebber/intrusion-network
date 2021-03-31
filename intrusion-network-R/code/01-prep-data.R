@@ -46,7 +46,7 @@ trp <-trp %>%
 
 ## pull relevant variables
 trp <- trp[,c("squirrel_id", "locx", "locy", "gr",
-       "date", "julian", "year")]
+       "date", "julian", "year", "rattle")]
 
 ## assign column to indicate data are trapping
 trp$data <- "trap"
@@ -56,14 +56,7 @@ setnames(trp, "gr", "grid")
 
 ## pull census database
 census <- tbl(con, "census") %>% 
-  filter(gr %in% c("KL", "SU"), #) %>% 
-            census_date == "2012-05-15" | census_date == "2012-05-31" |
-            census_date == "2013-05-15" | 
-            census_date == "2014-05-15" | census_date == "2014-05-21" |
-            census_date == "2015-05-15" | census_date == "2015-05-13" |
-            census_date == "2016-05-15" | 
-            census_date == "2017-05-15"
-  ) %>% 
+  filter(gr %in% c("KL", "SU")) %>% 
   collect() %>% 
   dplyr::select(squirrel_id)
 
