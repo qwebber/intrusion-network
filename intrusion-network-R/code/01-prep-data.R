@@ -55,7 +55,7 @@ trp$data <- "trap"
 setnames(trp, "gr", "grid")
 
 ## pull census database
-census <- tbl(con, "census") %>% 
+sq <- tbl(con, "squirrel") %>% 
   filter(gr %in% c("KL", "SU")) %>% 
   collect() %>% 
   dplyr::select(squirrel_id)
@@ -95,7 +95,7 @@ behaviour_all <- behaviour %>%
           #behaviour == 2, ## vocalizations 
           #behaviour == 3, 
           #detail == 1, ## animal material 
-          squirrel_id %in% census$squirrel_id 
+          #squirrel_id %in% census$squirrel_id 
   ) %>%
   droplevels()
 
@@ -119,6 +119,18 @@ df <- df[N > 30]
 df[, rowDay := seq_len(.N), by = c("squirrel_id","julian","grid", "year")]
 
 df <- df[rowDay < 31]
+
+## check number of IDs per grid-year
+df[, NID := uniqueN(squirrel_id), by = c("grid", "year")]
+
+## remove grid-years with <10 unique squirrels
+df2 <- df[NID > 11]
+
+## number of unique years
+length(unique(df2$year))
+
+## number of trapping events
+df2[, .N, by = c("data")]
 
 ## order dataframe by grid and year
 df <- setDT(ddply(df, c('year', 'grid')))
