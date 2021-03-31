@@ -43,6 +43,32 @@ trp <-trp %>%
          locy > -10) %>% 
   droplevels()
 
+## Pull dbatrapping data
+trp2 <- tbl(con, "dbatrapping") %>%
+  collect() %>% 
+  filter(gr %in% c("KL","SU")) %>% 
+  mutate(locx = loc_to_numeric(locX),
+         locy = loc_to_numeric(locY)) 
+setDT(trp2)
+
+## add julian date, year, drop NAs for dbatrapping
+trp2 <-trp2 %>% 
+  mutate(date=ymd(date),
+         julian = yday(date),
+         year = year(date),
+         squirrel_id = as.factor(squirrel_id)) %>% 
+  filter(
+    !is.na(squirrel_id),
+    !is.na(locx),
+    !is.na(locy),
+    julian > 74, ## only include trapping between March 15 and Sept 1
+    julian < 244,
+    locx > -15,
+    locx < 20,
+    locy < 25,
+    locy > -10) %>% 
+  droplevels()
+
 ## pull relevant variables
 trp <- trp[,c("squirrel_id", "locx", "locy", "gr",
        "date", "julian", "year", "rattle")]
