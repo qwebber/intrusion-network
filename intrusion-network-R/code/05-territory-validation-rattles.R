@@ -94,7 +94,7 @@ ggplot(edge_list) +
 
 rattle_sum <- edge_list[, .N, by = c("rattle", "edge")]
 
-
+ 
 M_rattle <- as.table(rbind(c(rattle_sum[rattle == "R"][edge == "other_territory"]$N),
                            c(rattle_sum[rattle == "R"][edge == "own_territory"]$N)))
 
