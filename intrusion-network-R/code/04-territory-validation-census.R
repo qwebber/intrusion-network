@@ -15,24 +15,50 @@ con <- krsp_connect(host = "krsp.cepb5cjvqban.us-east-2.rds.amazonaws.com",
                     password = Sys.getenv("krsp_password")
 )
 
-## load census data
-census <- tbl(con, "census") %>% 
+#Importing midden census data
+census_1 <- tbl(con, "dbamidden") %>% 
   collect() %>%
-  filter(gr %in% c("KL", "SU")) %>% 
-  mutate(locx = loc_to_numeric(locx),
-         locy = loc_to_numeric(locy)) 
-  
-## convert dates
-census <- census %>%
-              mutate(date=ymd(census_date),
-                     julian = yday(census_date),
-                     year = year(census_date),
-                     squirrel_id = as.factor(squirrel_id))
+  dplyr::select(reflo, squirrel_id, locX, locY, grid, date, Sex) %>%
+  # use collect to execute the sql query before using any R specific functions
+  # such as loc_to_numeric
+  mutate(locX = loc_to_numeric(locX))
 
-census$gr_year <- as.factor(paste(census$year, census$gr, sep = "_"))
+#Importing squirrel census data
+census_2 <- tbl(con, "census") %>%
+  # be careful with case, database uses locX in census, but locX in dbaMidden
+  # sql doesn't care since it's not case sensitive, but R does!
+  dplyr::select(reflo, squirrel_id, locx, locy, gr, census_date, sq_fate, sex) %>%
+  filter(sq_fate != 7) %>%
+  # use collect to execute the sql query before using any R specific functions
+  # such as loc_to_numeric
+  collect %>%
+  mutate(locx = loc_to_numeric(locx))
+
+census_2 <- dplyr::select(census_2, -sq_fate) %>% 
+  dplyr::rename(locX = locx,
+         locY = locy,
+         grid = gr,
+         date = census_date,
+         Sex = sex)
+
+census_all<-bind_rows(census_1, census_2)%>% 
+  mutate(grid = factor(grid),
+         year = year(ymd(date)),
+         month = month(ymd(date)),
+         julian = yday(date),
+         locY=as.numeric(locY),
+         Sex=factor(Sex))
+
+census_all$gr_year <- as.factor(paste(census_all$year, census_all$grid, sep = "_"))
 
 ## subset to only include census dates and remove NAs
-census <- setDT(census)[julian == 135 | julian == 136][!is.na(locx)]
+#census <- setDT(census_all)[julian == 135 | julian == 136][!is.na(locx)]
+
+## exclude years prior to 2000 and KL + SU grids
+census_all <- setDT(census_all)[year >= 2000][grid == "KL" | grid == "SU"]
+
+## exclude observations with no coordinates
+census_all <- census_all[!is.na(locX)][!is.na(locY)]
 
 ######################################################
 ############ VALIDATION 1: CENSUS MIDDEN #############
@@ -46,14 +72,15 @@ prj <- '+init=epsg:26911'
 
 yr <- data.table(gr_year = as.factor(names(polys)))
 
+
 ## generate list of spatial points dataframes
 out_spdf <- c()
 for(i in levels(yr$gr_year)){ 
   
-  df2 <- census[gr_year == i]
+  df2 <- census_all[gr_year == i]
   
-  spdf <- SpatialPointsDataFrame(coordinates(cbind(df2$locx, df2$locy)),
-                                 data = df2[,c("julian","locx", "locy", "squirrel_id")],
+  spdf <- SpatialPointsDataFrame(coordinates(cbind(df2$locX, df2$locY)),
+                                 data = df2[,c("julian","locX", "locY", "squirrel_id")],
                                  proj4string = CRS(prj))
   
   out_spdf[[i]] <- st_as_sf(spdf)
@@ -77,8 +104,8 @@ for(i in 1:length(yr$gr_year)){
   ## generate edge list with territory owners and intruders
   edge_list <- data.table(spatial_locs = intersect_out[[i]]$id_polygons,
                           census = intersect_out[[i]]$squirrel_id,
-                          locx = intersect_out[[i]]$locx,
-                          locy = intersect_out[[i]]$locy,
+                          locx = intersect_out[[i]]$locX,
+                          locy = intersect_out[[i]]$locY,
                           julian = intersect_out[[i]]$julian)
   
   ## assign TRUE or FALSE value to whether a squirrel is observed on 
@@ -114,7 +141,6 @@ on_territory$ids_on_terr <- edge_list[edge == 0][, length(unique(census)), by = 
 
 ## validation of number of squirrel census locs that were on/off territories
 on_territory$propOn <- on_territory$ids_on_terr/on_territory$total_ids
-
 
 
 
