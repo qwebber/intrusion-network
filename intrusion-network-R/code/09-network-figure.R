@@ -11,6 +11,12 @@ df <- fread("output/spatial-locs.csv")
 ## load matrices
 out_mats <- readRDS("output/matrices/matrix_list.RDS")
 
+## load territory polygons
+polys <- readRDS("output/edge_list_data/polygons.RDS")
+
+gr_year <- data.table(id = names(polys))
+
+
 
 ## filter for squirrels with at least 15 observations
 ## first assign dummy column to count number of observations per ID in each year and grid
@@ -60,16 +66,43 @@ setnames(coordsMeans, c("locy", "locx"), c("y", "x"))
 KL2016 = create_layout(KL_2016out, layout = coordsMeans2) # algorithm = 'kk')
 
 
-ggplot(ud, aes(x = long, y = lat, fill = id, group = group)) + 
-  geom_polygon(alpha = 0.4) +
-  theme(legend.position = 'none')
+polys2016 <- sf::st_transform(polys[[30]])
+polys2016$gr_year <- rep("2016", length(polys2016$id_polygons))
+
+aa <- ggplot(data = polys2016) +
+  geom_sf(aes(fill = id_polygons), 
+          alpha = 0.5) +
+  xlim(-10, 25) + 
+  ylim(-3, 25) +
+  #scale_fill_viridis_d() +
+  theme(legend.position = 'none',
+        legend.key = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        strip.background = element_rect(color = "black", fill = NA, size = 1),
+        strip.text = element_text(size = 12),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        panel.border = element_rect(colour = "black", fill=NA, size=1))
 
 bb <- ggplot(KL2016) +
   geom_node_point(aes(color = factor(squirrel_id)),
-                  size = (log(graph.strength(KL_2016out, mode = c("out")))*4), 
+                  size = (log(graph.strength(KL_2016out, mode = c("out")))), 
                   alpha = 0.5) +
   geom_edge_link(alpha = 0.5) +
-  theme(legend.position = 'none')
+  xlim(-10, 20) + 
+  ylim(0, 20) +
+  theme(legend.position = 'none',
+        legend.key = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        axis.title = element_blank(),
+        strip.background = element_rect(color = "black", fill = NA, size = 1),
+        strip.text = element_text(size = 12),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        panel.border = element_rect(colour = "black", fill=NA, size=1),
+        plot.margin = margin(1, 1, 1, 1, "cm"))
 grid.arrange(aa,bb, nrow = 1)
 
 
