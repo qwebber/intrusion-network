@@ -55,7 +55,7 @@ for(i in levels(yr$gr_year)){
   
   ## generate ranges by ID
   ud <- df3[, GetHRBy(squirrel_id, locx, locy, 
-                          in.percent = 75, params = params,
+                          in.percent = 50, params = params,
                           type = "kernel")]
 
   ## assign prj
