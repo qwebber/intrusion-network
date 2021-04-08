@@ -2,14 +2,16 @@
 ### Packages ----
 libs <- c('data.table', 'igraph', 'ggraph',
           'ggplot2', 'krsp', 'sp', 'adehabitatHR',
-          'sf')
+          'sf', 'ggnetwork')
 lapply(libs, require, character.only = TRUE)
 
 ## load data
 df <- fread("output/spatial-locs.csv")
+df <- df[grid == "KL" & year == "2016"]
 
-## load matrices
-out_mats <- readRDS("output/matrices/matrix_list.RDS")
+## load data
+edge_list <- readRDS("output/edge_list.RDS")
+edge_list$gr_year <- as.factor(paste(edge_list$year, edge_list$grid, sep = "_"))
 
 ## load territory polygons
 polys <- readRDS("output/edge_list_data/polygons.RDS")
@@ -17,65 +19,111 @@ polys <- readRDS("output/edge_list_data/polygons.RDS")
 gr_year <- data.table(id = names(polys))
 
 
-
-## filter for squirrels with at least 15 observations
-## first assign dummy column to count number of observations per ID in each year and grid
-df[, row := seq_len(.N), by = c("grid", "year")]
-df[, N := uniqueN(row), by = c("squirrel_id","grid", "year")]
-
-## drop all squirrels with <30 observations
-df <- df[N > 30]
-
-## order dataframe by grid and year
-df <- setDT(ddply(df, c('year', 'grid')))
-df <- df[grid == "KL" & year == "2016"]
-
 #### generate polygon ####
 ## prj
-prj <- '+init=epsg:26911'
-params = c(grid = 400, extent = 3)
+#prj <- '+init=epsg:26911'
+#params = c(grid = 400, extent = 3)
 
 ## load GetHRBy function
-source("functions/GetHRBy.R")
+#source("functions/GetHRBy.R")
 
-ud <- df[, GetHRBy(squirrel_id, locx, locy, 
-                    in.percent = 75, params = params,
-                    type = "kernel")]
+#ud <- df[, GetHRBy(squirrel_id, locx, locy, 
+#                    in.percent = 75, params = params,
+#                    type = "kernel")]
 
 ## assign prj
-proj4string(ud) <- CRS(prj)
+#proj4string(ud) <- CRS(prj)
 
-## mean coordinates 
-coordsMeans <- data.frame(squirrel_id = unique(df$squirrel_id),
-                          locx = df[, median(locx), by = "squirrel_id"]$V1,
-                          locy = df[, median(locy), by = "squirrel_id"]$V1)
+###  KL 2016 ###
+## generate igraph object
+df1 <- edge_list[gr_year == "2016_KL"][, .N, by = c("owner", "intruder")]
 
-## convert to intrusion network
-out_mats$`2016_KL`[lower.tri(out_mats$`2016_KL`)] <- 0
-KL_2016out <- graph.adjacency(out_mats$`2016_KL`, weighted = T)
+KL_2016out <- graph.data.frame(df1, directed = T)
 
-## make sure same individuals in both files
-mets <- data.table(outstrength = graph.strength(KL_2016out, mode = c("out")),
-                 squirrel_id = names(degree(KL_2016out)))
-                        
-coordsMeans2 <- coordsMeans %>% 
-                  filter(squirrel_id %in% mets$squirrel_id)
-         
+
+##
+df <- df[grid == "KL" | year == 2016]
+coordsMeans <- data.frame(squirrel_id = as.factor(unique(df$squirrel_id)),
+                          locx = df[, mean(locx), by = "squirrel_id"]$V1,
+                          locy = df[, mean(locy), by = "squirrel_id"]$V1)
 setnames(coordsMeans, c("locy", "locx"), c("y", "x"))
 
-KL2016 = create_layout(KL_2016out, layout = coordsMeans2) # algorithm = 'kk')
+## create layout
+lay = create_layout(KL_2016out, layout = coordsMeans) # algorithm = 'kk')
 
+ggraph(lay) + 
+  geom_edge_link() + 
+  geom_node_point(#aes(color=factor(squirrel_id)), 
+                  #size = (graph.strength(KL_2016out)+0.0125)*75,
+                  alpha = 0.75) +
+  scale_edge_width(range=c(0.1,2)) +
+  #ggtitle("A) Winter (2007)") +
+  ylab('') +
+  xlab('') +
+  coord_fixed() +
+  #scale_color_viridis_d() +
+  theme(#legend.position = 'none',
+    legend.key = element_blank(),
+    axis.text=element_text(size=12, color = "black"),
+    axis.title=element_text(size=12),
+    strip.text = element_text(size=12,face = "bold"),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+
+
+
+l <- as.matrix(coordsMeans[,2:3])
+
+
+plot.igraph(simplify(KL_2016out), 
+  #delete.vertices(simplify(KL_2016out), degree(KL_2016out)==0),
+     #rescale = FALSE,
+     #edge.color= edge_color,
+     #edge.width = E(KL_2016out)$Weight5,
+     vertex.size = 7.5,
+     vertex.color = adjustcolor("blue", alpha.f = 0.5), 
+     main="KL 2016",
+     layout=l,
+     #vertex.label = NA,
+     edge.curved=TRUE,
+     edge.arrow.size=0.2,
+     edge.color = adjustcolor("black", alpha.f = 0.5),
+     #vertex.label.dist=0, 
+     vertex.label.degree=pi/2)
+
+setnames(coordsMeans, c("locy", "locx"), c("y", "x"))
+
+KL2016 = create_layout(KL_2016out, layout = coordsMeans) # algorithm = 'kk')
+
+ggplot(coordsMeans) +
+  geom_point(aes(x, y, color = factor(squirrel_id)))
 
 polys2016 <- sf::st_transform(polys[[30]])
 polys2016$gr_year <- rep("2016", length(polys2016$id_polygons))
 
-aa <- ggplot(data = polys2016) +
+df <- df[grid == "KL" | year == 2016]
+df2 <- df[squirrel_id == 12613 | squirrel_id == 19718 |
+          squirrel_id == 22008 | 
+          squirrel_id == 12207]
+
+ggplot(data = #polys2016) +
+         subset(polys2016,  
+                     id_polygons == 12613 |
+                     id_polygons == 19718 | 
+                     id_polygons == 22008 | 
+                     id_polygons == 12207)) +
   geom_sf(aes(fill = id_polygons), 
           alpha = 0.5) +
+  geom_point(data = df2, 
+             aes(locx, locy, color = factor(squirrel_id)), 
+             alpha = 0.25) + 
   xlim(-10, 25) + 
   ylim(-3, 25) +
+  labs("") +
   #scale_fill_viridis_d() +
-  theme(legend.position = 'none',
+  theme(#legend.position = 'none',
         legend.key = element_blank(),
         axis.text = element_blank(),
         axis.ticks = element_blank(),
@@ -85,14 +133,14 @@ aa <- ggplot(data = polys2016) +
         panel.background = element_blank(),
         panel.border = element_rect(colour = "black", fill=NA, size=1))
 
-bb <- ggplot(KL2016) +
+ggplot(KL2016) +
   geom_node_point(aes(color = factor(squirrel_id)),
-                  size = (log(graph.strength(KL_2016out, mode = c("out")))), 
+                  #size = (log(graph.strength(KL_2016out, mode = c("out")))), 
                   alpha = 0.5) +
   geom_edge_link(alpha = 0.5) +
   xlim(-10, 20) + 
   ylim(0, 20) +
-  theme(legend.position = 'none',
+  theme(#legend.position = 'none',
         legend.key = element_blank(),
         axis.text = element_blank(),
         axis.ticks = element_blank(),
@@ -104,29 +152,4 @@ bb <- ggplot(KL2016) +
         panel.border = element_rect(colour = "black", fill=NA, size=1),
         plot.margin = margin(1, 1, 1, 1, "cm"))
 grid.arrange(aa,bb, nrow = 1)
-
-
-ggplot(KL2016) +
-       #layout = 'manual', 
-       #node.positions = coordsMeans[,2:3]) + 
-   + 
-  geom_node_point(size = (graph.strength(KL_2016out)*0.05),
-    alpha = 0.75) +
-  
-
-
-  # scale_edge_width(range=c(0.1,2)) +
-  ggtitle("KL 2016") +
-  ylab('') +
-  xlab('') +
-  #coord_fixed() +
-  scale_color_viridis_d() +
-  theme(#legend.position = 'none',
-    legend.key = element_blank(),
-    axis.text=element_text(size=12, color = "black"),
-    axis.title=element_text(size=12),
-    strip.text = element_text(size=12,face = "bold"),
-    panel.grid.minor = element_blank(),
-    panel.background = element_blank(),
-    panel.border = element_rect(colour = "black", fill=NA, size=1))
 
