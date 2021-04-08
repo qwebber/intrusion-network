@@ -14,7 +14,7 @@ yr <- fread("output/unique-grid-years.csv")
 n <- length(unique(yr$gr_year))
 gr_year <- unique(yr$gr_year)
 
-## generate list of spatial points dataframes
+## generate metrics
 metrics <- c()
 for(i in 1:n){ 
   
