@@ -15,45 +15,22 @@ n <- length(unique(yr$gr_year))
 gr_year <- unique(yr$gr_year)
 
 ## generate list of spatial points dataframes
-out_mats <- c()
+metrics <- c()
 for(i in 1:n){ 
   
   k <- gr_year[i]
   
   df1 <- edge_list[gr_year == k][, .N, by = c("owner", "intruder")]
-
-  mat <- df1 %>%
-          mutate_if(is.character, factor, levels = unique(df1$intruder)) %>%
-          xtabs(N ~ owner + intruder, ., drop.unused.levels = F) 
-
-  out_mats[[i]] <- mat
-}
-
-## name matrices
-names(out_mats) <- yr$gr_year
-
-saveRDS(out_mats, "output/matrices/matrix_list.RDS")
-
-metrics <- c()
-for(i in 1:n){ 
   
-  out_mats_in <- out_mats
-  out_mats_out <- out_mats
+  grph <- graph.data.frame(df1, directed = T)
+
   
-  out_mats_in[[i]][upper.tri(out_mats_in[[i]])] <- 0
-  out_mats_out[[i]][lower.tri(out_mats_out[[i]])] <- 0
-  
-  grph_out <- graph.adjacency(out_mats_out[[i]], weighted = T)
-  grph_in <- graph.adjacency(out_mats_in[[i]], weighted = T)
-  
-  metrics[[i]] <- data.table(outstrength = graph.strength(grph_out, mode = c("out")),
-                             instrength = graph.strength(grph_in, mode = c("in")),
-                             squirrel_id = names(degree(grph_out)),
-                             #squirrel_id_check = names(degree(grph_in)),
-                             gr_year = names(out_mats)[i])
+  metrics[[i]] <- data.table(outstrength = graph.strength(grph, mode = c("out")),
+                             instrength = graph.strength(grph, mode = c("in")),
+                             squirrel_id = names(degree(grph)),
+                             gr_year = k)
 
 }
-
 
 metrics2 <- rbindlist(metrics, fill = T)
 metrics2[, c("year", "grid") := tstrsplit(gr_year, "_", fixed=TRUE)][,c("gr_year") := NULL]
