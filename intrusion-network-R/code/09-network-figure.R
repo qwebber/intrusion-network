@@ -19,26 +19,17 @@ polys <- readRDS("output/edge_list_data/polygons.RDS")
 gr_year <- data.table(id = names(polys))
 
 
-#### generate polygon ####
-## prj
-#prj <- '+init=epsg:26911'
-#params = c(grid = 400, extent = 3)
-
-## load GetHRBy function
-#source("functions/GetHRBy.R")
-
-#ud <- df[, GetHRBy(squirrel_id, locx, locy, 
-#                    in.percent = 75, params = params,
-#                    type = "kernel")]
-
-## assign prj
-#proj4string(ud) <- CRS(prj)
-
-###  KL 2016 ###
-## generate igraph object
-df1 <- edge_list[gr_year == "2016_KL"][, .N, by = c("owner", "intruder")]
-
-KL_2016out <- graph.data.frame(df1, directed = T)
+## generate igraph objects
+metrics <- c()
+for(i in 1:n){ 
+  
+  k <- "2016_KL"#gr_year[i]
+  
+  df1 <- edge_list[gr_year == k][, .N, by = c("owner", "intruder")]
+  
+  grph <- graph.data.frame(df1, directed = T)
+  
+}
 
 
 ##
@@ -49,11 +40,11 @@ coordsMeans <- data.frame(squirrel_id = as.factor(unique(df$squirrel_id)),
 setnames(coordsMeans, c("locy", "locx"), c("y", "x"))
 
 ## create layout
-lay = create_layout(KL_2016out, layout = coordsMeans) # algorithm = 'kk')
+lay = create_layout(grph, layout = coordsMeans) # algorithm = 'kk')
 
 ggraph(lay) + 
   geom_edge_link() + 
-  geom_node_point(#aes(color=factor(squirrel_id)), 
+  geom_node_point(aes(color=factor(squirrel_id)), 
                   #size = (graph.strength(KL_2016out)+0.0125)*75,
                   alpha = 0.75) +
   scale_edge_width(range=c(0.1,2)) +
