@@ -15,26 +15,27 @@ all$year <- as.factor(all$year)
 unique(all$gr_year)
 
 ## model 1: outstrength
-mod1 <- lmer(log(outstrength) ~ #age + I(age^2) + 
+mod1 <- lmer(log(outstrength + 1) ~ #age + I(age^2) + 
                   grid + 
                   spr_density + 
-                  #I(spr_density^2) +
+                  I(spr_density^2) +
                   (1|year) + 
                   (1|squirrel_id), 
                   data=all)
 summary(mod1)
 
 ## model 2: instrength
-mod2 <- lmer(log(instrength) ~ #age + I(age^2) + 
+mod2 <- lmer(log(instrength + 1) ~ #age + I(age^2) + 
                grid + 
                spr_density + 
-               #I(spr_density^2) +
+               I(spr_density^2) +
                (1|year) + 
                (1|squirrel_id), 
              data=all)
 summary(mod2)
 
 vis_mod1 <- visreg(mod1, "spr_density", xlab="Density", ylab="Out-strength") 
+plot(vis_mod1)
 vis_mod2 <- visreg(mod2, "spr_density", xlab="Density", ylab="In-strength") 
 
 
