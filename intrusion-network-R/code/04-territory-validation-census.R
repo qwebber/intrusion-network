@@ -52,12 +52,9 @@ census_all<-bind_rows(census_1, census_2)%>%
 census_all$gr_year <- as.factor(paste(census_all$year, census_all$grid, sep = "_"))
 
 ## subset to only include census dates and remove NAs
-#census <- setDT(census_all)[julian == 135 | julian == 136][!is.na(locx)]
-
 ## exclude years prior to 2000 and KL + SU grids
-census_all <- setDT(census_all)[year >= 2000][grid == "KL" | grid == "SU"]
+census_all <- setDT(census_all)[julian == 135 | julian == 136][year >= 2000][grid == "KL" | grid == "SU"]
 
-## exclude observations with no coordinates
 census_all <- census_all[!is.na(locX)][!is.na(locY)]
 
 ######################################################
