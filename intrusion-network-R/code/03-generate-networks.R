@@ -22,12 +22,15 @@ for(i in 1:n){
   
   df1 <- edge_list[gr_year == k][, .N, by = c("owner", "intruder")]
   
-  grph <- graph.data.frame(df1, directed = T)
-
+  adj <- AdjacencyFromEdgelist(df1)
   
-  metrics[[i]] <- data.table(outstrength = graph.strength(grph, mode = c("out")),
-                             instrength = graph.strength(grph, mode = c("in")),
-                             squirrel_id = names(degree(grph)),
+  diag(adj$adjacency) <- 0
+  
+  g <- graph.adjacency(adj$adjacency) 
+  
+  metrics[[i]] <- data.table(outstrength = graph.strength(g, mode = c("out")),
+                             instrength = graph.strength(g, mode = c("in")),
+                             squirrel_id = adj$nodelist,
                              gr_year = k)
 
 }
