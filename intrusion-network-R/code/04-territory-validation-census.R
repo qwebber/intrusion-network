@@ -57,6 +57,8 @@ census_all <- setDT(census_all)[julian == 135 | julian == 136][year >= 2000][gri
 
 census_all <- census_all[!is.na(locX)][!is.na(locY)]
 
+fwrite(census_all, "output/census_all.csv")
+
 ######################################################
 ############ VALIDATION 1: CENSUS MIDDEN #############
 ######################################################
