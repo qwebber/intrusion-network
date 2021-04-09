@@ -2,7 +2,7 @@
 
 ### Packages ----
 libs <- c('data.table', 'igraph',
-          'ggplot2', 'krsp')
+          'ggplot2', 'krsp', 'dils')
 lapply(libs, require, character.only = TRUE)
 
 ## load data
