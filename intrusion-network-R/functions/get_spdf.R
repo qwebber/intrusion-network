@@ -1,13 +1,13 @@
 
 
 get_spdf <- function(df, n){
-
-## df = input dataframe
-## n = levels for the loop
+  
+  ## df = input dataframe
+  ## n = levels for the loop
     
-out <- c()
+  out <- c()
 
-for(i in levels(n)){ 
+  for(i in levels(n)){ 
   
   df2 <- df[gr_year == i] ## this is very specific to my dataset and not easily transferable - so, must have a colulmn called "gr_yeaR" to run
   
@@ -17,6 +17,6 @@ for(i in levels(n)){
   
   out[[i]] <- st_as_sf(spdf)
   
-}
-out
+  }
+  out
 }
