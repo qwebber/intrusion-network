@@ -23,6 +23,7 @@ prj <- '+init=epsg:26911'
 
 ## load GetHRBy function
 source("functions/GetHRBy.R")
+source("functions/get_spdf.R")
 
 ## parameters for kernel
 params = c(grid = 400, extent = 7)
@@ -31,23 +32,15 @@ yr <- data.table(gr_year = as.factor(unique(df$gr_year)))
 
 fwrite(yr, "output/unique-grid-years.csv")
 
-## generate list of spatial points dataframes
-out_spdf <- c()
-for(i in levels(yr$gr_year)){ 
-  
-  df2 <- df[gr_year == i]
-  
-  spdf <- SpatialPointsDataFrame(coordinates(cbind(df2$locx, df2$locy)),
-                              data = df2[,c("julian","locx", "locy", "squirrel_id")],
-                                        proj4string = CRS(prj))
-  
-  out_spdf[[i]] <- st_as_sf(spdf)
-  
-}
+## get spatail points dataframe
+out_spdf <- get_spdf(df = df[,c("julian","locx", "locy", "squirrel_id", "gr_year")], 
+               n = yr$gr_year)
 
+## save SPDF
 saveRDS(out_spdf, "output/edge_list_data/spdf.RDS")
 
 ## generate list of kernels
+
 out_polygon <- c()
 for(i in levels(yr$gr_year)){ 
   
