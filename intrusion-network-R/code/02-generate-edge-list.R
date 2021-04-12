@@ -21,15 +21,13 @@ df$gr_year <- as.factor(paste(df$year, df$grid, sep = "_"))
 ## prj
 prj <- '+init=epsg:26911'
 
-## load GetHRBy function
+## load home-made functions
 source("functions/GetHRBy.R")
 source("functions/get_spdf.R")
+source("functions/get_polygon.R")
 
-## parameters for kernel
-params = c(grid = 400, extent = 7)
-
+## generate list of grid-year combinations
 yr <- data.table(gr_year = as.factor(unique(df$gr_year)))
-
 fwrite(yr, "output/unique-grid-years.csv")
 
 ## get spatail points dataframe
@@ -40,6 +38,15 @@ out_spdf <- get_spdf(df = df[,c("julian","locx", "locy", "squirrel_id", "gr_year
 saveRDS(out_spdf, "output/edge_list_data/spdf.RDS")
 
 ## generate list of kernels
+
+## parameters for kernel
+params = c(grid = 400, extent = 7)
+
+out_polygons <- get_polygon(df = df, 
+                            n = yr$gr_year,
+                            #id = "squirrel_id",
+                            in.percent = 50,
+                            params = params)
 
 out_polygon <- c()
 for(i in levels(yr$gr_year)){ 
