@@ -28,8 +28,11 @@ con <- krsp_connect (host = "krsp.cepb5cjvqban.us-east-2.rds.amazonaws.com",
 )
 
 # Summarize cones data
-script <- getURL("https://raw.githubusercontent.com/KluaneRedSquirrelProject/krsp-functions/master/cone_count_summaries.R", ssl.verifypeer = FALSE)
-eval(parse(text = script))
+#script <- getURL("https://raw.githubusercontent.com/KluaneRedSquirrelProject/krsp-functions/master/cone_count_summaries.R", ssl.verifypeer = FALSE)
+#eval(parse(text = script))
+
+cones_grids_years <- readRDS("output/auxilliary-data/cones_grids_years.RDS")
+
 
 grids_cone_data<-cones_grids_years %>%
   ungroup() %>% 
