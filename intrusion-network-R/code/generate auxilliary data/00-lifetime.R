@@ -11,10 +11,11 @@
 # library (devtools)
 # devtools::install_github("KluaneRedSquirrelProject/krsp")
 
-library (plyr)  #Causes conflicts with dplyr - needs to load first
+#library (plyr)  #Causes conflicts with dplyr - needs to load first
 library (krsp)
 library (dplyr)
 library (lubridate)
+library(RCurl)
 select = dplyr::select #necessary as MASS also has a select function
 
 # Connection to the AWS database
@@ -27,7 +28,6 @@ con <- krsp_connect (host = "krsp.cepb5cjvqban.us-east-2.rds.amazonaws.com",
 )
 
 # Summarize cones data
-library(RCurl)
 script <- getURL("https://raw.githubusercontent.com/KluaneRedSquirrelProject/krsp-functions/master/cone_count_summaries.R", ssl.verifypeer = FALSE)
 eval(parse(text = script))
 
