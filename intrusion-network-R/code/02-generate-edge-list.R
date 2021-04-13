@@ -44,7 +44,6 @@ params = c(grid = 400, extent = 7)
 
 out_polygons <- get_polygon(df = df, 
                             n = yr$gr_year,
-                            #id = "squirrel_id",
                             in.percent = 50,
                             params = params)
 
