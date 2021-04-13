@@ -22,15 +22,15 @@ df$gr_year <- as.factor(paste(df$year, df$grid, sep = "_"))
 prj <- '+init=epsg:26911'
 
 ## load home-made functions
-source("functions/GetHRBy.R")
 source("functions/get_spdf.R")
 source("functions/get_polygon.R")
+source("functions/get_intersection.R")
 
 ## generate list of grid-year combinations
 yr <- data.table(gr_year = as.factor(unique(df$gr_year)))
 fwrite(yr, "output/unique-grid-years.csv")
 
-## get spatail points dataframe
+# Generate spdf points ---------------------------------
 out_spdf <- get_spdf(df = df[,c("julian","locx", "locy", "squirrel_id", "gr_year")], 
                n = yr$gr_year)
 
@@ -42,6 +42,7 @@ saveRDS(out_spdf, "output/edge_list_data/spdf.RDS")
 ## parameters for kernel
 params = c(grid = 400, extent = 7)
 
+# Generate territorial polygons ---------------------------------
 out_polygon <- get_polygon(df = df, 
                             n = yr$gr_year,
                             in.percent = 50,
@@ -69,19 +70,18 @@ area[, c("year", "grid") := tstrsplit(gr_year, "_", fixed=TRUE)][,c("gr_year") :
 fwrite(area, "output/territory-area.csv")
 
 # Intersection between polygon and points ---------------------------------
-intersect_out <- c()
-for(i in 1:length(yr$gr_year)){
-  
-  intersection <- st_intersection(x = out_polygon[[i]], y = out_spdf[[i]])
-  
-  intersect_out[[i]] <- intersection 
-}
+intersect_out <- get_intersection(poly = out_polygon, 
+                                  spdf = out_spdf,
+                                  n = yr$gr_year)
 
 ## name lists within intersect_out
 names(intersect_out) <- yr$gr_year
 
+## save intersection file
 saveRDS(intersect_out, "output/edge_list_data/intersect-pt-poly.RDS")
 
+
+# Generate edge list based on polygon-point overlap ---------------------------------
 edge_out <- c()
 for(i in 1:length(yr$gr_year)){ 
   ## generate edge list with territory owners and intruders
