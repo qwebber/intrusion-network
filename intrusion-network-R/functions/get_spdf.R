@@ -1,5 +1,7 @@
 
 
+## function written by Quinn Webber to converte red squirrel locs to spdf format
+
 get_spdf <- function(df, n){
   
   ## df = input dataframe
