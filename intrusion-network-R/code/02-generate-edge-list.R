@@ -42,33 +42,10 @@ saveRDS(out_spdf, "output/edge_list_data/spdf.RDS")
 ## parameters for kernel
 params = c(grid = 400, extent = 7)
 
-out_polygons <- get_polygon(df = df, 
+out_polygon <- get_polygon(df = df, 
                             n = yr$gr_year,
                             in.percent = 50,
                             params = params)
-
-out_polygon <- c()
-for(i in levels(yr$gr_year)){ 
-  
-  df3 <- df[gr_year == i]
-  
-  ## generate ranges by ID
-  ud <- df3[, GetHRBy(squirrel_id, locx, locy, 
-                          in.percent = 50, params = params,
-                          type = "kernel")]
-
-  ## assign prj
-  proj4string(ud) <- CRS(prj)
-
-  # Get polygon
-  polygon <- st_as_sf(ud)
-
-  # convert to sf object
-  colnames(polygon) <- c("id_polygons", "area" ,"geometry") # change colnames
-
-  out_polygon[[i]] <- polygon
-
-}
 
 saveRDS(out_polygon, "output/edge_list_data/polygons.RDS")
 
