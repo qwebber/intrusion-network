@@ -4,6 +4,9 @@
 
 get_polygon <- function(df, n, in.percent, params) {
   
+  ## load GetHRBy function
+  source("functions/GetHRBy.R")
+  
   ## df = input dataframe
   ## n = levels for the loop
   ## id = identity of animals
