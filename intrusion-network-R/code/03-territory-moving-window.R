@@ -50,6 +50,14 @@ edge_list[, after := maxDayInt > maxDayOwn & edge == 1]
 ## true edge list that only includes intrusions that occur during the lifetime of a territory
 edge_list[after == "TRUE"]
 
+## determine if territory was owned by squirrel in previous year
+edge_list[, meanX := mean(locx), by = c("owner", "grid", "year")][, meanY := mean(locy), by = c("owner", "grid", "year")]
+
+edge_list2 <- edge_list[, .N, by = c("owner", "grid", "year", "meanX", "meanY")]
+
+edge_list2 <- plyr::ddply(edge_list2, c('owner'))
+
+
 saveRDS(edge_list, "output/edge-list-true.RDS")
 
 
