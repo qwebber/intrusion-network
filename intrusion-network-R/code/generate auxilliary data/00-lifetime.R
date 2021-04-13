@@ -11,7 +11,7 @@
 # library (devtools)
 # devtools::install_github("KluaneRedSquirrelProject/krsp")
 
-#library (plyr)  #Causes conflicts with dplyr - needs to load first
+library (plyr)  #Causes conflicts with dplyr - needs to load first
 library (krsp)
 library (dplyr)
 library (lubridate)
@@ -59,9 +59,10 @@ flastall<-collect(flastall)
 
 
 # Grid density
-script <- getURL("https://raw.githubusercontent.com/KluaneRedSquirrelProject/krsp-functions/master/density.R", ssl.verifypeer = FALSE)
-eval(parse(text = script))
+#script <- getURL("https://raw.githubusercontent.com/KluaneRedSquirrelProject/krsp-functions/master/density.R", ssl.verifypeer = FALSE)
+#eval(parse(text = script))
 
+grids_density <- readRDS("output/auxilliary-data/spring-density.RDS")
 
 density <- grids_density %>% 
   select(year, grid, spr_density)
@@ -363,12 +364,12 @@ lifetime<-lifetime %>%
 ## Calculate LBS
 lifetime <- lifetime %>% 
   group_by(dam_id) %>% 
-  summarize(dam_lbs = n()) %>% 
+  dplyr::summarise(dam_lbs = n()) %>% 
   left_join(lifetime, ., by = c("squirrel_id"= "dam_id"))
 
 lifetime <- lifetime %>% 
   group_by(sire_id) %>% 
-  summarize(sire_lbs = n()) %>% 
+  dplyr::summarise(sire_lbs = n()) %>% 
   left_join(lifetime, ., by = c("squirrel_id"= "sire_id"))
 
 lifetime<-lifetime %>% 
@@ -381,13 +382,13 @@ lifetime<-lifetime %>%
 lifetime <- lifetime %>% 
   filter(longevity > 199) %>% 
   group_by(dam_id) %>% 
-  summarize(dam_lrs = n()) %>% 
+  dplyr::summarise(dam_lrs = n()) %>% 
   left_join(lifetime, ., by = c("squirrel_id"= "dam_id"))
 
 lifetime <- lifetime %>% 
   filter(longevity > 199) %>% 
   group_by(sire_id) %>% 
-  summarize(sire_lrs = n()) %>% 
+  dplyr::summarise(sire_lrs = n()) %>% 
   left_join(lifetime, ., by = c("squirrel_id"= "sire_id"))
 
 lifetime<-lifetime %>% 
@@ -414,7 +415,7 @@ lifetime<-ddply(lifetime, c("byear", "grid"), transform, w_sire_lrs = sire_lrs/m
 first_litter_means<-litter %>% 
   filter (ln==1) %>% 
   group_by(squirrel_id) %>%
-  dplyr::summarize(mean_std_julian = mean(std_Julian, na.rm=T),
+  dplyr::summarise(mean_std_julian = mean(std_Julian, na.rm=T),
                    mean_std_LS = mean(std_LS, na.rm=T), 
                    mean_std_growth = mean(std_Growt, na.rm=T))
 
@@ -483,7 +484,7 @@ manipulated_litter_records <- tbl(con, "litter") %>%
          food %in% manipulation_codes) %>% 
   select(litter_id = id, squirrel_id) %>% 
   group_by(squirrel_id) %>% 
-  dplyr::summarize(num_manipulated_litters = n()) %>%
+  dplyr::summarise(num_manipulated_litters = n()) %>%
   collect()
 
 afr <- tbl(con, "litter") %>% 
@@ -539,6 +540,6 @@ lifetime_clean<-lifetime %>%
 # Clean Up
 rm(con, density, fla, flastall, food_add, grids_cone_data)
 
-write.csv(lifetime_clean, "output/lifetime_clean.csv")
+saveRDS(lifetime, "output/auxilliary-data/lifetime-clean.RDS")
 
 
