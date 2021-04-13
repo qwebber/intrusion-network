@@ -36,23 +36,6 @@ setnames(edge_list, "Sex", "intruder_sex")
 
 edge_list <- edge_list[!is.na(owner)][!is.na(intruder)]
 
-edge_list$group <- 1:length(edge_list$owner)
-
-## remove the intruder column
-edge_list_owner <- edge_list[, c("owner", "owner_sex", 
-                                 "locx", "locy", "julian","edge", 
-                                 "year", "dyad", "grid",
-                                 "gr_year", "group")]
-edge_list_owner$direction <- "owner"
-setnames(edge_list_owner, c("owner_sex", "owner"), c("sex", "squirrel_id"))
-## remove the owner column
-edge_list_intruder <- edge_list[, c("intruder", "intruder_sex", 
-                                 "locx", "locy","julian","edge", 
-                                 "year", "dyad", "grid",
-                                 "gr_year", "group")]
-edge_list_intruder$direction <- "intruder"
-setnames(edge_list_intruder, c("intruder_sex", "intruder"), c("sex", "squirrel_id"))
-
 ## add min and max julian days for squirrel territories separately for owners and intruders
 edge_list[, minDay := min(julian), by = c("owner", "grid", "year", "dyad")][, maxDay := max(julian), by = c("owner", "grid", "year", "dyad")]
 edge_list[, minDayOwn := min(julian), by = c("owner", "grid", "year")][, maxDayOwn := max(julian), by = c("owner", "grid", "year")]
@@ -65,9 +48,9 @@ edge_list[, before := minDayInt < minDayOwn & edge == 1]
 edge_list[, after := maxDayInt > maxDayOwn & edge == 1]
 
 ## true edge list that only includes intrusions that occur during the lifetime of a territory
-edge_list_true <- edge_list[during == "TRUE"]
+edge_list[after == "TRUE"]
 
-saveRDS(edge_list_true, "output/edge_list_true.RDS")
+saveRDS(edge_list, "output/edge-list-true.RDS")
 
 
 
