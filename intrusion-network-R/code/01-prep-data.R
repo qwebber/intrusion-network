@@ -8,6 +8,8 @@ lapply(libs, require, character.only = TRUE)
 
 devtools::install_github("KluaneRedSquirrelProject/krsp")
 
+select = dplyr::select #necessary as MASS also has a select function
+
 library(krsp)
 
 con <- krsp_connect(host = "krsp.cepb5cjvqban.us-east-2.rds.amazonaws.com",
