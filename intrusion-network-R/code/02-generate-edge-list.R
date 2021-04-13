@@ -25,6 +25,7 @@ prj <- '+init=epsg:26911'
 source("functions/get_spdf.R")
 source("functions/get_polygon.R")
 source("functions/get_intersection.R")
+source("functions/get_edgelist.R")
 
 ## generate list of grid-year combinations
 yr <- data.table(gr_year = as.factor(unique(df$gr_year)))
@@ -82,36 +83,12 @@ saveRDS(intersect_out, "output/edge_list_data/intersect-pt-poly.RDS")
 
 
 # Generate edge list based on polygon-point overlap ---------------------------------
-edge_out <- c()
-for(i in 1:length(yr$gr_year)){ 
-  ## generate edge list with territory owners and intruders
-  edge_list <- data.table(owner = intersect_out[[i]]$id_polygons,
-                          intruder = intersect_out[[i]]$squirrel_id,
-                          locx = intersect_out[[i]]$locx,
-                          locy = intersect_out[[i]]$locy,
-                          julian = intersect_out[[i]]$julian)
-
-  ## assign TRUE or FALSE value to whether a squirrel is observed on 
-  ## it's own territory (TRUE) or another territory (FALSE)
-  edge_list[, edge:= (owner==intruder)]
-
-  edge_list$edge <- as.character(edge_list$edge)
-
-  ## re-assign TRUE and FALSE values to 0s and 1s
-  edge_list$edge[edge_list$edge == "TRUE"] <- 0
-  edge_list$edge[edge_list$edge == "FALSE"] <- 1
-
-  ## add year to list 
-  edge_list$year <- yr$gr_year[i]
-  
-  ## keep all points in file
-  edge_out[[i]] <- edge_list
-
-}
+edge_out <- get_edgelist(df = intersect_out, 
+                         n = yr$gr_year)
 
 edge_list <- rbindlist(edge_out)
 
-## Remove mom-offspring dyads
+# Remove mom-offspring dyads ---------------------------------
 
 ## load lifetime data
 life <- fread("output/lifetime_clean.csv")
