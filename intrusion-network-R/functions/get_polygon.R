@@ -1,5 +1,7 @@
 
 
+## function written by Quinn Webber to generate red squirrel territory polygons
+
 get_polygon <- function(df, n, in.percent, params) {
   
   ## df = input dataframe
