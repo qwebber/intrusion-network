@@ -20,7 +20,7 @@ get_polygon <- function(df, n, in.percent, params) {
     df3 <- df[gr_year == i]
     
     ## generate ranges by ID
-    ud <- df3[, GetHRBy(squirrel_id, 
+    ud <- df3[, GetHRBy(squirrel_id, ## id must be squirrel_id
                         locx, locy, ## coords must be locx and locy
                         in.percent = in.percent, 
                         params = params,
