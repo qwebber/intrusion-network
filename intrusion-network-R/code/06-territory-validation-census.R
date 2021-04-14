@@ -8,6 +8,7 @@ lapply(libs, require, character.only = TRUE)
 ## load territory polygons
 polys <- readRDS("output/edge_list_data/polygons.RDS")
 
+## load census data
 census_all <- readRDS("output/auxilliary-data/census-all.RDS")
 
 ######################################################
