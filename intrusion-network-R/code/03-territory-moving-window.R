@@ -67,14 +67,20 @@ setDT(census_all)
 ## determine if territory was held in consecutive years
 census_all <- census_all[row == 1][ , hold_terr_X := (meanX = shift(meanX)), by = "squirrel_id"][ , hold_terr_Y := (meanY = shift(meanY)), by = "squirrel_id"]
 
-census_all$owned <- census_all$meanX - census_all$hold_terr_X
+census_all$ownedX <- census_all$meanX - census_all$hold_terr_X
+census_all$ownedY <- census_all$meanY - census_all$hold_terr_Y
 
-census_all[squirrel_id == 12613]
+census_all[,owned := ownedX < 1 & ownedX >-1 & ownedY <1 & ownedY >-1]
+
+census_all[squirrel_id == 22358]
+
+
+
 
 saveRDS(edge_list, "output/edge-list-true.RDS")
 
-ggplot(census_all[owned < 1 & owned >-1]) +
-  geom_histogram(aes(owned))
+ggplot(census_all) +
+  geom_histogram(aes(ownedY))
 
 #hist(census_all$owned)
 
