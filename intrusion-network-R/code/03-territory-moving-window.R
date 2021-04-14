@@ -64,18 +64,56 @@ census_all <- plyr::ddply(census_all, c('squirrel_id', 'year'))
 
 setDT(census_all)
 
-## determine if territory was held in consecutive years
-census_all <- census_all[row == 1][ , hold_terr_X := (meanX = shift(meanX)), by = "squirrel_id"][ , hold_terr_Y := (meanY = shift(meanY)), by = "squirrel_id"]
+## determine if territory was held in the previous year
+census_all <- census_all[row == 1][ , hold_terr_last_X := (meanX = shift(meanX)), by = "squirrel_id"][ , hold_terr_last_Y := (meanY = shift(meanY)), by = "squirrel_id"]
+census_all$ownedX_last <- census_all$meanX - census_all$hold_terr_last_X
+census_all$ownedY_last <- census_all$meanY - census_all$hold_terr_last_Y
 
-census_all$ownedX <- census_all$meanX - census_all$hold_terr_X
-census_all$ownedY <- census_all$meanY - census_all$hold_terr_Y
+## assign a territory as "owned" in consecutive years if all coordinates were with 1 unit in consecutive years
+census_all[,ownedLastYear := ownedX_last < 1 & ownedX_last >-1 & ownedY_last <1 & ownedY_last >-1]
 
-census_all[,owned := ownedX < 1 & ownedX >-1 & ownedY <1 & ownedY >-1]
+## determine if territory was held in the next year
+census_all <- census_all[row == 1][ , hold_terr_next_X := (meanX = shift(meanX, type = "lead")), by = "squirrel_id"][ , hold_terr_next_Y := (meanY = shift(meanY, type = "lead")), by = "squirrel_id"]
+census_all$ownedX_next <- census_all$meanX - census_all$hold_terr_next_X
+census_all$ownedY_next <- census_all$meanY - census_all$hold_terr_next_Y
 
-census_all[squirrel_id == 22358]
+## assign a territory as "owned" in consecutive years if all coordinates were with 1 unit in consecutive years
+census_all[,ownedNextYear := ownedX_next < 1 & ownedX_next >-1 & ownedY_next <1 & ownedY_next >-1]
+
+census_all$own_gr_year <- as.factor(paste(census_all$squirrel_id, census_all$year, census_all$grid, sep = "_"))
+edge_list$own_gr_year <- as.factor(paste(edge_list$owner, edge_list$year, edge_list$grid, sep = "_"))
+
+## merge edge list with territory ownership to make new edge list file
+edge_list2 <- merge(edge_list, 
+                    census_all[,c("own_gr_year", "squirrel_id", "ownedLastYear", "ownedNextYear")], 
+                    by = "own_gr_year", 
+                    all = T)
+
+## remove instanes where year == NA
+edge_list2 <- edge_list2[!is.na(year)]
+
+## remove intrusions that happened before territory was established AND when it was not owned last year
+edge_list2[,beforeCut := (before == TRUE & ownedLastYear == FALSE)]
+
+## remove intrusions that happened after territory was estalbished AND when it was not owned in the next year
+edge_list2[,afterCut := (after == TRUE & ownedNextYear == FALSE)]
+
+## convert NAs to "unknown"
+edge_list2$beforeCut[is.na(edge_list2$beforeCut)] <- "unknown"
+edge_list2$afterCut[is.na(edge_list2$afterCut)] <- "unknown"
+
+edge_list2[, .N, by = "beforeCut"]
+
+
+edge_list3 <- edge_list2[beforeCut != "TRUE"]  #& afterCut != "TRUE"]
 
 
 
+302804 - 299711
+
+920 + 2290
+
+edge_list2[squirrel_id == 12613]
 
 saveRDS(edge_list, "output/edge-list-true.RDS")
 
