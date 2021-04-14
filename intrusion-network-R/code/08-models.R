@@ -4,38 +4,43 @@
 libs <- c('data.table',
           'ggplot2', 'gridExtra',
           'lme4',
-          'visreg')
+          'visreg',
+          'glmmTMB')
 lapply(libs, require, character.only = TRUE)
 
 ## load data
-all <- fread ("output/final-df.csv")
+all <- readRDS("output/final-df.RDS")
 all$squirrel_id <- as.factor(all$squirrel_id)
 all$year <- as.factor(all$year)
 
 unique(all$gr_year)
 
 ## model 1: outstrength
-mod1 <- lmer(log(outstrength + 1) ~ #age + I(age^2) + 
-                  grid + 
+mod1 <- glmmTMB(log(outstrength + 1) ~ #age + I(age^2) + 
+                  #grid + 
+                  age +
+                  sex + 
+                  #I(age)^2 +
                   spr_density + 
-                  I(spr_density^2) +
+                  #I(spr_density^2) +
                   (1|year) + 
-                  (1|squirrel_id), 
+                  (1|grid/squirrel_id), 
                   data=all)
 summary(mod1)
 
 ## model 2: instrength
 mod2 <- lmer(log(instrength + 1) ~ #age + I(age^2) + 
                grid + 
+               age +
+               sex +
                spr_density + 
-               I(spr_density^2) +
+               #I(spr_density^2) +
                (1|year) + 
                (1|squirrel_id), 
              data=all)
 summary(mod2)
 
 vis_mod1 <- visreg(mod1, "spr_density", xlab="Density", ylab="Out-strength") 
-plot(vis_mod1)
 vis_mod2 <- visreg(mod2, "spr_density", xlab="Density", ylab="In-strength") 
 
 
