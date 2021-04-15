@@ -104,23 +104,12 @@ edge_list2$afterCut[is.na(edge_list2$afterCut)] <- "unknown"
 
 edge_list2[, .N, by = "beforeCut"]
 
+edge_list3 <- edge_list2[beforeCut != "TRUE" & afterCut != "TRUE"]
 
-edge_list3 <- edge_list2[beforeCut != "TRUE"]  #& afterCut != "TRUE"]
-
-
-
-302804 - 299711
-
-920 + 2290
-
-edge_list2[squirrel_id == 12613]
-
-saveRDS(edge_list, "output/edge-list-true.RDS")
+saveRDS(edge_list3, "output/edge-list-true.RDS")
 
 ggplot(census_all) +
   geom_histogram(aes(ownedY))
-
-#hist(census_all$owned)
 
 ### Example figure
 ggplot(edge_list[owner == 12613]) +
