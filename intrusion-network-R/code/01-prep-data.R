@@ -60,7 +60,7 @@ setnames(trp, "gr", "grid")
 sq <- tbl(con, "squirrel") %>% 
   filter(gr %in% c("KL", "SU")) %>% 
   collect() %>% 
-  dplyr::select(squirrel_id)
+  select(id)
 
 ## pull behaviour database
 behaviour <- tbl(con, "behaviour") %>% 
@@ -81,24 +81,18 @@ behaviour <- behaviour %>%
          squirrel_id = as.factor(squirrel_id)) %>% 
   filter(!is.na(squirrel_id),
          !is.na(locx),
-         !is.na(locy)) %>% 
+         !is.na(locy)
+         ) %>% 
   droplevels()
 
 ## filter to 2016 as an example year
 behaviour_all <- behaviour %>% 
-  filter (#year == 2012 | year == 2013 | year == 2014 | 
-          #  year == 2015 | year == 2016 | year == 2017,
-          julian > 74, ## only include observations between March 15 and Sept 1
+  filter (julian > 74, ## only include observations between March 15 and Sept 1
           julian < 244,
           locx > -15,
           locx < 20,
           locy < 25,
-          locy > -10,
-          #behaviour == 2, ## vocalizations 
-          #behaviour == 3, 
-          #detail == 1, ## animal material 
-          #squirrel_id %in% census$squirrel_id 
-  ) %>%
+          locy > -10) %>%
   droplevels()
 
 ## pull relevant variables
@@ -114,33 +108,48 @@ df <- rbind(trp, behaviour_all, fill = T)
 df[, row := seq_len(.N), by = c("grid", "year")]
 df[, N := uniqueN(row), by = c("squirrel_id","grid", "year")]
 
-## drop all squirrels with <30 observations
-df <- df[N > 30]
+df$gr_year <- as.factor(paste(df$grid, df$year, sep = "_"))
 
-## drop instances where >10 observations in a day
-df[, rowDay := seq_len(.N), by = c("squirrel_id","julian","grid", "year")]
+## compare data subsets with minimum 15 and minimum 30 observations
+df2 <- df[N > 15]
+df3 <- df[N > 30]
+ids15 <- df2[, uniqueN(squirrel_id), by = c("gr_year")]
+ids30 <- df3[, uniqueN(squirrel_id), by = c("gr_year")]
+df_obs <- merge(ids15, ids30, by = "gr_year", all = T)
+setnames(df_obs, c("V1.x", "V1.y"), c("unique_ids_15_obs", "unique_ids_30_obs"))
 
-## mean number of observations per squirrel per day
-idsDay <- df[, max(rowDay), by = c("squirrel_id", "julian", "year", "grid")]
-range(idsDay$V1)
+## drop all squirrels with <15 observations and separate file with >30 observations
+df15 <- df[N > 15]
+df30 <- df[N > 30]
+
+## drop instances where >10 observatioHns in a day
+df15[, rowDay := seq_len(.N), by = c("squirrel_id","julian","grid", "year")]
+df30[, rowDay := seq_len(.N), by = c("squirrel_id","julian","grid", "year")]
 
 ## remove any observations more than 30 in a day
-df <- df[rowDay < 31]
+df15 <- df15[rowDay < 31]
+df30 <- df30[rowDay < 31]
 
 ## check number of IDs per grid-year
-df[, NID := uniqueN(squirrel_id), by = c("grid", "year")]
+df15[, NID := uniqueN(squirrel_id), by = c("grid", "year")]
+df30[, NID := uniqueN(squirrel_id), by = c("grid", "year")]
 
 ## remove grid-years with <10 unique squirrels
-df2 <- df[NID > 11]
+df15 <- df15[NID > 11]
+df30 <- df30[NID > 11]
 
 ## number of unique years
-length(unique(df2$year))
+length(unique(df15$year))
+length(unique(df30$year))
 
 ## number of trappingevents/behavioural observations
-df2[, .N, by = c("data")]
+df15[, .N, by = c("data")]
+df30[, .N, by = c("data")]
 
 ## order dataframe by grid and year
-df2 <- setDT(ddply(df2, c('year', 'grid')))
+df15 <- setDT(ddply(df15, c('year', 'grid')))
+df30 <- setDT(ddply(df30, c('year', 'grid')))
 
-fwrite(df2, "output/spatial-locs.csv")
+fwrite(df15, "output/spatial-locs-15.csv")
+fwrite(df30, "output/spatial-locs-30.csv")
 
