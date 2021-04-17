@@ -7,13 +7,7 @@ libs <- c('data.table',
           'ggplot2', 'krsp')
 lapply(libs, require, character.only = TRUE)
 
-df <- fread("output/spatial-locs.csv")
-
-## check to make sure there are no outliers
-ggplot(df) +
-  geom_point(aes(locx, locy, color = factor(squirrel_id))) +
-  theme(legend.position = 'none') +
-  facet_wrap(~year*grid)
+df <- fread("output/spatial-locs-15.csv")
 
 df$squirrel_id <- as.character(df$squirrel_id)
 df$gr_year <- as.factor(paste(df$year, df$grid, sep = "_"))
