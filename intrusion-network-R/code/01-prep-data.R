@@ -150,6 +150,12 @@ df30[, .N, by = c("data")]
 df15 <- setDT(ddply(df15, c('year', 'grid')))
 df30 <- setDT(ddply(df30, c('year', 'grid')))
 
+## convert locx and locy to metres
+df15$locx <- df15$locx*30
+df15$locy <- df15$locy*30
+df30$locx <- df30$locx*30
+df30$locy <- df30$locy*30
+
 fwrite(df15, "output/spatial-locs-15.csv")
 fwrite(df30, "output/spatial-locs-30.csv")
 
