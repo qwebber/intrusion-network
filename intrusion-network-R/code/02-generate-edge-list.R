@@ -8,9 +8,7 @@ libs <- c('data.table',
 lapply(libs, require, character.only = TRUE)
 
 df <- fread("output/spatial-locs-15.csv")
-
 df$squirrel_id <- as.character(df$squirrel_id)
-df$gr_year <- as.factor(paste(df$year, df$grid, sep = "_"))
 
 ## prj
 prj <- '+init=epsg:26911'
