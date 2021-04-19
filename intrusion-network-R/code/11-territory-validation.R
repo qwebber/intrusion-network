@@ -46,7 +46,7 @@ a4 <- a3[,.SD[sample(.N, min(10,.N))],by = "squirrel_id"]
 
 
 out <- c()
-for(i in 1:2){ 
+for(i in 1:36){ 
 
   samp <- 51 - i
   
@@ -72,14 +72,20 @@ out2 <- rbindlist(out)
 
 out2$iter <- as.numeric(out2$iter)
 
-out2$area50 <- rep(out2[iter == 50]$area, 2)
+out2$area50 <- rep(out2[iter == 50]$area, 36)
 
 out2$propArea <- out2$area/out2$area50
 
 out3 <- out2[, mean(propArea), by = "iter"]
+out3$lower <- out2[, gmodels::ci(propArea)[2], by = "iter"]$V1
+out3$upper <- out2[, gmodels::ci(propArea)[3], by = "iter"]$V1
+
 
 ggplot(out3) +
+  geom_ribbon(aes(iter, V1, ymin = lower, ymax = upper), fill = "lightgrey") +
   geom_line(aes(iter, V1)) +
+  ylab("Area of territory with n locs/area of territory with 50 locs") +
+  xlab("Number of locs") +
   theme(legend.position = 'none')
 
 # Generate territorial polygons ---------------------------------
