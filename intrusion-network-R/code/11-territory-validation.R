@@ -41,25 +41,46 @@ a2 <- setDT(a2)[, rowAll := seq_len(.N), by = c("squirrel_id")]
 
 a3 <- a2[rowAll < 51]
 
+a3[, sample(nrow(.SD), 10), by = "squirrel_id"]
+a4 <- a3[,.SD[sample(.N, min(10,.N))],by = "squirrel_id"]
+
+
 out <- c()
 for(i in 1:2){ 
 
-  df_sub <- a3[rowAll < 51 - i]
+  samp <- 51 - i
   
-  a2 <- df_sub[, GetHRBy(squirrel_id, ## id must be squirrel_id
+  df_sub <- a3[,.SD[sample(.N, min(samp,.N))],by = "squirrel_id"]
+  
+  hrs <- df_sub[, GetHRBy(squirrel_id, ## id must be squirrel_id
                         locx, locy, ## coords must be locx and locy
                         in.percent = 50, 
                         params = params,
                         type = "kernel")]
   
-  a3 <- data.table(id = a2$id, 
-                   area = a2$area,
-                   iter = i)
+  hrsDT <- data.table(id = hrs$id, 
+                   area = hrs$area,
+                   iter = 51 - i)
   
-  out[[i]] <- a3
+  out[[i]] <- hrsDT
 
 }
 
+saveRDS(out,"output/territories/KL2018-50-pts.RDS")
+
+out2 <- rbindlist(out)
+
+out2$iter <- as.numeric(out2$iter)
+
+out2$area50 <- rep(out2[iter == 50]$area, 2)
+
+out2$propArea <- out2$area/out2$area50
+
+out3 <- out2[, mean(propArea), by = "iter"]
+
+ggplot(out3) +
+  geom_line(aes(iter, V1)) +
+  theme(legend.position = 'none')
 
 # Generate territorial polygons ---------------------------------
 out_polygon <- get_polygon(df = df[gr_year == "KL_2016"], 
