@@ -18,7 +18,7 @@ flastall <- tbl(con, "flastall2") %>%
   #flastall2 contains juveniles that were not tagged
   # exclusions
   filter(gr %in% c("SU", "KL")) %>% 
-  select(squirrel_id, gr, sex, byear=byear, dam_id, bcert=bcert)
+  dplyr::select(squirrel_id, gr, sex, byear=byear, dam_id, bcert=bcert)
 
 flastall <- setDT(collect(flastall))
 
