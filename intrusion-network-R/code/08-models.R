@@ -29,7 +29,7 @@ mod1 <- glmmTMB(log(outstrength + 1) ~ #age + I(age^2) +
 summary(mod1)
 
 ## model 2: instrength
-mod2 <- lmer(log(instrength + 1) ~ #age + I(age^2) + 
+mod2 <- glmmTMB(log(instrength + 1) ~ #age + I(age^2) + 
                grid + 
                age +
                sex +
