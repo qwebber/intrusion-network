@@ -68,6 +68,8 @@ for(i in 1:36){
 
 saveRDS(out,"output/territories/KL2018-50-pts.RDS")
 
+out <- readRDS("output/territories/KL2018-50-pts.RDS")
+
 out2 <- rbindlist(out)
 
 out2$iter <- as.numeric(out2$iter)
@@ -80,13 +82,28 @@ out3 <- out2[, mean(propArea), by = "iter"]
 out3$lower <- out2[, gmodels::ci(propArea)[2], by = "iter"]$V1
 out3$upper <- out2[, gmodels::ci(propArea)[3], by = "iter"]$V1
 
-
+png("figures/Fig-territory-sensitivity.png", 
+    height = 3000, 
+    width = 3000,
+    units = "px", 
+    res = 600)
 ggplot(out3) +
   geom_ribbon(aes(iter, V1, ymin = lower, ymax = upper), fill = "lightgrey") +
   geom_line(aes(iter, V1)) +
+  geom_hline(yintercept = 1, lty = 2) +
   ylab("Area of territory with n locs/area of territory with 50 locs") +
   xlab("Number of locs") +
-  theme(legend.position = 'none')
+  ggtitle("n = 23 squirrels from KL 2018") +
+  theme(legend.position = 'none',
+        legend.key = element_blank(),
+        axis.text=element_text(size=12, color = "black"),
+        axis.title=element_text(size=12),
+        strip.text = element_text(size=12,face = "bold"),
+        panel.background = element_blank(),
+        panel.border = element_rect(colour = "black", fill=NA, size=1)) 
+dev.off()
+
+
 
 # Generate territorial polygons ---------------------------------
 out_polygon <- get_polygon(df = df[gr_year == "KL_2016"], 
