@@ -9,6 +9,7 @@ lapply(libs, require, character.only = TRUE)
 
 df <- readRDS("output/spatial-locs.RDS")
 df$squirrel_id <- as.character(df$squirrel_id)
+df$gr_year <- as.character(df$gr_year)
 
 ## prj
 prj <- '+init=epsg:26911'
@@ -20,15 +21,20 @@ source("functions/get_intersection.R")
 source("functions/get_edgelist.R")
 
 ## generate list of grid-year combinations
-yr <- data.table(gr_year = as.factor(unique(df$gr_year)))
+yr <- data.table(gr_year = as.character(unique(df$gr_year)))
 fwrite(yr, "output/unique-grid-years.csv")
+
+n = length(unique(yr$gr_year))
 
 # Generate spdf points ---------------------------------
 out_spdf <- get_spdf(df = df[,c("julian","locx", "locy", "squirrel_id", "gr_year")], 
-               n = yr$gr_year)
+               n = n,
+               yr = yr)
+
+names(out_spdf) <- yr$gr_year
 
 ## save SPDF
-saveRDS(out_spdf, "output/edge_list_data/spdf.RDS")
+saveRDS(out_spdf, "output/edge-list-inputs/spdf.RDS")
 
 ## generate list of kernels
 
@@ -41,7 +47,7 @@ out_polygon <- get_polygon(df = df,
                             in.percent = 50,
                             params = params)
 
-saveRDS(out_polygon, "output/edge_list_data/polygons.RDS")
+saveRDS(out_polygon, "output/edge-list-inputs/polygons.RDS")
 
 ## output area
 area <- c()
