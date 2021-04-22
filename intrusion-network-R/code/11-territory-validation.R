@@ -46,7 +46,7 @@ a4 <- a3[,.SD[sample(.N, min(10,.N))],by = "squirrel_id"]
 
 
 out <- c()
-for(i in 1:36){ 
+for(i in 1:45){ 
 
   samp <- 51 - i
   
@@ -74,24 +74,27 @@ out2 <- rbindlist(out)
 
 out2$iter <- as.numeric(out2$iter)
 
-out2$area50 <- rep(out2[iter == 50]$area, 36)
+out2$area <- out2$area/10000
+
+out2$area50 <- rep(out2[iter == 50]$area, 45)
 
 out2$propArea <- out2$area/out2$area50
 
 out3 <- out2[, mean(propArea), by = "iter"]
-out3$lower <- out2[, gmodels::ci(propArea)[2], by = "iter"]$V1
-out3$upper <- out2[, gmodels::ci(propArea)[3], by = "iter"]$V1
 
 png("figures/Fig-territory-sensitivity.png", 
     height = 3000, 
     width = 3000,
     units = "px", 
     res = 600)
-ggplot(out3) +
-  geom_ribbon(aes(iter, V1, ymin = lower, ymax = upper), fill = "lightgrey") +
-  geom_line(aes(iter, V1)) +
-  geom_hline(yintercept = 1, lty = 2) +
-  ylab("Area of territory with n locs/area of territory with 50 locs") +
+ggplot(out2, aes(iter, area)) +
+  geom_smooth(method = "lm", formula = y ~ splines::bs(x, 3), 
+              se = T,
+              color = "black") +
+  geom_hline(yintercept = mean(out2[iter == 50]$area), lty = 2) +
+  geom_vline(xintercept = 15, lty = 2) + 
+  #geom_vline(xintercept = 20, lty = 2) + 
+  ylab("Average territory size (ha)") +
   xlab("Number of locs") +
   ggtitle("n = 23 squirrels from KL 2018") +
   theme(legend.position = 'none',
