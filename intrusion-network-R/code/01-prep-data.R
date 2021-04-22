@@ -111,51 +111,32 @@ df[, N := uniqueN(row), by = c("squirrel_id","grid", "year")]
 df$gr_year <- as.factor(paste(df$grid, df$year, sep = "_"))
 
 ## compare data subsets with minimum 15 and minimum 30 observations
-df2 <- df[N > 15]
-df3 <- df[N > 30]
-ids15 <- df2[, uniqueN(squirrel_id), by = c("gr_year")]
-ids30 <- df3[, uniqueN(squirrel_id), by = c("gr_year")]
-df_obs <- merge(ids15, ids30, by = "gr_year", all = T)
-setnames(df_obs, c("V1.x", "V1.y"), c("unique_ids_15_obs", "unique_ids_30_obs"))
-
-## drop all squirrels with <15 observations and separate file with >30 observations
-df15 <- df[N > 15]
-df30 <- df[N > 30]
+df2 <- df[N > 21]
 
 ## drop instances where >10 observatioHns in a day
-df15[, rowDay := seq_len(.N), by = c("squirrel_id","julian","grid", "year")]
-df30[, rowDay := seq_len(.N), by = c("squirrel_id","julian","grid", "year")]
+df2[, rowDay := seq_len(.N), by = c("squirrel_id","julian","grid", "year")]
 
 ## remove any observations more than 30 in a day
-df15 <- df15[rowDay < 31]
-df30 <- df30[rowDay < 31]
+df2 <- df2[rowDay < 31]
 
 ## check number of IDs per grid-year
-df15[, NID := uniqueN(squirrel_id), by = c("grid", "year")]
-df30[, NID := uniqueN(squirrel_id), by = c("grid", "year")]
+df2[, NID := uniqueN(squirrel_id), by = c("grid", "year")]
+
+## check unique squirrels per year
+df2[, uniqueN(squirrel_id), by = c("grid", "year")]
 
 ## remove grid-years with <10 unique squirrels
-df15 <- df15[NID > 11]
-df30 <- df30[NID > 11]
-
-## number of unique years
-length(unique(df15$year))
-length(unique(df30$year))
+df2 <- df2[NID > 11]
 
 ## number of trappingevents/behavioural observations
-df15[, .N, by = c("data")]
-df30[, .N, by = c("data")]
+df2[, .N, by = c("data")]
 
 ## order dataframe by grid and year
-df15 <- setDT(ddply(df15, c('year', 'grid')))
-df30 <- setDT(ddply(df30, c('year', 'grid')))
+df2 <- setDT(ddply(df2, c('year', 'grid')))
 
 ## convert locx and locy to metres
-df15$locx <- df15$locx*30
-df15$locy <- df15$locy*30
-df30$locx <- df30$locx*30
-df30$locy <- df30$locy*30
+df2$locx <- df2$locx*30
+df2$locy <- df2$locy*30
 
-fwrite(df15, "output/spatial-locs-15.csv")
-fwrite(df30, "output/spatial-locs-30.csv")
+saveRDS(df2, "output/spatial-locs.RDS")
 
