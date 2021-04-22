@@ -7,7 +7,7 @@ libs <- c('data.table',
           'ggplot2', 'krsp')
 lapply(libs, require, character.only = TRUE)
 
-df <- fread("output/spatial-locs-15.csv")
+df <- readRDS("output/spatial-locs.RDS")
 df$squirrel_id <- as.character(df$squirrel_id)
 
 ## prj
