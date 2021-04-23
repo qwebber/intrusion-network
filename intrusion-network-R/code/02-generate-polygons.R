@@ -23,8 +23,6 @@ prj <- '+init=epsg:26911'
 ## load home-made functions
 source("functions/get_spdf.R")
 source("functions/get_polygon.R")
-source("functions/get_intersection.R")
-source("functions/get_edgelist.R")
 
 ## generate list of grid-year combinations
 yr <- data.table(gr_year = as.character(unique(df$gr_year)))
