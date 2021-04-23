@@ -10,16 +10,32 @@ lapply(libs, require, character.only = TRUE)
 
 ## load and merge polygons
 
+## save SPDF
+out_spdf <- readRDS("output/edge-list-inputs/spdf.RDS")
+
+out_polygon90s <- readRDS("output/edge-list-inputs/polygons-1996-99.RDS")
+out_polygon05 <- readRDS("output/edge-list-inputs/polygons-2000-2005.RDS")
+out_polygon10 <- readRDS("output/edge-list-inputs/polygons-2006-2010.RDS")
+out_polygon15 <- readRDS("output/edge-list-inputs/polygons-2011-2015.RDS")
+out_polygon20 <- readRDS("output/edge-list-inputs/polygons-2016-2020.RDS")
 
 
-polygons_all <- 
+polygons_all <- c(out_polygon90s, 
+                      out_polygon05,
+                      out_polygon10,
+                      out_polygon15,
+                      out_polygon20)
   
-  ## output area
-  area <- c()
+
+yr <- fread("output/unique-grid-years.csv")
+
+## generate territory size ##
+area <- c()
+
 for(i in 1:length(yr$gr_year)){ 
-  ar <- data.table(out_polygon[[i]]$id_polygons, out_polygon[[i]]$area)
+  ar <- data.table(polygons_all[[i]]$id_polygons, polygons_all[[i]]$area)
   ar$gr_year <- yr$gr_year[i]
-  setnames(ar, c("V1", "V2"), c("squirrel_id", "area_ha"))
+  setnames(ar, c("V1", "V2"), c("squirrel_id", "area_m2"))
   
   area[[i]] <- ar
   
@@ -31,10 +47,10 @@ area <- rbindlist(area)
 area[, c("year", "grid") := tstrsplit(gr_year, "_", fixed=TRUE)][,c("gr_year") := NULL]
 
 # export df of area
-fwrite(area, "output/territory-area.csv")
+saveRDS(area, "output/territory-area.RDS")
 
 # Intersection between polygon and points ---------------------------------
-intersect_out <- get_intersection(poly = out_polygon, 
+intersect_out <- get_intersection(poly = polygons_all, 
                                   spdf = out_spdf,
                                   n = yr$gr_year)
 
@@ -42,7 +58,7 @@ intersect_out <- get_intersection(poly = out_polygon,
 names(intersect_out) <- yr$gr_year
 
 ## save intersection file
-saveRDS(intersect_out, "output/edge_list_data/intersect-pt-poly.RDS")
+saveRDS(intersect_out, "output/intersect-pt-poly.RDS")
 
 
 # Generate edge list based on polygon-point overlap ---------------------------------
@@ -54,7 +70,7 @@ edge_list <- rbindlist(edge_out)
 # Remove mom-offspring dyads ---------------------------------
 
 ## load lifetime data
-life <- fread("output/lifetime_clean.csv")
+life <- readRDS("output/auxilliary-data/lifetime-clean.RDS")
 
 ## add column for unique dyad ID of moms and offspring
 life$dyad <- as.factor(paste(life$squirrel_id, life$dam_id, sep = "_"))
