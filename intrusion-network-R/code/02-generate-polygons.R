@@ -11,7 +11,7 @@ df <- readRDS("output/spatial-locs.RDS")
 df$squirrel_id <- as.character(df$squirrel_id)
 df$gr_year <- as.character(df$gr_year)
 
-## something weird with 1996
+## problem years - figure out later
 df <- df[gr_year != "KL_1996" & 
          gr_year != "SU_1998" & 
          gr_year != "KL_1999" & 
