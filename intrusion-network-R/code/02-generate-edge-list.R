@@ -50,7 +50,7 @@ params = c(grid = 400, extent = 7)
 ####################################################
 
 ## only run polygons for 1996 - 1999
-df_poly90s <- df[year < 1999]
+df_poly90s <- df[year < 2000 & gr_year != "KL_1999"]
 
 yr90s <- data.table(gr_year = as.character(unique(df_poly90s$gr_year)))
 n90s = length(unique(yr90s$gr_year))
@@ -64,7 +64,7 @@ out_polygon90s <- get_polygon(input = df_poly90s,
 
 names(out_polygon90s) <- yr90s$gr_year
 
-saveRDS(out_polygon90s, "output/edge-list-inputs/polygons-1996-97.RDS")
+saveRDS(out_polygon90s, "output/edge-list-inputs/polygons-1996-99.RDS")
 
 names(out_polygon) <- yr$gr_year
 
@@ -119,29 +119,29 @@ names(out_polygon15) <- yr15$gr_year
 
 saveRDS(out_polygon15, "output/edge-list-inputs/polygons-2011-2015.RDS")
 
-## 2016 - 2019
-df_poly2019 <- df[year >= 2017]
+## 2016 - 2020
+df_poly2020 <- df[year >= 2016 & gr_year != "KL_2016"]
 
-yr19 <- data.table(gr_year = as.character(unique(df_poly2019$gr_year)))
-n19 = length(unique(yr19$gr_year))
+yr20 <- data.table(gr_year = as.character(unique(df_poly2020$gr_year)))
+n20 = length(unique(yr20$gr_year))
 
 # Generate territorial polygons ---------------------------------
-out_polygon19 <- get_polygon(input = df_poly2019, 
-                             n = n19,
-                             yr = yr19,
+out_polygon20 <- get_polygon(input = df_poly2020, 
+                             n = n20,
+                             yr = yr20,
                              in.percent = 50,
                              params = params)
 
-names(out_polygon19) <- yr19$gr_year
+names(out_polygon20) <- yr20$gr_year
 
-saveRDS(out_polygon19, "output/edge-list-inputs/polygons-2017-2020.RDS")
+saveRDS(out_polygon20, "output/edge-list-inputs/polygons-2016-2020.RDS")
 
 
-## problem years (2016):
-df_poly2016 <- df[year == "2016"]
+## problem years (KL_2016):
+df_poly2016 <- df[gr_year == "KL_2016"]
 
 ## parameters for kernel
-params = c(grid = 1000, extent = 7)
+params = c(grid = 400, extent = 7)
 
 yr16 <- data.table(gr_year = as.character(unique(df_poly2016$gr_year)))
 n16 = length(unique(yr16$gr_year))
@@ -158,11 +158,11 @@ names(out_polygon16) <- yr16$gr_year
 saveRDS(out_polygon16, "output/edge-list-inputs/polygons-2016.RDS")
 
 
-## problem years (1999):
-df_poly1999 <- df[year == "1999"]
+## problem years (KL_1999):
+df_poly1999 <- df[gr_year == "KL_1999"]
 
 ## parameters for kernel
-params = c(grid = 1000, extent = 7)
+params = c(grid = 400, extent = 7)
 
 yr99 <- data.table(gr_year = as.character(unique(df_poly1999$gr_year)))
 n99 = length(unique(yr99$gr_year))
