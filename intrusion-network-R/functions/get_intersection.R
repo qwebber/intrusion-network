@@ -10,7 +10,7 @@ get_intersection <- function(poly, spdf, n) {
 
   # Intersection between polygon and points ---------------------------------
   intersect_out <- c()
-  for(i in 1:length(n)){
+  for(i in 1:n){
   
   intersection <- st_intersection(x = poly[[i]], y = spdf[[i]])
   
