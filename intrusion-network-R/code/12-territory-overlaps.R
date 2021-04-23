@@ -3,7 +3,7 @@
 
 ### Packages ----
 libs <- c('data.table', 'sf', 'dplyr', 'sp',
-          'lubridate','ggplot2', 'krsp')
+          'lubridate','ggplot2', 'krsp', 'adehabitatHR')
 lapply(libs, require, character.only = TRUE)
 
 ## load data
@@ -18,11 +18,9 @@ prj <- '+init=epsg:26911'
 
 out_spdf <- readRDS("output/edge-list-inputs/spdf.RDS")
   
-xy <- get_spdf(df = df[,c("julian","locx", "locy", "squirrel_id", "gr_year")], 
-                     n = n,
-                     yr = yr)
+shape_proj <- sf_transform(out_spdf$KL_2005)
 
-    KOver = kerneloverlap(out_spdf$KL_2005,
+KOver = kerneloverlap(shape_proj,
                                         method = "HR",
                                         percent = 50,
                                         grid = 700)
