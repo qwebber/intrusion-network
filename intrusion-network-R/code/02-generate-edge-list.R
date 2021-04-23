@@ -11,6 +11,10 @@ df <- readRDS("output/spatial-locs.RDS")
 df$squirrel_id <- as.character(df$squirrel_id)
 df$gr_year <- as.character(df$gr_year)
 
+## something weird with 1996
+df <- df[gr_year != "KL_1996" & 
+         gr_year != "SU_1998"]
+
 ## prj
 prj <- '+init=epsg:26911'
 
@@ -41,74 +45,102 @@ saveRDS(out_spdf, "output/edge-list-inputs/spdf.RDS")
 ## parameters for kernel
 params = c(grid = 400, extent = 7)
 
+####################################################     
+##### run polygons in batches for efficiency ##### 
+####################################################
+
+## only run polygons for 1996 - 1999
+df_poly90s <- df[year < 1999]
+
+yr90s <- data.table(gr_year = as.character(unique(df_poly90s$gr_year)))
+n90s = length(unique(yr90s$gr_year))
+
 # Generate territorial polygons ---------------------------------
-out_polygon <- get_polygon(df = df, 
-                            n = yr$gr_year,
+out_polygon90s <- get_polygon(input = df_poly90s, 
+                              n = n90s,
+                              yr = yr90s,
+                              in.percent = 50,
+                              params = params)
+
+names(out_polygon90s) <- yr90s$gr_year
+
+saveRDS(out_polygon90s, "output/edge-list-inputs/polygons-1996-97.RDS")
+
+names(out_polygon) <- yr$gr_year
+
+## 2000 - 2005
+df_poly2005 <- df[year >= 2000 & year <= 2005]
+
+yr05 <- data.table(gr_year = as.character(unique(df_poly2005$gr_year)))
+n05 = length(unique(yr05$gr_year))
+
+# Generate territorial polygons ---------------------------------
+out_polygon05 <- get_polygon(input = df_poly2005, 
+                           n = n05,
+                           yr = yr05,
                             in.percent = 50,
                             params = params)
 
-saveRDS(out_polygon, "output/edge-list-inputs/polygons.RDS")
+names(out_polygon05) <- yr05$gr_year
 
-## output area
-area <- c()
-for(i in 1:length(yr$gr_year)){ 
-ar <- data.table(out_polygon[[i]]$id_polygons, out_polygon[[i]]$area)
-ar$gr_year <- yr$gr_year[i]
-setnames(ar, c("V1", "V2"), c("squirrel_id", "area_ha"))
+saveRDS(out_polygon05, "output/edge-list-inputs/polygons-2000-2005.RDS")
 
-area[[i]] <- ar
+## 2006 - 2010
+df_poly2010 <- df[year >= 2006 & year <= 2010]
 
-}
+yr10 <- data.table(gr_year = as.character(unique(df_poly2010$gr_year)))
+n10 = length(unique(yr10$gr_year))
 
-## convert from list to data.table
-area <- rbindlist(area)
+# Generate territorial polygons ---------------------------------
+out_polygon10 <- get_polygon(input = df_poly2010, 
+                             n = n10,
+                             yr = yr10,
+                             in.percent = 50,
+                             params = params)
 
-area[, c("year", "grid") := tstrsplit(gr_year, "_", fixed=TRUE)][,c("gr_year") := NULL]
+names(out_polygon10) <- yr10$gr_year
 
-# export df of area
-fwrite(area, "output/territory-area.csv")
+saveRDS(out_polygon10, "output/edge-list-inputs/polygons-2006-2010.RDS")
 
-# Intersection between polygon and points ---------------------------------
-intersect_out <- get_intersection(poly = out_polygon, 
-                                  spdf = out_spdf,
-                                  n = yr$gr_year)
+## 2011 - 2015
+df_poly2015 <- df[year >= 2011 & year <= 2015]
 
-## name lists within intersect_out
-names(intersect_out) <- yr$gr_year
+yr15 <- data.table(gr_year = as.character(unique(df_poly2015$gr_year)))
+n15 = length(unique(yr15$gr_year))
 
-## save intersection file
-saveRDS(intersect_out, "output/edge_list_data/intersect-pt-poly.RDS")
+# Generate territorial polygons ---------------------------------
+out_polygon15 <- get_polygon(input = df_poly2015, 
+                             n = n15,
+                             yr = yr15,
+                             in.percent = 50,
+                             params = params)
+
+names(out_polygon15) <- yr15$gr_year
+
+saveRDS(out_polygon15, "output/edge-list-inputs/polygons-2011-2015.RDS")
+
+## 2016 - 2019
+df_poly2019 <- df[year >= 2017]
+
+yr19 <- data.table(gr_year = as.character(unique(df_poly2019$gr_year)))
+n19 = length(unique(yr19$gr_year))
+
+# Generate territorial polygons ---------------------------------
+out_polygon19 <- get_polygon(input = df_poly2019, 
+                             n = n19,
+                             yr = yr19,
+                             in.percent = 50,
+                             params = params)
+
+names(out_polygon19) <- yr19$gr_year
+
+saveRDS(out_polygon19, "output/edge-list-inputs/polygons-2017-2020.RDS")
 
 
-# Generate edge list based on polygon-point overlap ---------------------------------
-edge_out <- get_edgelist(df = intersect_out, 
-                         n = yr$gr_year)
 
-edge_list <- rbindlist(edge_out)
 
-# Remove mom-offspring dyads ---------------------------------
+## problem years (2016 and 1999):
+df[year == "2016"]
 
-## load lifetime data
-life <- fread("output/lifetime_clean.csv")
-
-## add column for unique dyad ID of moms and offspring
-life$dyad <- as.factor(paste(life$squirrel_id, life$dam_id, sep = "_"))
-life$mom <- "yes"
-
-## add column for unique dyad ID
-edge_list$dyad <- as.factor(paste(edge_list$owner, edge_list$intruder, sep = "_"))
-
-## merge to form file of just moms and their offspring
-mom_offspring <- merge(edge_list, life[,c("dyad", "mom")], by = "dyad")
-
-## generate new edgelist file without moms and their offspring
-edge_list <- edge_list %>% 
-  filter(!dyad %in% mom_offspring$dyad)
-
-## summary of observations that occurred on own territory vs. on a different territory
-edge_list[, c("year", "grid") := tstrsplit(year, "_", fixed=TRUE)]
-
-## export edge list
-saveRDS(edge_list, "output/edge_list.RDS")
 
 
