@@ -2,13 +2,14 @@
 
 ## function written by Quinn Webber to generate red squirrel territory polygons
 
-get_polygon <- function(df, n, yr, in.percent, params) {
+get_polygon <- function(input, n, yr, in.percent, params) {
   
   ## load GetHRBy function
   source("functions/GetHRBy.R")
   
   ## df = input dataframe
   ## n = levels for the loop
+  ## yr = data.table with list of unique gr_year levels
   ## id = identity of animals
   ## in.percent = kernel %
   ## params = parameters for kernels (see GetHRBy function)
@@ -19,12 +20,13 @@ get_polygon <- function(df, n, yr, in.percent, params) {
     
     k = as.character(yr[i])  
     
-    df3 <- df[gr_year == k]
+    input2 <- input[gr_year == k]
     
     ## generate ranges by ID
-    ud <- df3[, GetHRBy(squirrel_id, ## id must be squirrel_id
-                        locx, locy, ## coords must be locx and locy
-                        in.percent = in.percent, 
+    ud <- input2[, GetHRBy(by.col = squirrel_id, ## id must be squirrel_id
+                        x.col = locx, 
+                        y.col = locy, ## coords must be locx and locy
+                        in.percent = 50, 
                         params = params,
                         type = "kernel")]
     
