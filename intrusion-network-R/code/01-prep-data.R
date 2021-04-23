@@ -97,7 +97,7 @@ behaviour_all <- behaviour %>%
 
 ## pull relevant variables
 behaviour_all <- behaviour_all[,c("squirrel_id", "locx", "locy", "grid",  
-              "date", "julian", "year", "detail", "behaviour")]
+              "date", "julian", "year", "detail", "behaviour", "mode")]
 
 behaviour_all$data <- "behaviour"
 
