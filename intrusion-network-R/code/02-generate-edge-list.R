@@ -137,10 +137,43 @@ names(out_polygon19) <- yr19$gr_year
 saveRDS(out_polygon19, "output/edge-list-inputs/polygons-2017-2020.RDS")
 
 
+## problem years (2016):
+df_poly2016 <- df[year == "2016"]
+
+## parameters for kernel
+params = c(grid = 1000, extent = 7)
+
+yr16 <- data.table(gr_year = as.character(unique(df_poly2016$gr_year)))
+n16 = length(unique(yr16$gr_year))
+
+# Generate territorial polygons ---------------------------------
+out_polygon16 <- get_polygon(input = df_poly2016, 
+                             n = n16,
+                             yr = yr16,
+                             in.percent = 50,
+                             params = params)
+
+names(out_polygon16) <- yr16$gr_year
+
+saveRDS(out_polygon16, "output/edge-list-inputs/polygons-2016.RDS")
 
 
-## problem years (2016 and 1999):
-df[year == "2016"]
+## problem years (1999):
+df_poly1999 <- df[year == "1999"]
 
+## parameters for kernel
+params = c(grid = 1000, extent = 7)
 
+yr99 <- data.table(gr_year = as.character(unique(df_poly1999$gr_year)))
+n99 = length(unique(yr99$gr_year))
 
+# Generate territorial polygons ---------------------------------
+out_polygon99 <- get_polygon(input = df_poly1999, 
+                             n = n99,
+                             yr = yr99,
+                             in.percent = 50,
+                             params = params)
+
+names(out_polygon99) <- yr99$gr_year
+
+saveRDS(out_polygon99, "output/edge-list-inputs/polygons-1999.RDS")
