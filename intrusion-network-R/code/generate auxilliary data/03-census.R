@@ -44,7 +44,7 @@ census_all<-bind_rows(census_1, census_2)%>%
          locY=as.numeric(locY),
          Sex=factor(Sex))
 
-census_all$gr_year <- as.factor(paste(census_all$year, census_all$grid, sep = "_"))
+census_all$gr_year <- as.factor(paste(census_all$grid, census_all$year, sep = "_"))
 
 ## subset to only include census dates and remove NAs
 ## exclude years prior to 2000 and KL + SU grids
