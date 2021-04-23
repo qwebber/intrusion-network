@@ -8,7 +8,7 @@ libs <- c('data.table',
 lapply(libs, require, character.only = TRUE)
 
 
-df <- fread("output/spatial-locs-15.csv")
+df <- readRDS("output/spatial-locs.RDS")
 df$squirrel_id <- as.character(df$squirrel_id)
 
 yr <- fread("output/unique-grid-years.csv")
@@ -82,7 +82,7 @@ out2$propArea <- out2$area/out2$area50
 
 out3 <- out2[, mean(propArea), by = "iter"]
 
-png("figures/Fig-territory-sensitivity.png", 
+png("figures/FigS2.png", 
     height = 3000, 
     width = 3000,
     units = "px", 
@@ -91,12 +91,11 @@ ggplot(out2, aes(iter, area)) +
   geom_smooth(method = "lm", formula = y ~ splines::bs(x, 3), 
               se = T,
               color = "black") +
-  geom_hline(yintercept = mean(out2[iter == 50]$area), lty = 2) +
-  geom_vline(xintercept = 15, lty = 2) + 
+  geom_hline(yintercept = 0.5, lty = 2) +
+  geom_vline(xintercept = 20, lty = 2) + 
   #geom_vline(xintercept = 20, lty = 2) + 
   ylab("Average territory size (ha)") +
-  xlab("Number of locs") +
-  ggtitle("n = 23 squirrels from KL 2018") +
+  xlab("Number of spatial locations") +
   theme(legend.position = 'none',
         legend.key = element_blank(),
         axis.text=element_text(size=12, color = "black"),
@@ -105,13 +104,3 @@ ggplot(out2, aes(iter, area)) +
         panel.background = element_blank(),
         panel.border = element_rect(colour = "black", fill=NA, size=1)) 
 dev.off()
-
-
-
-# Generate territorial polygons ---------------------------------
-out_polygon <- get_polygon(df = df[gr_year == "KL_2016"], 
-                           n = yr2$gr_year,
-                           in.percent = 50,
-                           params = params)
-
-range(df[gr_year == "KL_2015" | gr_year == "KL_2016"][, .N, by = "squirrel_id"]$N)
