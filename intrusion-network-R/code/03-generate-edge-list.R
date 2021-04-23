@@ -8,6 +8,10 @@ libs <- c('data.table',
           'ggplot2', 'krsp')
 lapply(libs, require, character.only = TRUE)
 
+## load home-made functions
+source("functions/get_intersection.R")
+source("functions/get_edgelist.R")
+
 ## load and merge polygons
 
 ## save SPDF
@@ -44,7 +48,7 @@ for(i in 1:length(yr$gr_year)){
 ## convert from list to data.table
 area <- rbindlist(area)
 
-area[, c("year", "grid") := tstrsplit(gr_year, "_", fixed=TRUE)][,c("gr_year") := NULL]
+area[, c("grd", "year") := tstrsplit(gr_year, "_", fixed=TRUE)][,c("gr_year") := NULL]
 
 # export df of area
 saveRDS(area, "output/territory-area.RDS")
@@ -87,7 +91,7 @@ edge_list <- edge_list %>%
   filter(!dyad %in% mom_offspring$dyad)
 
 ## summary of observations that occurred on own territory vs. on a different territory
-edge_list[, c("year", "grid") := tstrsplit(year, "_", fixed=TRUE)]
+edge_list[, c("grid", "year") := tstrsplit(year, "_", fixed=TRUE)]
 
 ## export edge list
 saveRDS(edge_list, "output/edge_list.RDS")
