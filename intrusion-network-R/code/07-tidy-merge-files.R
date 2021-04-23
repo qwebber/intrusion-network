@@ -21,9 +21,10 @@ flastall <- tbl(con, "flastall2") %>%
   dplyr::select(squirrel_id, gr, sex, byear=byear, dam_id, bcert=bcert)
 
 flastall <- setDT(collect(flastall))
+flastall$squirrel_id <- as.factor(flastall$squirrel_id)
 
 ## load network metrics
-metrics <- fread("output/metrics.csv")
+metrics <- readRDS("output/metrics.RDS")
 metrics$gr_year <- as.factor(paste(metrics$grid, metrics$year, sep = "_"))
 
 
@@ -37,7 +38,15 @@ all <- merge(metrics, setDT(density)[,c("year", "grid") := NULL], by = "gr_year"
 all <- merge(all, flastall, by = "squirrel_id", fill = T)
 
 ## calculate age
-all$age <- all$year - all$byear
+all$age <- as.integer(all$year) - as.integer(all$byear)
+all$id_yr_gr <- as.factor(paste(all$squirrel_id, all$grid, all$year, sep = "_"))
 
-saveRDS(all, "output/final-df.RDS")
+
+## load territory size data
+terr <- readRDS("output/territory-area.RDS")
+terr$id_yr_gr <- as.factor(paste(terr$squirrel_id, terr$grd, terr$year, sep = "_"))
+
+all2 <- merge(all, terr[,c("area_m2", "id_yr_gr")], by = "id_yr_gr")
+
+saveRDS(all2, "output/final-df.RDS")
 
