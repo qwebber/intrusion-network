@@ -30,6 +30,7 @@ polygons_all <- c(out_polygon90s,
                       out_polygon15,
                       out_polygon20)
   
+saveRDS(polygons_all, "output/edge-list-inputs/polygons-all.RDS")
 
 yr <- fread("output/unique-grid-years.csv")
 
