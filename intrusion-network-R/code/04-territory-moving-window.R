@@ -68,7 +68,10 @@ census$ownedX_last <- census$meanX - census$hold_terr_last_X
 census$ownedY_last <- census$meanY - census$hold_terr_last_Y
 
 ## assign a territory as "owned" in consecutive years if all coordinates were with 1 unit in consecutive years
-census[,ownedLastYear := ownedX_last < 1 & ownedX_last >-1 & ownedY_last <1 & ownedY_last >-1]
+census[, ownedLastYear := ownedX_last < 1 & ownedX_last >-1  & ownedY_last <1 & ownedY_last >-1]
+
+## assign NAs to FALSE
+census$ownedLastYear[is.na(census$ownedLastYear)] <- FALSE
 
 ## determine if territory was held in the next year
 census <- census[row == 1][ , hold_terr_next_X := (meanX = shift(meanX, type = "lead")), by = "squirrel_id"][ , hold_terr_next_Y := (meanY = shift(meanY, type = "lead")), by = "squirrel_id"]
@@ -78,14 +81,18 @@ census$ownedY_next <- census$meanY - census$hold_terr_next_Y
 ## assign a territory as "owned" in consecutive years if all coordinates were with 1 unit in consecutive years
 census[,ownedNextYear := ownedX_next < 1 & ownedX_next >-1 & ownedY_next <1 & ownedY_next >-1]
 
-census$own_gr_year <- as.factor(paste(census$squirrel_id, census$year, census$grid, sep = "_"))
-edge_list$own_gr_year <- as.factor(paste(edge_list$owner, edge_list$year, edge_list$grid, sep = "_"))
+## assign NAs to FALSE
+census$ownedNextYear[is.na(census$ownedNextYear)] <- FALSE
+
+census$own_gr_year <- as.character(paste(census$squirrel_id, census$year, census$grid, sep = "_"))
+edge_list$own_gr_year <- as.character(paste(edge_list$owner, edge_list$year, edge_list$grid, sep = "_"))
+
+census_abbrev <- census[,c("own_gr_year", "squirrel_id" ,"ownedLastYear", "ownedNextYear")]
 
 ## merge edge list with territory ownership to make new edge list file
 edge_list2 <- merge(edge_list, 
-                    census[,c("own_gr_year", "squirrel_id", "ownedLastYear", "ownedNextYear")], 
-                    by = "own_gr_year", 
-                    all = T)
+                    census_abbrev, 
+                    by = "own_gr_year", all = T)
 
 ## remove instanes where year == NA
 edge_list2 <- edge_list2[!is.na(year)]
@@ -106,14 +113,11 @@ edge_list3 <- edge_list2[beforeCut != "TRUE" & afterCut != "TRUE"]
 
 saveRDS(edge_list3, "output/edge-list-true.RDS")
 
-ggplot(census_all) +
-  geom_histogram(aes(ownedY))
-
 ### Example figure
-ggplot(edge_list[owner == 12613]) +
+ggplot(edge_list[owner == 11176]) +
   geom_jitter(aes(julian, intruder, color = intruder), 
               height = 0.01, alpha = 0.25)  +
   geom_errorbar(aes(y=intruder, xmin=minDay, xmax=maxDay, color = intruder), 
-                width=0.2, size=0.1, height = 0.2) 
+                width=0.2, size=0.1, height = 0.2) +
   facet_wrap(~year)
 
