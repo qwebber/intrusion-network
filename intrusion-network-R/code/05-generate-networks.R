@@ -52,6 +52,5 @@ metrics2 <- rbindlist(metrics, fill = T)
 metrics2[, c("year", "grid") := tstrsplit(gr_year, "_", fixed=TRUE)][,c("gr_year") := NULL]
 
 
-
-fwrite(metrics2, "output/metrics.csv")
+saveRDS(metrics2, "output/metrics.RDS")
 
