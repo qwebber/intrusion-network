@@ -15,8 +15,10 @@ all$year <- as.factor(all$year)
 
 unique(all$gr_year)
 
+all$area_ha <- all$area_m2/10000
+
 ## model 1: outstrength
-mod1 <- glmmTMB(log(outstrength + 1) ~ #age + I(age^2) + 
+mod1 <- glmmTMB(log(area_ha + 1) ~ #age + I(age^2) + 
                   #grid + 
                   age +
                   sex + 
@@ -29,7 +31,7 @@ mod1 <- glmmTMB(log(outstrength + 1) ~ #age + I(age^2) +
 summary(mod1)
 
 ## model 2: instrength
-mod2 <- glmmTMB(log(instrength + 1) ~ #age + I(age^2) + 
+mod2 <- glmmTMB(log(area_ha + 1) ~ #age + I(age^2) + 
                grid + 
                age +
                sex +
@@ -45,7 +47,8 @@ vis_mod2 <- visreg(mod2, "spr_density", xlab="Density", ylab="In-strength")
 
 
 ggplot(all) +
-  geom_point(aes(instrength, outstrength))
+  geom_point(aes(area_ha, outstrength, color = sex, shape = grid)) +
+  facet_wrap(~year)
 
 aa <- ggplot(filter(vis_mod1$fit), aes(spr_density, visregFit))+
           geom_line(colour = 'black', 
