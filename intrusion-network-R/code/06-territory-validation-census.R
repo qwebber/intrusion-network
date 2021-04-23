@@ -6,7 +6,7 @@ libs <- c('data.table', 'sf', 'dplyr', 'sp',
 lapply(libs, require, character.only = TRUE)
 
 ## load territory polygons
-polys <- readRDS("output/edge_list_data/polygons.RDS")
+polys <- readRDS("output/edge-list-inputs/polygons-all.RDS")
 
 ## load census data
 census_all <- readRDS("output/auxilliary-data/census-all.RDS")
@@ -19,10 +19,7 @@ census_all <- readRDS("output/auxilliary-data/census-all.RDS")
 params = c(grid = 400, extent = 3)
 prj <- '+init=epsg:26911'
 
-#yr <- data.table(gr_year = as.factor(unique(census$gr_year)))
-
-yr <- data.table(gr_year = as.factor(names(polys)))
-
+yr <- fread("output/unique-grid-years.csv")
 
 ## generate list of spatial points dataframes
 out_spdf <- c()
