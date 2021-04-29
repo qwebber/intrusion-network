@@ -165,6 +165,10 @@ terr_overlap_all$year <- as.factor(terr_overlap_all$year)
 saveRDS(terr_overlap_all, "output/territories/territory-overlap.RDS")
 
 ### Generate territory size
+source("functions/get_polygon.R")
+
+## parameters for kernel
+params = c(grid = 400, extent = 7)
 
 ## only run polygons for 1996 - 1999
 df_polys <- df[gr_year == "KL_2002" | 
@@ -183,14 +187,132 @@ out_polygon40 <- get_polygon(input = df_polys,
                               in.percent = 40,
                               params = params)
 
+
+area40 <- c()
 for(i in 1:length(yr$gr_year)){ 
   ar <- data.table(out_polygon40[[i]]$id_polygons, out_polygon40[[i]]$area)
   ar$gr_year <- yr$gr_year[i]
   setnames(ar, c("V1", "V2"), c("squirrel_id", "area_m2"))
   
-  area[[i]] <- ar
+  area40[[i]] <- ar
   
 }
 
 ## convert from list to data.table
-area <- rbindlist(area)
+area40 <- rbindlist(area40)
+area40$perecent <- 40
+
+# Generate 50% territorial polygons ---------------------------------
+out_polygon50 <- get_polygon(input = df_polys, 
+                             n = n,
+                             yr = yr,
+                             in.percent = 50,
+                             params = params)
+
+
+area50 <- c()
+for(i in 1:length(yr$gr_year)){ 
+  ar50 <- data.table(out_polygon50[[i]]$id_polygons, out_polygon50[[i]]$area)
+  ar50$gr_year <- yr$gr_year[i]
+  setnames(ar50, c("V1", "V2"), c("squirrel_id", "area_m2"))
+  
+  area50[[i]] <- ar
+  
+}
+
+## convert from list to data.table
+area50 <- rbindlist(area50)
+area50$perecent <- 50
+
+
+# Generate 60% territorial polygons ---------------------------------
+out_polygon60 <- get_polygon(input = df_polys, 
+                             n = n,
+                             yr = yr,
+                             in.percent = 60,
+                             params = params)
+
+
+area60 <- c()
+for(i in 1:length(yr$gr_year)){ 
+  ar <- data.table(out_polygon60[[i]]$id_polygons, out_polygon60[[i]]$area)
+  ar$gr_year <- yr$gr_year[i]
+  setnames(ar, c("V1", "V2"), c("squirrel_id", "area_m2"))
+  
+  area60[[i]] <- ar
+  
+}
+
+## convert from list to data.table
+area60 <- rbindlist(area60)
+area60$perecent <- 60
+
+# Generate 70% territorial polygons ---------------------------------
+out_polygon70 <- get_polygon(input = df_polys, 
+                             n = n,
+                             yr = yr,
+                             in.percent = 70,
+                             params = params)
+
+
+area70 <- c()
+for(i in 1:length(yr$gr_year)){ 
+  ar <- data.table(out_polygon70[[i]]$id_polygons, out_polygon70[[i]]$area)
+  ar$gr_year <- yr$gr_year[i]
+  setnames(ar, c("V1", "V2"), c("squirrel_id", "area_m2"))
+  
+  area70[[i]] <- ar
+  
+}
+
+## convert from list to data.table
+area70 <- rbindlist(area70)
+area70$perecent <- 70
+
+# Generate 80% territorial polygons ---------------------------------
+out_polygon80 <- get_polygon(input = df_polys, 
+                             n = n,
+                             yr = yr,
+                             in.percent = 80,
+                             params = params)
+
+
+area80 <- c()
+for(i in 1:length(yr$gr_year)){ 
+  ar <- data.table(out_polygon80[[i]]$id_polygons, out_polygon80[[i]]$area)
+  ar$gr_year <- yr$gr_year[i]
+  setnames(ar, c("V1", "V2"), c("squirrel_id", "area_m2"))
+  
+  area80[[i]] <- ar
+  
+}
+
+## convert from list to data.table
+area80 <- rbindlist(area80)
+area80$perecent <- 80
+
+# Generate 90% territorial polygons ---------------------------------
+out_polygon90 <- get_polygon(input = df_polys, 
+                             n = n,
+                             yr = yr,
+                             in.percent = 90,
+                             params = params)
+
+
+area90 <- c()
+for(i in 1:length(yr$gr_year)){ 
+  ar <- data.table(out_polygon90[[i]]$id_polygons, out_polygon90[[i]]$area)
+  ar$gr_year <- yr$gr_year[i]
+  setnames(ar, c("V1", "V2"), c("squirrel_id", "area_m2"))
+  
+  area90[[i]] <- ar
+  
+}
+
+## convert from list to data.table
+area90 <- rbindlist(area90)
+area90$perecent <- 90
+
+area_all <- rbind(area40, area50, area60, area70, area80, area90)
+
+saveRDS(area_all, "output/territories/territory-size.RDS")
