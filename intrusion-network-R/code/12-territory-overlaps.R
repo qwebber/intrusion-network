@@ -200,7 +200,7 @@ for(i in 1:length(yr$gr_year)){
 
 ## convert from list to data.table
 area40 <- rbindlist(area40)
-area40$perecent <- 40
+area40$percent <- 40
 
 # Generate 50% territorial polygons ---------------------------------
 out_polygon50 <- get_polygon(input = df_polys, 
@@ -212,9 +212,9 @@ out_polygon50 <- get_polygon(input = df_polys,
 
 area50 <- c()
 for(i in 1:length(yr$gr_year)){ 
-  ar50 <- data.table(out_polygon50[[i]]$id_polygons, out_polygon50[[i]]$area)
-  ar50$gr_year <- yr$gr_year[i]
-  setnames(ar50, c("V1", "V2"), c("squirrel_id", "area_m2"))
+  ar <- data.table(out_polygon50[[i]]$id_polygons, out_polygon50[[i]]$area)
+  ar$gr_year <- yr$gr_year[i]
+  setnames(ar, c("V1", "V2"), c("squirrel_id", "area_m2"))
   
   area50[[i]] <- ar
   
@@ -222,7 +222,7 @@ for(i in 1:length(yr$gr_year)){
 
 ## convert from list to data.table
 area50 <- rbindlist(area50)
-area50$perecent <- 50
+area50$percent <- 50
 
 
 # Generate 60% territorial polygons ---------------------------------
@@ -245,7 +245,7 @@ for(i in 1:length(yr$gr_year)){
 
 ## convert from list to data.table
 area60 <- rbindlist(area60)
-area60$perecent <- 60
+area60$percent <- 60
 
 # Generate 70% territorial polygons ---------------------------------
 out_polygon70 <- get_polygon(input = df_polys, 
@@ -267,7 +267,7 @@ for(i in 1:length(yr$gr_year)){
 
 ## convert from list to data.table
 area70 <- rbindlist(area70)
-area70$perecent <- 70
+area70$percent <- 70
 
 # Generate 80% territorial polygons ---------------------------------
 out_polygon80 <- get_polygon(input = df_polys, 
@@ -289,7 +289,7 @@ for(i in 1:length(yr$gr_year)){
 
 ## convert from list to data.table
 area80 <- rbindlist(area80)
-area80$perecent <- 80
+area80$percent <- 80
 
 # Generate 90% territorial polygons ---------------------------------
 out_polygon90 <- get_polygon(input = df_polys, 
@@ -311,7 +311,7 @@ for(i in 1:length(yr$gr_year)){
 
 ## convert from list to data.table
 area90 <- rbindlist(area90)
-area90$perecent <- 90
+area90$percent <- 90
 
 area_all <- rbind(area40, area50, area60, area70, area80, area90)
 
