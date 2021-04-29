@@ -22,14 +22,14 @@ flastall <- tbl(con, "flastall2") %>%
 flastall <- setDT(collect(flastall))
 
 ## load data
-df <- fread("output/spatial-locs-30.csv")
+df <- readRDS("output/spatial-locs.RDS")
 
 ## load data
 edge_list <- readRDS("output/edge-list-true.RDS")
 edge_list[, Nintruder := .N, by = c("intruder", "grid", "year")]
 
 ## load territory polygons
-polys <- readRDS("output/edge_list_data/polygons.RDS")
+polys <- readRDS("output/edge-list-inputs/polygons-all.RDS")
 
 gr_year <- data.table(id = names(polys))
 
@@ -58,17 +58,19 @@ coordsMeans <- merge(coordsMeans, flastall[,c("squirrel_id", "sex")], by = "squi
 ## create layout
 lay = create_layout(g, layout = coordsMeans) # algorithm = 'kk')
 
-polys2018 <- sf::st_transform(polys$`2018_KL`)
+polys2018 <- sf::st_transform(polys$KL_2018)
 polys2018$gr_year <- rep("2018", length(polys2018$id_polygons))
 
 
-png("figures/Fig-pts-hr-net.png", width = 6000, height = 3000, units = "px", res = 600)
+png("figures/Fig-pts-hr-net.png", width = 8000, height = 8000, units = "px", res = 600)
 ### Plot points 
 aa <- ggplot(df[gr_year == "KL_2018"]) +
   geom_jitter(aes(locx/30, locy/30, color = factor(squirrel_id)), 
              alpha = 0.25) + 
   ylab("") + xlab("") +
   ggtitle("A)") +
+  geom_rect(aes(xmin = -8, xmax = 0, 
+                ymin = 8, ymax = 16), color = "black", fill = "transparent") +
   scale_y_continuous(name = "", 
                      breaks = c(-4, 0,
                                 4, 8,
@@ -89,29 +91,80 @@ aa <- ggplot(df[gr_year == "KL_2018"]) +
         strip.text = element_text(size=12,face = "bold"),
         panel.grid.major = element_line(color = "grey80"),
         panel.background = element_blank(),
-        panel.border = element_rect(colour = "black", fill=NA, size=1))
+        panel.border = element_rect(colour = "black", fill=NA, size=1)) 
 
-bb <- ggplot(data = polys2018) +
-  geom_sf(aes(fill = id_polygons), 
-          alpha = 0.5) +
-  coord_sf(datum = st_crs(32648)) +
-  scale_y_continuous(name = "", 
-                     breaks = c(-4, 0,
-                                4, 8,
-                                12, 16, 20,
-                                24), 
-                     limits=c(-2,25))  +
-  scale_x_continuous(name = "", 
-                     breaks = c(-12, -8, 
-                                -4, 0,
-                                4, 8,
-                                12, 16, 20), 
-                     limits=c(-12,20)) + 
-  ggtitle('B)') +
-  scale_fill_viridis_d() +
+bb <- ggplot(df[gr_year == "KL_2018"]) +
+  geom_jitter(aes(locx/30, locy/30, color = factor(squirrel_id)), 
+              alpha = 0.25) + 
+  ylab("") + xlab("") +
+  ggtitle("B)") +
+  ylim(8, 16) +
+  xlim(-8, 0) +
+  scale_color_viridis_d() +
   theme(legend.position = 'none',
         legend.key = element_blank(),
         axis.text=element_text(size=12, color = "black"),
+        axis.title=element_text(size=12),
+        strip.text = element_text(size=12,face = "bold"),
+        panel.grid.major = element_line(color = "grey80"),
+        panel.background = element_blank(),
+        panel.border = element_rect(colour = "black", fill=NA, size=1)) 
+
+ggplot(data = polys2018) +
+  geom_sf(aes(fill = id_polygons), 
+          alpha = 0.5) +
+  coord_sf(datum = st_crs(32648)) +
+  geom_rect(aes(xmin = -8*30, xmax = 0, 
+                ymin = 8*30, ymax = 16*30), color = "black", fill = "transparent") +
+  
+  scale_x_continuous(labels = c(-8, -4, 0, 4, 8, 12, 16), 
+                     breaks = c(6363600,
+                                6363400,
+                                6363200,
+                                6363000,
+                                6362800,
+                                6362600,
+                                6362400),
+                     limits = c(-12*30, 20*30)) + 
+  ggtitle('C)') +
+  scale_fill_viridis_d() +
+  theme(legend.position = 'none',
+        legend.key = element_blank(),
+        axis.text= element_text(size=12, color = "black"),
+        axis.title=element_text(size=12),
+        axis.ticks = element_line(),
+        strip.text = element_text(size=12,face = "bold"),
+        panel.grid.major = element_line(color = "grey80"),
+        panel.background = element_blank(),
+        panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+dd <- ggplot(data = polys2018) +
+  geom_sf(aes(fill = id_polygons), 
+          alpha = 0.5) +
+  coord_sf(datum = st_crs(32648)) +
+  scale_y_continuous(labels = c(9, 10, 11, 12, 13, 14, 15), 
+                     breaks = c(19995550, 
+                                19995500,
+                                19995450,
+                                19995400,
+                                19995350,
+                                19995300,
+                                19995250),
+                     limits = c(8*30, 16*30)) +
+  scale_x_continuous(labels = c(-8, -7, -6, -5, -4, -3, -2), 
+                     breaks = c(6363600,
+                                6363550,
+                                6363500,
+                                6363450,
+                                6363400,
+                                6363350,
+                                6363300),
+                     limits = c(-8*30, 0)) +
+  ggtitle('D)') +
+  scale_fill_viridis_d() +
+  theme(legend.position = 'none',
+        legend.key = element_blank(),
+        axis.text= element_text(size=12, color = "black"),
         axis.title=element_text(size=12),
         axis.ticks = element_line(),
         strip.text = element_text(size=12,face = "bold"),
@@ -120,12 +173,15 @@ bb <- ggplot(data = polys2018) +
         panel.border = element_rect(colour = "black", fill=NA, size=1))
 
 ### plot ggraph ###
-cc <- ggraph(lay) + 
+ee <- ggraph(lay) + 
   geom_edge_link(arrow = arrow(length = unit(2, 'mm')),
-                 end_cap = circle(1, 'mm')) + 
+                 end_cap = circle(1, 'mm'), 
+                 alpha = 0.5) + 
   geom_node_point(aes(color=factor(squirrel_id)), 
                   size = degree(g)/5,
                   alpha = 0.75) +
+  geom_rect(aes(xmin = -8, xmax = 0, 
+                ymin = 8, ymax = 16), color = "black", fill = "transparent") +
   scale_y_continuous(name = "", 
                      breaks = c(-4, 0,
                                 4, 8,
@@ -138,7 +194,34 @@ cc <- ggraph(lay) +
                                  4, 8,
                                  12, 16, 20), 
                      limits=c(-12,20)) + 
-  ggtitle('C)') +
+  ggtitle('E)') +
+  scale_color_viridis_d() +
+  theme(legend.position = 'none',
+        legend.key = element_blank(),
+        axis.text=element_text(size=12, color = "black"),
+        axis.title=element_text(size=12),
+        axis.ticks = element_line(),
+        strip.text = element_text(size=12,face = "bold"),
+        panel.grid.major = element_line(color = "grey80"),
+        panel.background = element_blank(),
+        panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+ff <- ggraph(lay) + 
+  geom_edge_link(arrow = arrow(length = unit(2, 'mm')),
+                 end_cap = circle(1, 'mm'), 
+                 alpha = 0.5) + 
+  geom_node_point(aes(color=factor(squirrel_id)), 
+                  size = degree(g)/5,
+                  alpha = 0.75) +
+  scale_y_continuous(name = "", 
+                     breaks = c(8, 10,
+                                12, 14, 16), 
+                     limits=c(8, 16))  +
+  scale_x_continuous(name = "", 
+                     breaks = c(-8, -6,
+                                -4, -2, 0), 
+                     limits=c(-8, 0)) + 
+  ggtitle('F)') +
   scale_color_viridis_d() +
   theme(legend.position = 'none',
         legend.key = element_blank(),
@@ -151,7 +234,11 @@ cc <- ggraph(lay) +
         panel.border = element_rect(colour = "black", fill=NA, size=1))
 
 
-grid.arrange(aa,bb, cc, nrow = 1)
+
+grid.arrange(aa, bb, 
+             cc, dd,
+             ee, ff,
+             ncol = 2, nrow = 3)
 dev.off()
 
 
