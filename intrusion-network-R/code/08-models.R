@@ -66,6 +66,7 @@ df_fit_strength = setDT(df_strength)[Type == "fit"]
 
 df_fit_strength <- df_fit_strength[!is.na(df_fit_strength$grid)]
 
+png("figures/Fig4.png", height = 6000, width = 3000, units = "px", res = 600)
 aa <- ggplot() +
   geom_smooth(data = df_fit_strength, 
     aes(spr_density, Value, group = as.factor(squirrel_id), color = grid),
@@ -78,12 +79,12 @@ aa <- ggplot() +
   #geom_line(data = density, aes(as.factor(year), spr_density, group = grid, color = grid)) +
   ylim(-0.8, 1) +
   xlab("Spring density (squirrels/ha)") +
-  ylab("Intrusion out-strength") +
+  ylab("Intrusion strength") +
   ggtitle('A)') +
   theme(
     legend.position = 'none',
     plot.title = element_text(size = 14, color = "black"),
-    axis.text.x = element_text(size = 12, color = "black", angle = 90, hjust = 1),
+    axis.text.x = element_text(size = 12, color = "black", hjust = 1),
     axis.text.y = element_text(size = 12, color = "black"),
     axis.title = element_text(size = 14, color = "black"),
     panel.grid.minor = element_blank(),
@@ -95,15 +96,27 @@ aa <- ggplot() +
 
 bb <- ggplot() +
   geom_smooth(data = df_fit_strength, 
-              aes(year, Value, group = as.factor(squirrel_id), color = grid),
+              aes(as.integer(year), Value, group = as.factor(squirrel_id), color = grid),
               #color = "darkgrey",
               size = 0.25,
               method = lm,
               se = FALSE) +
-  #geom_line(data = density, aes(as.factor(year), spr_density, group = grid, color = grid)) +
+  geom_vline(aes(xintercept = 3), lty = 2) + # 1998
+  geom_vline(aes(xintercept = 10), lty = 2) + # 2005
+  geom_vline(aes(xintercept = 15), lty = 2) + # 2010
+  geom_vline(aes(xintercept = 19), lty = 2) + # 2014
+  geom_vline(aes(xintercept = 24), lty = 2) + # 2019
+  scale_x_continuous(breaks = c(1, 3, 5, 
+                                7, 9, 11, 
+                                13, 15, 17, 
+                                19, 21, 23, 25),
+                     labels = c("1996", "1998", "2000", 
+                                "2002", "2004", "2006",
+                                "2008", "2010", "2012", 
+                                "2014", "2016", "2018", "2020")) +
   xlab("Year") +
   ylim(-0.8, 1) +
-  ylab("Intrusion out-strength") +
+  ylab("Intrusion strength") +
   scale_color_manual(values = c("orange", "royalblue")) +
   ggtitle('B)') +
   theme(
@@ -119,8 +132,11 @@ bb <- ggplot() +
       fill = NA,
       size = 0.5))
 
-grid.arrange(aa,bb, ncol = 2)
+grid.arrange(aa,bb, nrow = 2)
+dev.off()
 
+
+summary(mcmc1)
 
 
 mcmc2 <- MCMCglmm(scale(area_ha) ~ 
