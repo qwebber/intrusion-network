@@ -5,7 +5,8 @@ libs <- c('data.table',
           'ggplot2', 'gridExtra',
           'lme4',
           'visreg',
-          'glmmTMB')
+          'glmmTMB', 
+          'MCMCglmm')
 lapply(libs, require, character.only = TRUE)
 
 ## load data
@@ -17,37 +18,175 @@ unique(all$gr_year)
 
 all$area_ha <- all$area_m2/10000
 
-## model 1: outstrength
-mod1 <- glmmTMB(log(area_ha + 1) ~ #age + I(age^2) + 
-                  #grid + 
-                  age +
-                  sex + 
-                  #I(age)^2 +
-                  spr_density + 
-                  #I(spr_density^2) +
-                  (1|year) + 
-                  (1|grid/squirrel_id), 
-                  data=all)
-summary(mod1)
+all <- all[!is.na(all$sex)]
+all <- all[!is.na(all$grid)]
 
-## model 2: instrength
-mod2 <- glmmTMB(log(area_ha + 1) ~ #age + I(age^2) + 
-               grid + 
-               age +
-               sex +
-               spr_density + 
-               #I(spr_density^2) +
-               (1|year) + 
-               (1|squirrel_id), 
-             data=all)
-summary(mod2)
+density <- readRDS("output/auxilliary-data/spring-density.RDS")
+density <- setDT(density)[year > 1995] 
+density <- density[grid == "KL" | grid == "SU"]
 
-vis_mod1 <- visreg(mod1, "spr_density", xlab="Density", ylab="Out-strength") 
-vis_mod2 <- visreg(mod2, "spr_density", xlab="Density", ylab="In-strength") 
+### Reaction Norm for KDE ----
+p.var_str <- var(all$outstrength, na.rm = TRUE)
+
+prior <- list(G=list(G1=list(V=diag(2)*(p.var_str/2), nu=1,
+                                 alpha.V=diag(2)*p.var_str/2)),
+                  R=list(V=diag(1)*(p.var_str/2), nu=1))
+
+mcmc1 <- MCMCglmm(scale(outstrength) ~ 
+                      grid +
+                      sex + 
+                      age + 
+                      spr_density,
+                    random =~ us(1 + spr_density):squirrel_id,
+                    rcov = ~units,
+                    family = "gaussian",
+                    prior = prior,
+                    #nitt=420000,
+                    #burnin=20000,
+                    #thin=100,
+                    verbose = TRUE,
+                    data = all,
+                    pr=TRUE,
+                    saveX = TRUE,
+                    saveZ = TRUE)
+
+#saveRDS(mcmcKDE, "data/derived-data/MCMC-models/mod_KDE.RDS")
+
+
+## KDE
+df_strength <- cbind(all,
+                fit = predict(mcmc1, marginal = NULL)) %>%
+  group_by(squirrel_id, grid, year, spr_density) %>%
+  dplyr::summarise(fit = mean(fit.V1),
+            outstrength = mean(outstrength)) %>%
+  tidyr::gather(Type, Value,
+         fit:outstrength)
+
+df_fit_strength = setDT(df_strength)[Type == "fit"]
+
+df_fit_strength <- df_fit_strength[!is.na(df_fit_strength$grid)]
+
+aa <- ggplot() +
+  geom_smooth(data = df_fit_strength, 
+    aes(spr_density, Value, group = as.factor(squirrel_id), color = grid),
+    #color = "darkgrey",
+    size = 0.25,
+    alpha = 0.5,
+    method = lm,
+    se = FALSE) +
+  scale_color_manual(values = c("orange", "royalblue")) +
+  #geom_line(data = density, aes(as.factor(year), spr_density, group = grid, color = grid)) +
+  ylim(-0.8, 1) +
+  xlab("Spring density (squirrels/ha)") +
+  ylab("Intrusion out-strength") +
+  ggtitle('A)') +
+  theme(
+    legend.position = 'none',
+    plot.title = element_text(size = 14, color = "black"),
+    axis.text.x = element_text(size = 12, color = "black", angle = 90, hjust = 1),
+    axis.text.y = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, color = "black"),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_rect(
+      colour = "black",
+      fill = NA,
+      size = 0.5))
+
+bb <- ggplot() +
+  geom_smooth(data = df_fit_strength, 
+              aes(year, Value, group = as.factor(squirrel_id), color = grid),
+              #color = "darkgrey",
+              size = 0.25,
+              method = lm,
+              se = FALSE) +
+  #geom_line(data = density, aes(as.factor(year), spr_density, group = grid, color = grid)) +
+  xlab("Year") +
+  ylim(-0.8, 1) +
+  ylab("Intrusion out-strength") +
+  scale_color_manual(values = c("orange", "royalblue")) +
+  ggtitle('B)') +
+  theme(
+    legend.position = 'none',
+    plot.title = element_text(size = 14, color = "black"),
+    axis.text.x = element_text(size = 12, color = "black", angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, color = "black"),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_rect(
+      colour = "black",
+      fill = NA,
+      size = 0.5))
+
+grid.arrange(aa,bb, ncol = 2)
+
+
+
+mcmc2 <- MCMCglmm(scale(area_ha) ~ 
+                    grid +
+                    sex + 
+                    age + 
+                    spr_density +
+                    I(spr_density)^2,
+                  random =~ us(1 + spr_density):squirrel_id,
+                  rcov = ~units,
+                  family = "gaussian",
+                  prior = prior,
+                  #nitt=420000,
+                  #burnin=20000,
+                  #thin=100,
+                  verbose = TRUE,
+                  data = all,
+                  pr=TRUE,
+                  saveX = TRUE,
+                  saveZ = TRUE)
+
+#saveRDS(mcmcKDE, "data/derived-data/MCMC-models/mod_KDE.RDS")
+
+
+## KDE
+df_area <- cbind(all,
+                 fit = predict(mcmc2, marginal = NULL)) %>%
+  group_by(squirrel_id, grid, year, spr_density) %>%
+  dplyr::summarise(fit = mean(fit.V1),
+                   outstrength = mean(area_ha)) %>%
+  tidyr::gather(Type, Value,
+                fit:outstrength)
+
+df_fit_area = setDT(df_area)[Type == "fit"]
+
+
+ggplot(df_fit_area, 
+             aes(x = year, y = Value, group = factor(squirrel_id))) +
+  geom_smooth(
+    aes(year, Value, group = squirrel_id, color = grid),
+    #color = "darkgrey",
+    size = 0.25,
+    method = lm,
+    se = FALSE
+  ) +
+  xlab("Spring density (squirrels/ha)") +
+  ylab("Territory size (ha)") +
+  #ggtitle('A') +
+  theme(
+    #legend.position = 'none',
+    plot.title = element_text(size = 9),
+    axis.text = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 12, color = "black"),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_rect(
+      colour = "black",
+      fill = NA,
+      size = 0.5))
+
+
+
 
 
 ggplot(all) +
-  geom_point(aes(area_ha, outstrength, color = sex, shape = grid)) +
+  geom_point(aes(spr_density, area_ha, color = sex, shape = grid)) 
   facet_wrap(~year)
 
 aa <- ggplot(filter(vis_mod1$fit), aes(spr_density, visregFit))+
@@ -87,3 +226,35 @@ bb <- ggplot(filter(vis_mod2$fit), aes(spr_density, visregFit))+
         panel.background = element_blank(), 
         panel.border = element_rect(colour = "black", fill=NA, size = 1))
 grid.arrange(aa,bb)
+
+
+
+
+
+## model 1: outstrength
+mod1 <- glmmTMB(log(area_ha + 1) ~ #age + I(age^2) + 
+                  #grid + 
+                  age +
+                  sex + 
+                  #I(age)^2 +
+                  spr_density + 
+                  #I(spr_density^2) +
+                  (1|year) + 
+                  (1|grid/squirrel_id), 
+                data=all)
+summary(mod1)
+
+## model 2: instrength
+mod2 <- glmmTMB(log(area_ha + 1) ~ #age + I(age^2) + 
+                  grid + 
+                  age +
+                  sex +
+                  spr_density + 
+                  #I(spr_density^2) +
+                  (1|year) + 
+                  (1|squirrel_id), 
+                data=all)
+summary(mod2)
+
+vis_mod1 <- visreg(mod1, "spr_density", xlab="Density", ylab="Out-strength") 
+vis_mod2 <- visreg(mod2, "spr_density", xlab="Density", ylab="In-strength") 
