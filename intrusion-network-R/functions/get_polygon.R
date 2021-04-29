@@ -26,7 +26,7 @@ get_polygon <- function(input, n, yr, in.percent, params) {
     ud <- input2[, GetHRBy(by.col = squirrel_id, ## id must be squirrel_id
                         x.col = locx, 
                         y.col = locy, ## coords must be locx and locy
-                        in.percent = 50, 
+                        in.percent = in.percent, 
                         params = params,
                         type = "kernel")]
     
