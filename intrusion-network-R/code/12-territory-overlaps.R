@@ -3,8 +3,7 @@
 
 ### Packages ----
 libs <- c('data.table', 'sf', 'dplyr', 'sp', 'spatsoc',
-          'lubridate','ggplot2', 'krsp', 'adehabitatHR',
-          'ggforce', 'gridExtra')
+          'lubridate','ggplot2', 'krsp', 'adehabitatHR')
 lapply(libs, require, character.only = TRUE)
 
 ## load data
@@ -163,57 +162,35 @@ terr_overlap_all <- rbind(terr_over40,
                           terr_over90)
 terr_overlap_all$year <- as.factor(terr_overlap_all$year)
 
+saveRDS(terr_overlap_all, "output/territories/territory-overlap.RDS")
 
-## Figure
-png("figures/FigS3.png", height = 3000, width = 6000, units = "px", res = 600)
-aa <- ggplot(terr_overlap_all, aes(as.factor(percent), y =area, fill=year)) +
-  geom_point(shape = 21, alpha = 0.3, position = position_jitterdodge()) +
-  geom_boxplot(outlier.color = NA, 
-               position = position_dodge2(), 
-               alpha = 0.25,
-               lwd = 0.6,
-               color = "black") +
-  scale_fill_viridis_d() +
-  scale_color_viridis_d() +
-  ggtitle("A)") +
-  xlab("Kernel density estimator percentage") +
-  ylab("Area (ha) of overlap between territories") +
-  theme(
-    legend.position = c(0.15, 0.8),
-    legend.background = element_blank(),
-    legend.key = element_blank(),
-    legend.title = element_blank(),
-    axis.title.y = element_text(size = 12, color = 'black'),
-    axis.text = element_text(size = 10, color = 'black'),
-    panel.grid.minor = element_blank(),
-    panel.background = element_blank(),
-    panel.border = element_rect(
-      colour = 'black',
-      fill = NA,
-      size = 1)) 
+### Generate territory size
 
-bb <- ggplot(terr_overlap_all[percent <= 60], aes(as.factor(percent), y =area, fill=year)) +
-  geom_point(shape = 21, alpha = 0.3, position = position_jitterdodge()) +
-  geom_boxplot(outlier.color = NA, 
-               position = position_dodge2(), 
-               alpha = 0.25,
-               lwd = 0.6,
-               color = "black") +
-  scale_fill_viridis_d() +
-  scale_color_viridis_d() +
-  ggtitle("B)") +
-  xlab("Kernel density estimator percentage") +
-  ylab("Area (ha) of overlap between territories") +
-  theme(legend.position = 'none',
-    axis.title.y = element_text(size = 12, color = 'black'),
-    axis.text = element_text(size = 10, color = 'black'),
-    panel.grid.minor = element_blank(),
-    panel.background = element_blank(),
-    panel.border = element_rect(
-      colour = 'black',
-      fill = NA,
-      size = 1)) 
-grid.arrange(aa,bb, nrow = 1)
+## only run polygons for 1996 - 1999
+df_polys <- df[gr_year == "KL_2002" | 
+                   gr_year == "KL_2004" |
+                   gr_year == "KL_2009" |
+                   gr_year == "KL_2014" |
+                   gr_year == "KL_2020"]
 
-dev.off()
+yr <- data.table(gr_year = as.character(unique(df_polys$gr_year)))
+n = length(unique(yr$gr_year))
 
+# Generate 40% territorial polygons ---------------------------------
+out_polygon40 <- get_polygon(input = df_polys, 
+                              n = n,
+                              yr = yr,
+                              in.percent = 40,
+                              params = params)
+
+for(i in 1:length(yr$gr_year)){ 
+  ar <- data.table(out_polygon40[[i]]$id_polygons, out_polygon40[[i]]$area)
+  ar$gr_year <- yr$gr_year[i]
+  setnames(ar, c("V1", "V2"), c("squirrel_id", "area_m2"))
+  
+  area[[i]] <- ar
+  
+}
+
+## convert from list to data.table
+area <- rbindlist(area)
