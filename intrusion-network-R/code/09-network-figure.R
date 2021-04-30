@@ -110,7 +110,7 @@ bb <- ggplot(df[gr_year == "KL_2018"]) +
         panel.background = element_blank(),
         panel.border = element_rect(colour = "black", fill=NA, size=1)) 
 
-ggplot(data = polys2018) +
+cc <- ggplot(data = polys2018) +
   geom_sf(aes(fill = id_polygons), 
           alpha = 0.5) +
   coord_sf(datum = st_crs(32648)) +
