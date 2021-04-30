@@ -36,7 +36,7 @@ polys06 <- subset(KL_2006, id_polygons == 7390 |
 polys_all <- rbind(polys05, polys06)
 polys_all$year <- polys_all$gr_year
 
-png("")
+png("figures/FigS6.png", width = 6000, height = 3000, units = "px", res = 600)
 ggplot(data = polys_all) +
   geom_sf(aes(fill = id_polygons), 
           alpha = 0.5) +
@@ -58,22 +58,5 @@ ggplot(data = polys_all) +
         panel.background = element_blank(),
         panel.border = element_rect(colour = "black", fill=NA, size=1)) + 
   facet_wrap(~year)
-
-ggplot(data = subset(KL_2006, id_polygons == 7390)) +
-  geom_sf(aes(fill = id_polygons), 
-          alpha = 0.5) +
-  coord_sf(datum = st_crs(32648)) +
-  ggtitle('C)') +
-  scale_fill_viridis_d() +
-  scale_color_viridis_d() +
-  theme(legend.position = 'none',
-        legend.key = element_blank(),
-        axis.text= element_blank(),
-        axis.title=element_blank(),
-        axis.ticks = element_line(),
-        strip.text = element_text(size=12,face = "bold"),
-        #panel.grid.major = element_line(color = "grey80"),
-        panel.background = element_blank(),
-        panel.border = element_rect(colour = "black", fill=NA, size=1))
-
+dev.off()
 
