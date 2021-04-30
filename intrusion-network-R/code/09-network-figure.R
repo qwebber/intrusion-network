@@ -62,7 +62,7 @@ polys2018 <- sf::st_transform(polys$KL_2018)
 polys2018$gr_year <- rep("2018", length(polys2018$id_polygons))
 
 
-png("figures/Fig-pts-hr-net.png", width = 8000, height = 8000, units = "px", res = 600)
+png("figures/Fig2.png", width = 8000, height = 8000, units = "px", res = 600)
 ### Plot points 
 aa <- ggplot(df[gr_year == "KL_2018"]) +
   geom_jitter(aes(locx/30, locy/30, color = factor(squirrel_id)), 
