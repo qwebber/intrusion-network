@@ -1,106 +1,79 @@
 
 
-### Packages ----
-libs <- c('data.table', 
-          'sp', 'adehabitatHR',
-          'sf',
-          'ggplot2', 'krsp')
-lapply(libs, require, character.only = TRUE)
-
+library(data.table)
+library(ggplot2)
 
 df <- readRDS("output/spatial-locs.RDS")
 df$squirrel_id <- as.character(df$squirrel_id)
+df$gr_year <- as.character(df$gr_year)
 
-yr <- fread("output/unique-grid-years.csv")
+polys <- readRDS("output/edge-list-inputs/polygons-all.RDS")
+KL_2005 <- sf::st_transform(polys$KL_2005)
+KL_2005$gr_year <- rep("2005", length(KL_2005$id_polygons))
 
-## prj
-prj <- '+init=epsg:26911'
+KL_2006 <- sf::st_transform(polys$KL_2006)
+KL_2006$gr_year <- rep("2006", length(KL_2006$id_polygons))
 
-## load home made packages
-source("functions/get_spdf.R")
-source("functions/get_polygon.R")
-source("functions/GetHRBy.R")
+## subset point data
+sq <- df[squirrel_id == 7390 |
+           squirrel_id == 7106 |
+           squirrel_id == 8727 |
+           squirrel_id == 6868 |
+           squirrel_id == 10138] 
 
-## load SPDF file
-## save SPDF
-spdf <- readRDS("output/edge_list_data/spdf.RDS")
+## subset polygons
+polys05 <- subset(KL_2005, id_polygons == 7390 |
+                    id_polygons == 7106 |
+                    id_polygons == 8727 |
+                    id_polygons == 6868 |
+                    id_polygons == 10138)
+polys06 <- subset(KL_2006, id_polygons == 7390 |
+                    id_polygons == 7106 |
+                    id_polygons == 8727 |
+                    id_polygons == 6868 |
+                    id_polygons == 10138)
 
-## subset to KL 2015 and 2016
-spdf2 <- list(spdf[[22]])
+polys_all <- rbind(polys05, polys06)
+polys_all$year <- polys_all$gr_year
 
-yr2 <- data.table(gr_year = as.factor(c("KL_2016")))
+png("")
+ggplot(data = polys_all) +
+  geom_sf(aes(fill = id_polygons), 
+          alpha = 0.5) +
+  coord_sf(datum = st_crs(32648)) +
+  geom_jitter(data = sq[year == "2005" | 
+                        year == "2006"], aes(locx, locy, color = factor(squirrel_id)), 
+              alpha = 0.5) + 
+  ylab("") + xlab("") +
+  scale_color_viridis_d() +
+  scale_fill_viridis_d() +
+  theme(#legend.position = 'none',
+        legend.key = element_blank(),
+        axis.text=element_blank(),
+        axis.title=element_blank(),
+        axis.ticks = element_blank(),
+        strip.text = element_text(size=12),
+        strip.background = element_rect(fill = "white", color = "black", size = 1),
+        panel.grid.major = element_blank(),
+        panel.background = element_blank(),
+        panel.border = element_rect(colour = "black", fill=NA, size=1)) + 
+  facet_wrap(~year)
 
-## parameters for kernel
-params = c(grid = 700, extent = 4)
-
-a1 <- df[gr_year == "KL_2018"]
-
-a2 <- a1[N > 50]
-a2 <- plyr::ddply(a2, c('squirrel_id'))
-a2 <- setDT(a2)[, rowAll := seq_len(.N), by = c("squirrel_id")]
-
-a3 <- a2[rowAll < 51]
-
-a3[, sample(nrow(.SD), 10), by = "squirrel_id"]
-a4 <- a3[,.SD[sample(.N, min(10,.N))],by = "squirrel_id"]
-
-
-out <- c()
-for(i in 1:45){ 
-
-  samp <- 51 - i
-  
-  df_sub <- a3[,.SD[sample(.N, min(samp,.N))],by = "squirrel_id"]
-  
-  hrs <- df_sub[, GetHRBy(squirrel_id, ## id must be squirrel_id
-                        locx, locy, ## coords must be locx and locy
-                        in.percent = 50, 
-                        params = params,
-                        type = "kernel")]
-  
-  hrsDT <- data.table(id = hrs$id, 
-                   area = hrs$area,
-                   iter = 51 - i)
-  
-  out[[i]] <- hrsDT
-
-}
-
-saveRDS(out,"output/territories/KL2018-50-pts.RDS")
-
-out <- readRDS("output/territories/KL2018-50-pts.RDS")
-
-out2 <- rbindlist(out)
-
-out2$iter <- as.numeric(out2$iter)
-
-out2$area <- out2$area/10000
-
-out2$area50 <- rep(out2[iter == 50]$area, 45)
-
-out2$propArea <- out2$area/out2$area50
-
-out3 <- out2[, mean(propArea), by = "iter"]
-
-png("figures/FigS2.png", 
-    height = 3000, 
-    width = 3000,
-    units = "px", 
-    res = 600)
-ggplot(out2, aes(iter, area)) +
-  geom_smooth(method = "lm", formula = y ~ splines::bs(x, 3), 
-              se = T,
-              color = "black") +
-  geom_hline(yintercept = 0.5, lty = 2) +
-  geom_vline(xintercept = 20, lty = 2) + 
-  #geom_vline(xintercept = 20, lty = 2) + 
-  ylab("Average territory size (ha)") +
-  xlab("Number of spatial locations") +
+ggplot(data = subset(KL_2006, id_polygons == 7390)) +
+  geom_sf(aes(fill = id_polygons), 
+          alpha = 0.5) +
+  coord_sf(datum = st_crs(32648)) +
+  ggtitle('C)') +
+  scale_fill_viridis_d() +
+  scale_color_viridis_d() +
   theme(legend.position = 'none',
         legend.key = element_blank(),
-        axis.text=element_text(size=12, color = "black"),
-        axis.title=element_text(size=12),
+        axis.text= element_blank(),
+        axis.title=element_blank(),
+        axis.ticks = element_line(),
         strip.text = element_text(size=12,face = "bold"),
+        #panel.grid.major = element_line(color = "grey80"),
         panel.background = element_blank(),
-        panel.border = element_rect(colour = "black", fill=NA, size=1)) 
-dev.off()
+        panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+
