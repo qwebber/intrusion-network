@@ -1,72 +1,106 @@
 
 
-library(ggplot2)
-library(gridExtra)
-library(data.table)
-
-terr_overlap_all <- readRDS("output/territories/territory-overlap.RDS")
-area_all <- readRDS("output/territories/territory-size.RDS")
-setnames(area_all, "perecent", "percent")
-
-area_all$area_ha <- area_all$area_m2/10000
-area_all[, c("grid", "year") := tstrsplit(gr_year, "_", fixed=TRUE)][,c("gr_year") := NULL]
+### Packages ----
+libs <- c('data.table', 
+          'sp', 'adehabitatHR',
+          'sf',
+          'ggplot2', 'krsp')
+lapply(libs, require, character.only = TRUE)
 
 
-## Figure
-png("figures/FigS3.png", height = 3000, width = 6000, units = "px", res = 600)
+df <- readRDS("output/spatial-locs.RDS")
+df$squirrel_id <- as.character(df$squirrel_id)
 
-aa <- ggplot(area_all, aes(as.factor(percent), y =area_ha, fill=year)) +
-  geom_jitter(shape = 21, alpha = 0.3, position = position_jitterdodge(jitter.width = 0.1)) +
-  geom_boxplot(outlier.color = NA, 
-               position = position_dodge2(), 
-               alpha = 0.25,
-               lwd = 0.6,
-               color = "black") +
-  scale_fill_viridis_d() +
-  scale_color_viridis_d() +
-  ggtitle("A)") +
-  xlab("Kernel density estimator percentage") +
-  ylab("Territory area (ha)") +
-  theme(
-    legend.position = c(0.15, 0.8),
-    legend.background = element_blank(),
-    legend.key = element_blank(),
-    legend.title = element_blank(),
-    axis.title.y = element_text(size = 12, color = 'black'),
-    axis.text = element_text(size = 10, color = 'black'),
-    panel.grid.minor = element_blank(),
-    panel.background = element_blank(),
-    panel.border = element_rect(
-      colour = 'black',
-      fill = NA,
-      size = 1)) 
+yr <- fread("output/unique-grid-years.csv")
+
+## prj
+prj <- '+init=epsg:26911'
+
+## load home made packages
+source("functions/get_spdf.R")
+source("functions/get_polygon.R")
+source("functions/GetHRBy.R")
+
+## load SPDF file
+## save SPDF
+spdf <- readRDS("output/edge_list_data/spdf.RDS")
+
+## subset to KL 2015 and 2016
+spdf2 <- list(spdf[[22]])
+
+yr2 <- data.table(gr_year = as.factor(c("KL_2016")))
+
+## parameters for kernel
+params = c(grid = 700, extent = 4)
+
+a1 <- df[gr_year == "KL_2018"]
+
+a2 <- a1[N > 50]
+a2 <- plyr::ddply(a2, c('squirrel_id'))
+a2 <- setDT(a2)[, rowAll := seq_len(.N), by = c("squirrel_id")]
+
+a3 <- a2[rowAll < 51]
+
+a3[, sample(nrow(.SD), 10), by = "squirrel_id"]
+a4 <- a3[,.SD[sample(.N, min(10,.N))],by = "squirrel_id"]
+
+
+out <- c()
+for(i in 1:45){ 
+
+  samp <- 51 - i
   
-bb <- ggplot(terr_overlap_all, aes(as.factor(percent), y =area, fill=year)) +
-  geom_jitter(shape = 21, alpha = 0.3, position = position_jitterdodge(jitter.width = 0.2)) +
-  geom_boxplot(outlier.color = NA, 
-               position = position_dodge2(), 
-               alpha = 0.25,
-               lwd = 0.6,
-               color = "black") +
-  scale_fill_viridis_d() +
-  scale_color_viridis_d() +
-  ggtitle("B)") +
-  xlab("Kernel density estimator percentage") +
-  ylab("Area (ha) of overlap between territories") +
-  theme(
-    legend.position = 'none',
-    legend.background = element_blank(),
-    legend.key = element_blank(),
-    legend.title = element_blank(),
-    axis.title.y = element_text(size = 12, color = 'black'),
-    axis.text = element_text(size = 10, color = 'black'),
-    panel.grid.minor = element_blank(),
-    panel.background = element_blank(),
-    panel.border = element_rect(
-      colour = 'black',
-      fill = NA,
-      size = 1)) 
+  df_sub <- a3[,.SD[sample(.N, min(samp,.N))],by = "squirrel_id"]
+  
+  hrs <- df_sub[, GetHRBy(squirrel_id, ## id must be squirrel_id
+                        locx, locy, ## coords must be locx and locy
+                        in.percent = 50, 
+                        params = params,
+                        type = "kernel")]
+  
+  hrsDT <- data.table(id = hrs$id, 
+                   area = hrs$area,
+                   iter = 51 - i)
+  
+  out[[i]] <- hrsDT
 
-grid.arrange(aa,bb, nrow = 1)
+}
 
+saveRDS(out,"output/territories/KL2018-50-pts.RDS")
+
+out <- readRDS("output/territories/KL2018-50-pts.RDS")
+
+out2 <- rbindlist(out)
+
+out2$iter <- as.numeric(out2$iter)
+
+out2$area <- out2$area/10000
+
+out2$area50 <- rep(out2[iter == 50]$area, 45)
+
+out2$propArea <- out2$area/out2$area50
+
+out3 <- out2[, mean(propArea), by = "iter"]
+
+png("figures/FigS2.png", 
+    height = 3000, 
+    width = 3000,
+    units = "px", 
+    res = 600)
+ggplot(out2, aes(iter, area)) +
+  geom_smooth(method = "lm", formula = y ~ splines::bs(x, 3), 
+              se = T,
+              color = "black") +
+  geom_hline(yintercept = 0.5, lty = 2) +
+  geom_vline(xintercept = 20, lty = 2) + 
+  #geom_vline(xintercept = 20, lty = 2) + 
+  ylab("Average territory size (ha)") +
+  xlab("Number of spatial locations") +
+  theme(legend.position = 'none',
+        legend.key = element_blank(),
+        axis.text=element_text(size=12, color = "black"),
+        axis.title=element_text(size=12),
+        strip.text = element_text(size=12,face = "bold"),
+        panel.background = element_blank(),
+        panel.border = element_rect(colour = "black", fill=NA, size=1)) 
 dev.off()
