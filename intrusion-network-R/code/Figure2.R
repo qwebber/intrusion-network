@@ -236,7 +236,7 @@ ff <- ggraph(lay) +
 
 
 fig2 <- aa + bb + cc +dd + ee + ff + plot_layout(ncol = 2)
-ggsave('figures/Fig2.png', fig2, width = 13, height = 18)
+ggsave('figures/Fig2.png', fig2, width = 10, height = 12)
 
 
 
