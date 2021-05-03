@@ -53,7 +53,7 @@ coordsMeans <- data.frame(squirrel_id = as.factor(unique(df10$squirrel_id)),
                           locy = df10[, mean(locy)/30, by = "squirrel_id"]$V1)
 setnames(coordsMeans, c("locy", "locx"), c("y", "x"))
 
-coordsMeans <- merge(coordsMeans, flastall[,c("squirrel_id", "sex")], by = "squirrel_id")
+#coordsMeans <- merge(coordsMeans, flastall[,c("squirrel_id", "sex")], by = "squirrel_id")
 
 ## create layout
 lay = create_layout(g, layout = coordsMeans) # algorithm = 'kk')
