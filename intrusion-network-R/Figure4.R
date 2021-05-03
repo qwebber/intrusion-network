@@ -45,14 +45,12 @@ df_territory <- cbind(all,
 df_territory = setDT(df_territory)[Type == "fit"]
 df_territory <- df_territory[!is.na(df_territory$grid)]
 
-setnames(df_fit_strength, "grid", "Grid")
-
 col <- c("#f1a340", "#998ec3")
 
-png("figures/Fig4.png", height = 6000, width = 6000, units = "px", res = 600)
+png("figures/Fig4.png", height = 3000, width = 6000, units = "px", res = 600)
 aa <- ggplot() +
   geom_smooth(data = df_fit_strength, 
-              aes(spr_density, Value, group = as.factor(squirrel_id), color = Grid),
+              aes(spr_density, Value, group = as.factor(squirrel_id), color = grid),
               #color = "darkgrey",
               size = 0.25,
               alpha = 0.5,
@@ -64,10 +62,7 @@ aa <- ggplot() +
   ylab("Intrusion strength") +
   ggtitle('A)') +
   theme(
-    legend.position = c(0.1, 0.85),
-    legend.key = element_blank(),
-    legend.text = element_text(size = 12, color = "black"),
-    legend.title = element_text(size = 14, color = "black"),
+    legend.position = 'none',
     plot.title = element_text(size = 14, color = "black"),
     axis.text.x = element_text(size = 12, color = "black", hjust = 1),
     axis.text.y = element_text(size = 12, color = "black"),
@@ -106,5 +101,5 @@ bb <- ggplot() +
       fill = NA,
       size = 0.5))
 
-grid.arrange(aa, cc, bb, dd, nrow = 2)
+grid.arrange(aa, bb, nrow = 1)
 dev.off()
