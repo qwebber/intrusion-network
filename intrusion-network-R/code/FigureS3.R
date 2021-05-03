@@ -20,7 +20,7 @@ a1 <- glmmTMB(area_ha ~ as.factor(percent) + (1|year) + (1|squirrel_id),
               data = area_all)
 summary(a1)
 
-a2 <- glmmTMB(area ~ as.factor(percent) + (1|year) + (1|squirrel_id) + (1|squirrel_id2), 
+a2 <- glmmTMB(area ~ as.factor(percent) + (1|year) + (1|squirrel_id),
               data = terr_overlap_all)
 summary(a2)
 
