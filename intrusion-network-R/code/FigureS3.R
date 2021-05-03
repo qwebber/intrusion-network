@@ -1,12 +1,15 @@
 
 
+## load packages
 library(ggplot2)
 library(gridExtra)
 library(data.table)
 
+## load data
 terr_overlap_all <- readRDS("output/territories/territory-overlap.RDS")
 area_all <- readRDS("output/territories/territory-size.RDS")
-setnames(area_all, "perecent", "percent")
+
+
 
 area_all$area_ha <- area_all$area_m2/10000
 area_all[, c("grid", "year") := tstrsplit(gr_year, "_", fixed=TRUE)][,c("gr_year") := NULL]
