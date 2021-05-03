@@ -7,13 +7,22 @@ library(data.table)
 
 ## load data
 terr_overlap_all <- readRDS("output/territories/territory-overlap.RDS")
+terr_overlap_all <- terr_overlap_all[percent > 40]
+
 area_all <- readRDS("output/territories/territory-size.RDS")
-
-
-
 area_all$area_ha <- area_all$area_m2/10000
 area_all[, c("grid", "year") := tstrsplit(gr_year, "_", fixed=TRUE)][,c("gr_year") := NULL]
 
+area_all <- area_all[percent > 40]
+
+## statistics 
+a1 <- glmmTMB(area_ha ~ as.factor(percent) + (1|year) + (1|squirrel_id), 
+              data = area_all)
+summary(a1)
+
+a2 <- glmmTMB(area ~ as.factor(percent) + (1|year) + (1|squirrel_id) + (1|squirrel_id2), 
+              data = terr_overlap_all)
+summary(a2)
 
 ## Figure
 png("figures/FigS3.png", height = 3000, width = 6000, units = "px", res = 600)
