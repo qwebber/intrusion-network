@@ -2,7 +2,8 @@
 ### Packages ----
 libs <- c('data.table', 'igraph', 'ggraph',
           'ggplot2', 'krsp', 'sp', 'adehabitatHR',
-          'sf', 'ggnetwork', 'dils')
+          'sf', 'ggnetwork', 'dils',
+          'patchwork')
 lapply(libs, require, character.only = TRUE)
 
 
@@ -62,7 +63,6 @@ polys2018 <- sf::st_transform(polys$KL_2018)
 polys2018$gr_year <- rep("2018", length(polys2018$id_polygons))
 
 
-png("figures/Fig2.png", width = 8000, height = 8000, units = "px", res = 600)
 ### Plot points 
 aa <- ggplot(df[gr_year == "KL_2018"]) +
   geom_jitter(aes(locx/30, locy/30, color = factor(squirrel_id)), 
@@ -235,11 +235,9 @@ ff <- ggraph(lay) +
 
 
 
-grid.arrange(aa, bb, 
-             cc, dd,
-             ee, ff,
-             ncol = 2, nrow = 3)
-dev.off()
+fig2 <- aa + bb + cc +dd + ee + ff + plot_layout(ncol = 2)
+ggsave('figures/Fig2.png', fig2, width = 13, height = 18)
+
 
 
 l <- as.matrix(coordsMeans[,2:3])
