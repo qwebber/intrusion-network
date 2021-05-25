@@ -11,12 +11,6 @@ df <- readRDS("output/spatial-locs.RDS")
 df$squirrel_id <- as.character(df$squirrel_id)
 df$gr_year <- as.character(df$gr_year)
 
-## problem years - figure out later
-#df <- df[gr_year != "KL_1996" & 
-#         gr_year != "SU_1998" & 
-#         gr_year != "KL_1999" & 
-#         gr_year != "KL_2016"]
-
 ## prj
 prj <- '+init=epsg:26911'
 
@@ -45,12 +39,72 @@ saveRDS(out_spdf, "output/edge-list-inputs/spdf.RDS")
 ## parameters for kernel
 params = c(grid = 400, extent = 7)
 
+################################################
+### RUN VISUAL DIAGNOSTICS ON PROBLEM YEARS ####
+################################################
+
+## problem years include KL_1996, SU_1998, KL_1999, KL_2016
+
+## KL_1996
+ggplot(df[gr_year == "KL_1996"]) +
+  geom_point(aes(locx/30, locy/30, color = squirrel_id), 
+             alpha = 0.5) + 
+  theme(legend.position = 'none') +
+  facet_wrap(~squirrel_id, scale = "free")
+## possible problem squirrel_ids
+## 4245 in KL_1996
+
+## KL_1996
+ggplot(df_poly90s[gr_year == "SU_1998"]) +
+  geom_point(aes(locx/30, locy/30, color = squirrel_id), 
+             alpha = 0.5) + 
+  theme(legend.position = 'none') +
+  facet_wrap(~squirrel_id, scale = "free")
+## possible problem squirrel_ids
+## 4235 in SU_1998
+## 3709 in SU_1998
+## 5378 in SU_1998
+## 5001 in SU_1998
+## 4312 in SU_1998
+
+## KL_1999
+ggplot(df[gr_year == "KL_1999"]) +
+  geom_point(aes(locx/30, locy/30, color = squirrel_id), 
+              alpha = 0.5) + 
+  theme(legend.position = 'none') +
+  facet_wrap(~squirrel_id, scale = "free")
+## possible erroneous squirrel_ids
+## 4453 in KL_1999
+## 4842 in KL_1999
+
+## KL_2016
+ggplot(df[gr_year == "KL_2016"]) +
+  geom_point(aes(locx/30, locy/30, color = squirrel_id), 
+             alpha = 0.5) + 
+  theme(legend.position = 'none') +
+  facet_wrap(~squirrel_id, scale = "free")
+## possible erroneous squirrel_ids
+## 12027 in KL_2016
+## 12028 in KL_2016
+
 ####################################################     
 ##### run polygons in batches for efficiency ##### 
 ####################################################
 
 ## only run polygons for 1996 - 1999
-df_poly90s <- df[year < 2000 & gr_year != "KL_1999"]
+df$squirrel_id_yr <- as.factor(paste(df$squirrel_id, df$gr_year, sep = "_"))
+
+df_poly90s <- df[year < 2000] #& squirrel_id_yr != "4245_KL_1996" &
+                   #squirrel_id_yr != "4235_SU_1998" &
+                   #squirrel_id_yr != "3709_SU_1998" & 
+                   #squirrel_id_yr != "5378_SU_1998" & 
+                   #squirrel_id_yr != "5001_SU_1998" & 
+                   #squirrel_id_yr != "4312_SU_1998" & 
+                   #squirrel_id_yr != "4453_KL_1999" & 
+                   #squirrel_id_yr != "4842_KL_1999"]
+
+df_poly90s$locx <- df_poly90s$locx + sample(1:10, size = length(df_poly90s$locx), replace = T)
+df_poly90s$locy <- df_poly90s$locy + sample(1:10, size = length(df_poly90s$locy), replace = T)
 
 yr90s <- data.table(gr_year = as.character(unique(df_poly90s$gr_year)))
 n90s = length(unique(yr90s$gr_year))
@@ -120,7 +174,20 @@ names(out_polygon15) <- yr15$gr_year
 saveRDS(out_polygon15, "output/edge-list-inputs/polygons-2011-2015.RDS")
 
 ## 2016 - 2020
-df_poly2020 <- df[year >= 2016 & gr_year != "KL_2016"]
+
+## remove problem individuals
+df_poly2020 <- df[year >= 2016 & 
+                    squirrel_id_yr != "12027_KL_2016" &
+                    squirrel_id_yr != "12028_KL_2016"]
+
+## new file with just problem individuals
+df_probs <- df[squirrel_id_yr == "12027_KL_2016" |
+                  squirrel_id_yr == "12028_KL_2016"]
+
+df_probs$locx <- df_probs$locx + sample(1:10, size = length(df_probs$locx), replace = T)
+df_probs$locy <- df_probs$locy + sample(1:10, size = length(df_probs$locy), replace = T)
+
+df_poly2020 <- rbind(df_probs,df_poly2020)
 
 yr20 <- data.table(gr_year = as.character(unique(df_poly2020$gr_year)))
 n20 = length(unique(yr20$gr_year))
@@ -135,45 +202,3 @@ out_polygon20 <- get_polygon(input = df_poly2020,
 names(out_polygon20) <- yr20$gr_year
 
 saveRDS(out_polygon20, "output/edge-list-inputs/polygons-2016-2020.RDS")
-
-
-## problem years (KL_2016):
-df_poly2016 <- df[gr_year == "KL_2016"]
-
-## parameters for kernel
-params = c(grid = 400, extent = 7)
-
-yr16 <- data.table(gr_year = as.character(unique(df_poly2016$gr_year)))
-n16 = length(unique(yr16$gr_year))
-
-# Generate territorial polygons ---------------------------------
-out_polygon16 <- get_polygon(input = df_poly2016, 
-                             n = n16,
-                             yr = yr16,
-                             in.percent = 50,
-                             params = params)
-
-names(out_polygon16) <- yr16$gr_year
-
-saveRDS(out_polygon16, "output/edge-list-inputs/polygons-2016.RDS")
-
-
-## problem years (KL_1999):
-df_poly1999 <- df[gr_year == "KL_1999"]
-
-## parameters for kernel
-params = c(grid = 400, extent = 7)
-
-yr99 <- data.table(gr_year = as.character(unique(df_poly1999$gr_year)))
-n99 = length(unique(yr99$gr_year))
-
-# Generate territorial polygons ---------------------------------
-out_polygon99 <- get_polygon(input = df_poly1999, 
-                             n = n99,
-                             yr = yr99,
-                             in.percent = 50,
-                             params = params)
-
-names(out_polygon99) <- yr99$gr_year
-
-saveRDS(out_polygon99, "output/edge-list-inputs/polygons-1999.RDS")
