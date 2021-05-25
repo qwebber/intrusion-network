@@ -57,7 +57,7 @@ saveRDS(area, "output/territory-area.RDS")
 # Intersection between polygon and points ---------------------------------
 intersect_out <- get_intersection(poly = polygons_all, 
                                   spdf = out_spdf,
-                                  n = yr$gr_year)
+                                  n = length(yr$gr_year))
 
 ## name lists within intersect_out
 names(intersect_out) <- yr$gr_year
