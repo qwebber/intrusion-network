@@ -48,7 +48,7 @@ df_territory <- df_territory[!is.na(df_territory$grid)]
 col <- c("#f1a340", "#998ec3")
 
 png("figures/Fig4.png", height = 3000, width = 6000, units = "px", res = 600)
-aa <- ggplot() +
+Fig4A <- ggplot() +
   geom_smooth(data = df_fit_strength, 
               aes(spr_density, Value, group = as.factor(squirrel_id), color = grid),
               #color = "darkgrey",
@@ -74,8 +74,7 @@ aa <- ggplot() +
       fill = NA,
       size = 0.5))
 
-
-bb <- ggplot() +
+Fig4B <- ggplot() +
   geom_smooth(data = df_territory , 
               aes(spr_density, Value, group = as.factor(squirrel_id), color = grid),
               #color = "darkgrey",
@@ -99,7 +98,7 @@ bb <- ggplot() +
     panel.border = element_rect(
       colour = "black",
       fill = NA,
-      size = 0.5))
+      size = 0.5)) 
 
-grid.arrange(aa, bb, nrow = 1)
+grid.arrange(Fig4A, Fig4B, nrow = 2)
 dev.off()
