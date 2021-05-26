@@ -73,20 +73,19 @@ fig3A <- ggplot(data = density[year >1995],
   scale_y_continuous(labels = scales::number_format(accuracy = 0.1),
                      limits = c(0, 4.5)) +
   scale_x_discrete(breaks = c(#1988, 1990, 1992, 1994,
-                                1996, #1998, 
-                                2000, #2002, 
-                                2004, #2006, 
-                                2008, #2010, 
-                                2012, #2014,
-                                2016, #2018, 
+                                1996, 1998, 
+                                2000, 2002, 
+                                2004, 2006, 
+                                2008, 2010, 
+                                2012, 2014,
+                                2016, 2018, 
                                 2020),
-                     labels = c(#"1988","1990", "1992", "1994", 
-                                "1996", #"1998", 
-                                "2000", #"2002", 
-                                "2004", #"2006",
-                                "2008", #"2010", 
-                                "2012", #"2014", 
-                                "2016", #"2018", 
+                     labels = c("1996", "1998", 
+                                "2000", "2002", 
+                                "2004", "2006",
+                                "2008", "2010", 
+                                "2012", "2014", 
+                                "2016", "2018", 
                                 "2020")) +
   geom_vline(aes(xintercept = "1993"), lty = 2) + # 1993
   geom_vline(aes(xintercept = "1998"), lty = 2) + # 1998
@@ -100,7 +99,7 @@ fig3A <- ggplot(data = density[year >1995],
     legend.title = element_blank(),
     legend.key = element_blank(),
     plot.title = element_text(size = 14, color = "black"),
-    axis.text.x = element_text(size = 12, color = "black"),
+    axis.text.x = element_text(size = 12, color = "black", angle = 45, hjust = 1),
     axis.text.y = element_text(size = 12, color = "black"),
     axis.title = element_text(size = 14, color = "black"),
     panel.grid.minor = element_blank(),
@@ -118,25 +117,23 @@ fig3B <- ggplot() +
               method = lm,
               se = FALSE) +
   geom_vline(aes(xintercept = 3), lty = 2) + # 1998
-  geom_vline(aes(xintercept = 9), lty = 2) + # 2005
-  geom_vline(aes(xintercept = 14), lty = 2) + # 2010
-  geom_vline(aes(xintercept = 18), lty = 2) + # 2014
-  geom_vline(aes(xintercept = 23), lty = 2) + # 2019
-  scale_x_discrete(breaks = c(#1988, 1990, 1992, 1994,
-                              1996, #1998, 
-                              2000, #2002, 
-                              2004, #2006, 
-                              2008, #2010, 
-                              2012, #2014,
-                              2016, #2018, 
+  geom_vline(aes(xintercept = 10), lty = 2) + # 2005
+  geom_vline(aes(xintercept = 15), lty = 2) + # 2010
+  geom_vline(aes(xintercept = 19), lty = 2) + # 2014
+  geom_vline(aes(xintercept = 24), lty = 2) + # 2019
+  scale_x_discrete(breaks = c(1996, 1998, 
+                              2000, 2002, 
+                              2004, 2006, 
+                              2008, 2010, 
+                              2012, 2014,
+                              2016, 2018, 
                               2020),
-                              labels = c(#"1988","1990", "1992", "1994", 
-                                "1996", #"1998", 
-                                "2000", #"2002", 
-                                "2004", #"2006",
-                                "2008", #"2010", 
-                                "2012", #"2014", 
-                                "2016", #"2018", 
+                     labels = c("1996", "1998", 
+                                "2000", "2002", 
+                                "2004", "2006",
+                                "2008", "2010", 
+                                "2012", "2014", 
+                                "2016", "2018", 
                                 "2020")) +
   xlab("Year") +
   ylim(-0.8, 1) +
@@ -146,7 +143,7 @@ fig3B <- ggplot() +
   theme(
     legend.position = 'none',
     plot.title = element_text(size = 14, color = "black"),
-    axis.text.x = element_text(size = 12, color = "black"),
+    axis.text.x = element_text(size = 12, color = "black", angle = 45, hjust = 1),
     axis.text.y = element_text(size = 12, color = "black"),
     axis.title = element_text(size = 14, color = "black"),
     panel.grid.minor = element_blank(),
@@ -164,35 +161,33 @@ fig3C <- ggplot() +
               method = lm,
               se = FALSE) +
   geom_vline(aes(xintercept = 3), lty = 2) + # 1998
-  geom_vline(aes(xintercept = 9), lty = 2) + # 2005
-  geom_vline(aes(xintercept = 14), lty = 2) + # 2010
-  geom_vline(aes(xintercept = 18), lty = 2) + # 2014
-  geom_vline(aes(xintercept = 23), lty = 2) + # 2019
-  scale_x_discrete(breaks = c(#1988, 1990, 1992, 1994,
-                              1996, #1998, 
-                              2000, #2002, 
-                              2004, #2006, 
-                              2008, #2010, 
-                              2012, #2014,
-                              2016, #2018, 
+  geom_vline(aes(xintercept = 10), lty = 2) + # 2005
+  geom_vline(aes(xintercept = 15), lty = 2) + # 2010
+  geom_vline(aes(xintercept = 19), lty = 2) + # 2014
+  geom_vline(aes(xintercept = 24), lty = 2) + # 2019
+  scale_x_discrete(breaks = c(1996, 1998, 
+                              2000, 2002, 
+                              2004, 2006, 
+                              2008, 2010, 
+                              2012, 2014,
+                              2016, 2018, 
                               2020),
-                              labels = c(#"1988","1990", "1992", "1994", 
-                                "1996", #"1998", 
-                                "2000", #"2002", 
-                                "2004", #"2006",
-                                "2008", #"2010", 
-                                "2012", #"2014", 
-                                "2016", #"2018", 
+                    labels = c("1996", "1998", 
+                                "2000", "2002", 
+                                "2004", "2006",
+                                "2008", "2010", 
+                                "2012", "2014", 
+                                "2016", "2018", 
                                 "2020"))  +
+  scale_y_continuous(labels = scales::number_format(accuracy = 0.1)) + 
   xlab("Year") +
-  #ylim(-0.8, 1) +
   ylab("Territory size (ha)") +
   scale_color_manual(values = col) +
   ggtitle('C)') +
   theme(
     legend.position = 'none',
     plot.title = element_text(size = 14, color = "black"),
-    axis.text.x = element_text(size = 12, color = "black"),
+    axis.text.x = element_text(size = 12, color = "black", angle = 45, hjust = 1),
     axis.text.y = element_text(size = 12, color = "black"),
     axis.title = element_text(size = 14, color = "black"),
     panel.grid.minor = element_blank(),
