@@ -1,7 +1,7 @@
 
 
 ### Packages ----
-libs <- c('data.table','dplyr')
+libs <- c('data.table','dplyr', 'MCMCglmm')
 lapply(libs, require, character.only = TRUE)
 
 ## load data
