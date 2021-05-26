@@ -44,7 +44,7 @@ all$id_yr_gr <- as.factor(paste(all$squirrel_id, all$grid, all$year, sep = "_"))
 
 ## load territory size data
 terr <- readRDS("output/territory-area.RDS")
-terr$id_yr_gr <- as.factor(paste(terr$squirrel_id, terr$grd, terr$year, sep = "_"))
+terr$id_yr_gr <- as.factor(paste(terr$squirrel_id, terr$grid, terr$year, sep = "_"))
 
 all2 <- merge(all, terr[,c("area_m2", "id_yr_gr")], by = "id_yr_gr")
 
