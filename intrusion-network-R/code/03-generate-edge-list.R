@@ -49,7 +49,12 @@ for(i in 1:length(yr$gr_year)){
 ## convert from list to data.table
 area <- rbindlist(area)
 
-area[, c("grd", "year") := tstrsplit(gr_year, "_", fixed=TRUE)][,c("gr_year") := NULL]
+area[, c("grid", "year") := tstrsplit(gr_year, "_", fixed=TRUE)]
+
+ggplot(area) +
+  geom_jitter(aes(grid, area_m2, color = year)) +
+  theme(legend.position = 'none') +
+  facet_wrap(~year)
 
 # export df of area
 saveRDS(area, "output/territory-area.RDS")
