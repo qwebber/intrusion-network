@@ -25,9 +25,9 @@ a2 <- glmmTMB(area ~ as.factor(percent) + (1|year) + (1|squirrel_id),
 summary(a2)
 
 ## Figure
-png("figures/FigS3.png", height = 3000, width = 6000, units = "px", res = 600)
+png("figures/FigS3.png", height = 6000, width = 6000, units = "px", res = 600)
 
-aa <- ggplot(area_all, aes(as.factor(percent), y =area_ha, fill=year)) +
+figS3A <- ggplot(area_all[year != "2006"], aes(as.factor(percent), y =area_ha, fill=year)) +
   geom_jitter(shape = 21, alpha = 0.3, position = position_jitterdodge(jitter.width = 0.1)) +
   geom_boxplot(outlier.color = NA, 
                position = position_dodge2(), 
@@ -53,7 +53,7 @@ aa <- ggplot(area_all, aes(as.factor(percent), y =area_ha, fill=year)) +
       fill = NA,
       size = 1)) 
   
-bb <- ggplot(terr_overlap_all, aes(as.factor(percent), y =area, fill=year)) +
+figS3B <- ggplot(terr_overlap_all[year != "2006"], aes(as.factor(percent), y =area, fill=year)) +
   geom_jitter(shape = 21, alpha = 0.3, position = position_jitterdodge(jitter.width = 0.2)) +
   geom_boxplot(outlier.color = NA, 
                position = position_dodge2(), 
@@ -79,6 +79,62 @@ bb <- ggplot(terr_overlap_all, aes(as.factor(percent), y =area, fill=year)) +
       fill = NA,
       size = 1)) 
 
-grid.arrange(aa,bb, nrow = 1)
+figS3C <- ggplot(area_all[year == "2006"], aes(as.factor(percent), y = area_ha, fill = as.factor(percent))) +
+  geom_jitter(shape = 21, alpha = 0.3, 
+              position = position_jitterdodge(jitter.width = 1.5),
+              color = "black") +
+  geom_boxplot(outlier.color = NA, 
+               position = position_dodge2(), 
+               alpha = 0.25,
+               lwd = 0.6,
+               color = "black") +
+  scale_fill_viridis_d() +
+  scale_color_viridis_d() +
+  ggtitle("C)") +
+  xlab("Kernel density estimator percentage") +
+  ylab("Territory area (ha)") +
+  theme(
+    legend.position = 'none',
+    legend.background = element_blank(),
+    legend.key = element_blank(),
+    legend.title = element_blank(),
+    axis.title.y = element_text(size = 12, color = 'black'),
+    axis.text = element_text(size = 10, color = 'black'),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_rect(
+      colour = 'black',
+      fill = NA,
+      size = 1)) 
+
+figS3D <- ggplot(terr_overlap_all[year == "2006"], aes(as.factor(percent), y =area, 
+                                                       fill = as.factor(percent))) +
+  geom_jitter(shape = 21, alpha = 0.2, 
+              position = position_jitterdodge(jitter.width = 2.5)) +
+  geom_boxplot(outlier.color = NA, 
+               position = position_dodge2(), 
+               alpha = 0.5,
+               lwd = 0.6) +
+  scale_fill_viridis_d() +
+  scale_color_viridis_d() +
+  ggtitle("D)") +
+  xlab("Kernel density estimator percentage") +
+  ylab("Area (ha) of overlap between territories") +
+  theme(
+    legend.position = 'none',
+    legend.background = element_blank(),
+    legend.key = element_blank(),
+    legend.title = element_blank(),
+    axis.title.y = element_text(size = 12, color = 'black'),
+    axis.text = element_text(size = 10, color = 'black'),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_rect(
+      colour = 'black',
+      fill = NA,
+      size = 1)) 
+
+grid.arrange(figS3A,figS3B, 
+             figS3C,figS3D, nrow = 2)
 
 dev.off()
