@@ -21,19 +21,24 @@ all$area_ha <- all$area_m2/10000
 all <- all[!is.na(all$sex)]
 all <- all[!is.na(all$grid)]
 
+## scale variables within year:
+all[, outstrengthScale := scale(outstrength), by = c("year", "grid")]
+all[, instrengthScale := scale(instrength), by = c("year", "grid")]
+all[, areaScale := scale(area_ha), by = c("year", "grid")]
 
 ## load models
 mcmc_strength <- readRDS("output/models/mcmc_strength.RDS")
 mcmc_territory <- readRDS("output/models/mcmc_territory.RDS")
+mcmc_in <- readRDS("output/models/mcmc_instrength.RDS")
 
 ## convert to BRN format
 df_strength <- cbind(all,
                      fit = predict(mcmc_strength, marginal = NULL)) %>%
   group_by(squirrel_id, grid, year, spr_density) %>%
   dplyr::summarise(fit = mean(fit.V1),
-                   outstrength = mean(outstrength)) %>%
+                   outstrengthScale = mean(outstrengthScale)) %>%
   tidyr::gather(Type, Value,
-                fit:outstrength)
+                fit:outstrengthScale)
 
 df_fit_strength = setDT(df_strength)[Type == "fit"]
 df_fit_strength <- df_fit_strength[!is.na(df_fit_strength$grid)]
@@ -43,25 +48,28 @@ df_territory <- cbind(all,
                       fit = predict(mcmc_territory, marginal = NULL)) %>%
   group_by(squirrel_id, grid, year, spr_density) %>%
   dplyr::summarise(fit = mean(fit.V1),
-                   outstrength = mean(outstrength)) %>%
+                   areaScale = mean(areaScale)) %>%
   tidyr::gather(Type, Value,
-                fit:outstrength)
+                fit:areaScale)
 
 df_territory = setDT(df_territory)[Type == "fit"]
 df_territory <- df_territory[!is.na(df_territory$grid)]
 
+## In-strength
+df_in <- cbind(all,
+               fit = predict(mcmc_in, marginal = NULL)) %>%
+  group_by(squirrel_id, grid, year, spr_density) %>%
+  dplyr::summarise(fit = mean(fit.V1),
+                   instrengthScale = mean(instrengthScale)) %>%
+  tidyr::gather(Type, Value,
+                fit:instrengthScale)
+
+df_in = setDT(df_in)[Type == "fit"]
+df_in <- df_in[!is.na(df_in$grid)]
 
 col <- c("#f1a340", "#998ec3")
 
-## add 1998 as a dummy variable
-df_fit_strength98 <- data.table(squirrel_id = 0,
-                                grid = "KL",
-                                year = 1998,
-                                spr_density = 0,
-                                Type = "NA",
-                                Value = 0)
-
-png("figures/Fig3.png", width = 3000, height = 6000, units = "px", res = 600)
+png("figures/Fig3.png", width = 3000, height = 8000, units = "px", res = 600)
 fig3A <- ggplot(data = density[year >1995],
        aes(as.factor(year), spr_density, group = grid, color = grid)) +
   geom_point(size = 2) +
@@ -72,8 +80,7 @@ fig3A <- ggplot(data = density[year >1995],
   ggtitle("A)") +
   scale_y_continuous(labels = scales::number_format(accuracy = 0.1),
                      limits = c(0, 4.5)) +
-  scale_x_discrete(breaks = c(#1988, 1990, 1992, 1994,
-                                1996, 1998, 
+  scale_x_discrete(breaks = c(1996, 1998, 
                                 2000, 2002, 
                                 2004, 2006, 
                                 2008, 2010, 
@@ -137,7 +144,7 @@ fig3B <- ggplot() +
                                 "2020")) +
   xlab("Year") +
   ylim(-0.8, 1) +
-  ylab("Intrusion strength") +
+  ylab("Intrusion out-strength") +
   scale_color_manual(values = col) +
   ggtitle('B)') +
   theme(
@@ -183,6 +190,50 @@ fig3C <- ggplot() +
   xlab("Year") +
   ylab("Territory size (ha)") +
   scale_color_manual(values = col) +
+  ggtitle('D)') +
+  theme(
+    legend.position = 'none',
+    plot.title = element_text(size = 14, color = "black"),
+    axis.text.x = element_text(size = 12, color = "black", angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, color = "black"),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_rect(
+      colour = "black",
+      fill = NA,
+      size = 0.5))
+
+fig3D <- ggplot() +
+  geom_smooth(data = df_in, 
+              aes(year, Value, group = as.factor(squirrel_id), color = grid),
+              #color = "darkgrey",
+              size = 0.25,
+              method = lm,
+              se = FALSE) +
+  geom_vline(aes(xintercept = 3), lty = 2) + # 1998
+  geom_vline(aes(xintercept = 10), lty = 2) + # 2005
+  geom_vline(aes(xintercept = 15), lty = 2) + # 2010
+  geom_vline(aes(xintercept = 19), lty = 2) + # 2014
+  geom_vline(aes(xintercept = 24), lty = 2) + # 2019
+  scale_x_discrete(breaks = c(1996, 1998, 
+                              2000, 2002, 
+                              2004, 2006, 
+                              2008, 2010, 
+                              2012, 2014,
+                              2016, 2018, 
+                              2020),
+                   labels = c("1996", "1998", 
+                              "2000", "2002", 
+                              "2004", "2006",
+                              "2008", "2010", 
+                              "2012", "2014", 
+                              "2016", "2018", 
+                              "2020"))  +
+  scale_y_continuous(labels = scales::number_format(accuracy = 0.1)) + 
+  xlab("Year") +
+  ylab("Intrusion in-strength") +
+  scale_color_manual(values = col) +
   ggtitle('C)') +
   theme(
     legend.position = 'none',
@@ -198,5 +249,6 @@ fig3C <- ggplot() +
       size = 0.5))
 grid.arrange(fig3A,
              fig3B,
-             fig3C, ncol = 1, nrow = 3)
+             fig3D,
+             fig3C, ncol = 1, nrow = 4)
 dev.off()
