@@ -76,6 +76,7 @@ edge_out <- get_edgelist(df = intersect_out,
                          n = yr$gr_year)
 
 edge_list <- rbindlist(edge_out)
+setnames(edge_list, "year", "gr_year")
 
 # Remove mom-offspring dyads ---------------------------------
 
@@ -97,7 +98,14 @@ edge_list <- edge_list %>%
   filter(!dyad %in% mom_offspring$dyad)
 
 ## summary of observations that occurred on own territory vs. on a different territory
-edge_list[, c("grid", "year") := tstrsplit(year, "_", fixed=TRUE)]
+edge_list[, c("grid", "year") := tstrsplit(gr_year, "_", fixed=TRUE)]
+
+## look at discrepancy in number of intrusions through time 
+ggplot(edge_list[, .N, by = c("grid", "year")]) + 
+  geom_point(aes(year, N, color = grid))
+
+## remove KL-2006
+edge_list <- edge_list[gr_year != "KL_2006"]
 
 ## export edge list
 saveRDS(edge_list, "output/edge_list.RDS")
