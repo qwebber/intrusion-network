@@ -25,6 +25,7 @@ all <- all[!is.na(all$grid)]
 all[, outstrengthScale := scale(outstrength), by = c("year", "grid")]
 all[, instrengthScale := scale(instrength), by = c("year", "grid")]
 all[, areaScale := scale(area_ha), by = c("year", "grid")]
+all[, densityScale := scale(spr_density)]
 
 ## load models
 mcmc_strength <- readRDS("output/models/mcmc_strength.RDS")
@@ -34,7 +35,7 @@ mcmc_in <- readRDS("output/models/mcmc_instrength.RDS")
 ## convert to BRN format
 df_strength <- cbind(all,
                      fit = predict(mcmc_strength, marginal = NULL)) %>%
-  group_by(squirrel_id, grid, year, spr_density) %>%
+  group_by(squirrel_id, grid, year, densityScale) %>%
   dplyr::summarise(fit = mean(fit.V1),
                    outstrengthScale = mean(outstrengthScale)) %>%
   tidyr::gather(Type, Value,
@@ -46,7 +47,7 @@ df_fit_strength <- df_fit_strength[!is.na(df_fit_strength$grid)]
 ## Territory size
 df_territory <- cbind(all,
                       fit = predict(mcmc_territory, marginal = NULL)) %>%
-  group_by(squirrel_id, grid, year, spr_density) %>%
+  group_by(squirrel_id, grid, year, densityScale) %>%
   dplyr::summarise(fit = mean(fit.V1),
                    areaScale = mean(areaScale)) %>%
   tidyr::gather(Type, Value,
@@ -58,7 +59,7 @@ df_territory <- df_territory[!is.na(df_territory$grid)]
 ## In-strength
 df_in <- cbind(all,
                fit = predict(mcmc_in, marginal = NULL)) %>%
-  group_by(squirrel_id, grid, year, spr_density) %>%
+  group_by(squirrel_id, grid, year, densityScale) %>%
   dplyr::summarise(fit = mean(fit.V1),
                    instrengthScale = mean(instrengthScale)) %>%
   tidyr::gather(Type, Value,
