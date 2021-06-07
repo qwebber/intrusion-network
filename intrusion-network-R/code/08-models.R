@@ -17,9 +17,11 @@ all <- all[!is.na(all$sex)]
 all <- all[!is.na(all$grid)]
 
 ## scale variables within year:
-all[, outstrengthScale := scale(outstrength), by = c("year", "grid")]
-all[, instrengthScale := scale(instrength), by = c("year", "grid")]
-all[, areaScale := scale(area_ha), by = c("year", "grid")]
+all[, outstrengthScale := scale(outstrength)]
+all[, instrengthScale := scale(instrength)]
+all[, areaScale := scale(area_ha)]
+all[, densityScale := scale(spr_density)]
+
 
 ########################
 #### SUMMARY STATS ####
@@ -219,10 +221,17 @@ cor_str_terr <- mcmc4$VCV[,"traitinstrength:traitoutstrength.squirrel_id"]/
 median(cor_str_terr)
 HPDinterval(cor_str_terr)
 
-ggplot(all) +
-  geom_point(aes(instrength, outstrength, color = as.factor(year))) +
-  theme(legend.position = 'none') 
-  facet_wrap(~year)
+aa <- ggplot(all, aes(outstrength, instrength)) +
+  geom_point(aes(color = as.factor(year))) +
+  theme(legend.position = 'none') + 
+  geom_smooth(method = "loess") 
+bb <- ggplot(all, aes(area_ha, instrength)) +
+    geom_point(aes(color = as.factor(year))) +
+    theme(legend.position = 'none') + 
+    geom_smooth(method = "loess") 
+cc <- ggplot(all, aes(area_ha, outstrength)) +
+    geom_point(aes(color = as.factor(year))) +
+    theme(legend.position = 'none') + 
+    geom_smooth(method = "lm") 
+grid.arrange(aa,bb,cc, nrow = 1)  
 
-
-cor.test(all$instrength, all$outstrength)
