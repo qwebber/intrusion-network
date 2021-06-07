@@ -11,6 +11,8 @@ df <- readRDS("output/spatial-locs.RDS")
 df$squirrel_id <- as.character(df$squirrel_id)
 df$gr_year <- as.character(df$gr_year)
 
+df <- df[order(df$year), ]
+
 ## prj
 prj <- '+init=epsg:26911'
 
@@ -146,6 +148,8 @@ df_probs$locy <- df_probs$locy + sample(1:10, size = length(df_probs$locy), repl
 
 ## bring data back togethre
 df_poly90s <- rbind(df_probs,df_poly90s)
+
+df_poly90s <- df_poly90s[order(df_poly90s$year), ]
 
 yr90s <- data.table(gr_year = as.character(unique(df_poly90s$gr_year)))
 n90s = length(unique(yr90s$gr_year))
