@@ -96,7 +96,7 @@ mean(cor_area_in)
 HPDinterval(cor_area_in)
 
 
-png("figures/Fig4.png", width = 4000, height = 4000, res = 600, units = "px")
+png("figures/Fig4.png", width = 6000, height = 3000, res = 600, units = "px")
 fig4a <- ggplot(outInDF, aes(interceptOut, interceptIn)) +
   geom_point(size = 2, alpha = 0.65) +
   #geom_smooth(method = "lm") +
@@ -119,7 +119,7 @@ fig4a <- ggplot(outInDF, aes(interceptOut, interceptIn)) +
 fig4b <- ggplot(outAreaDF, aes(interceptOut, interceptArea)) +
   geom_jitter(size = 2, alpha = 0.65) +
   #geom_smooth(method = "lm") +
-  ylab("Area") +
+  ylab("Territory size (ha)") +
   xlab("Out-intrusion-strength") +
   ggtitle("B)") +
   theme(legend.position = c(0.1, 0.9),
@@ -137,8 +137,8 @@ fig4b <- ggplot(outAreaDF, aes(interceptOut, interceptArea)) +
 
 fig4c <- ggplot(inAreaDF, aes(interceptin, interceptArea)) +
   geom_jitter(size = 2, alpha = 0.65) +
-  geom_smooth(method = "lm") +
-  ylab("Area") +
+  #geom_smooth(method = "lm") +
+  ylab("Territory size (ha)") +
   xlab("In-intrusion-strength") +
   ggtitle("C)") +
   theme(legend.position = c(0.1, 0.9),
@@ -157,6 +157,8 @@ fig4c <- ggplot(inAreaDF, aes(interceptin, interceptArea)) +
 grid.arrange(fig4a, fig4b, fig4c, nrow = 1)
 
 dev.off()
+
+
 
 ggplot(all, aes(outstrength, instrength)) +
   geom_point(aes(color = as.factor(year))) +
