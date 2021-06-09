@@ -189,8 +189,8 @@ prior2 <- list(R = list(V=diag(4)*(p.var_str/2), nu=4),
                G = list(G1 = list(V = diag(4)*(p.var_str/2), nu=4,
                                       alpha.V = diag(4)*p.var_str/2)))
 
-mcmc4 <- MCMCglmm(cbind(scale(instrength), 
-                        scale(outstrength)) ~ 
+mcmc4 <- MCMCglmm(cbind(instrengthScale, 
+                        outstrengthScale) ~ 
                     trait-1 + 
                     trait:grid +
                     trait:sex + 
@@ -212,6 +212,31 @@ mcmc4 <- MCMCglmm(cbind(scale(instrength),
 
 summary(mcmc4)
 saveRDS(mcmc4, "output/models/mcmc_instrength-outstrength.RDS")
+
+
+mcmc5 <- MCMCglmm(cbind(areaScale, 
+                        outstrengthScale) ~ 
+                    trait-1 + 
+                    trait:grid +
+                    trait:sex + 
+                    trait:age + 
+                    trait:spr_density +
+                    trait:year,
+                  random =~ us(trait + spr_density:trait):squirrel_id,
+                  rcov =~ idh(trait:grid):units,
+                  family = c("gaussian","gaussian"),
+                  prior = prior2,
+                  #nitt=420000,
+                  #burnin=20000,
+                  #thin=100,
+                  verbose = TRUE,
+                  data = all,
+                  pr=TRUE,
+                  saveX = TRUE,
+                  saveZ = TRUE)
+
+summary(mcmc5)
+saveRDS(mcmc5, "output/models/mcmc_instrength-outstrength.RDS")
 
 
 ##################  CORRELATIONS ##################
