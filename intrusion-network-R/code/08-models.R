@@ -195,7 +195,7 @@ mcmc4 <- MCMCglmm(cbind(instrengthScale,
                     trait:grid +
                     trait:sex + 
                     trait:age + 
-                    trait:spr_density +
+                    trait:spr_density, +
                     trait:year,
                   random =~ us(trait + spr_density:trait):squirrel_id,
                   rcov =~ idh(trait:grid):units,
@@ -236,29 +236,32 @@ mcmc5 <- MCMCglmm(cbind(areaScale,
                   saveZ = TRUE)
 
 summary(mcmc5)
-saveRDS(mcmc5, "output/models/mcmc_instrength-outstrength.RDS")
+saveRDS(mcmc5, "output/models/mcmc_area-outstrength.RDS")
 
 
-##################  CORRELATIONS ##################
-## CORRELATIONS between Intercept in-strength and Intercept out-strength:
-cor_str_terr <- mcmc4$VCV[,"traitinstrength:traitoutstrength.squirrel_id"]/
-  (sqrt(mcmc4$VCV[,"traitinstrength:traitinstrength.squirrel_id"])*
-     sqrt(mcmc4$VCV[,"traitoutstrength:traitoutstrength.squirrel_id"]))
 
-median(cor_str_terr)
-HPDinterval(cor_str_terr)
+mcmc6 <- MCMCglmm(cbind(areaScale, 
+                        instrengthScale) ~ 
+                    trait-1 + 
+                    trait:grid +
+                    trait:sex + 
+                    trait:age + 
+                    trait:spr_density +
+                    trait:year,
+                  random =~ us(trait + spr_density:trait):squirrel_id,
+                  rcov =~ idh(trait:grid):units,
+                  family = c("gaussian","gaussian"),
+                  prior = prior2,
+                  #nitt=420000,
+                  #burnin=20000,
+                  #thin=100,
+                  verbose = TRUE,
+                  data = all,
+                  pr=TRUE,
+                  saveX = TRUE,
+                  saveZ = TRUE)
 
-aa <- ggplot(all, aes(outstrength, instrength)) +
-  geom_point(aes(color = as.factor(year))) +
-  theme(legend.position = 'none') + 
-  geom_smooth(method = "loess") 
-bb <- ggplot(all, aes(area_ha, instrength)) +
-    geom_point(aes(color = as.factor(year))) +
-    theme(legend.position = 'none') + 
-    geom_smooth(method = "loess") 
-cc <- ggplot(all, aes(area_ha, outstrength)) +
-    geom_point(aes(color = as.factor(year))) +
-    theme(legend.position = 'none') + 
-    geom_smooth(method = "lm") 
-grid.arrange(aa,bb,cc, nrow = 1)  
+summary(mcmc6)
+saveRDS(mcmc6, "output/models/mcmc_area-intstrength.RDS")
+
 
