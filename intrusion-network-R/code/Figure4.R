@@ -7,10 +7,37 @@
 library(data.table)
 library(ggplot2)
 
+
+##################  CORRELATIONS ##################
+## CORRELATIONS between Intercept in-strength and Intercept out-strength:
+cor_str_terr <- mcmc4$VCV[,"traitinstrength:traitoutstrength.squirrel_id"]/
+  (sqrt(mcmc4$VCV[,"traitinstrength:traitinstrength.squirrel_id"])*
+     sqrt(mcmc4$VCV[,"traitoutstrength:traitoutstrength.squirrel_id"]))
+
+median(cor_str_terr)
+HPDinterval(cor_str_terr)
+
+aa <- ggplot(all, aes(outstrength, instrength)) +
+  geom_point(aes(color = as.factor(year))) +
+  theme(legend.position = 'none') + 
+  geom_smooth(method = "loess") 
+bb <- ggplot(all, aes(area_ha, instrength)) +
+  geom_point(aes(color = as.factor(year))) +
+  theme(legend.position = 'none') + 
+  geom_smooth(method = "loess") 
+cc <- ggplot(all, aes(area_ha, outstrength)) +
+  geom_point(aes(color = as.factor(year))) +
+  theme(legend.position = 'none') + 
+  geom_smooth(method = "lm") 
+grid.arrange(aa,bb,cc, nrow = 1)  
+
 #### EFFECTS OF SPECIALIZATION ON FITNESS ####
 
-mod2 <- readRDS("output/models/2-ModLowDensityPSi.RDS")
-summary(mod2)
+## load models
+outIn <- readRDS("output/models/mcmc_instrength-outstrength.RDS")
+areaOut <- readRDS("output/models/mcmc_area-outtstrength.RDS")
+areaIn <- readRDS("output/models/mcmc_area-intstrength.RDS")
+
 
 ## Low Density (mod 2)
 df_adapt_PSi_low <- data.table(Trait = attr(colMeans(mod2$Sol), "names"),
