@@ -195,7 +195,7 @@ mcmc4 <- MCMCglmm(cbind(instrengthScale,
                     trait:grid +
                     trait:sex + 
                     trait:age + 
-                    trait:spr_density, +
+                    trait:spr_density +
                     trait:year,
                   random =~ us(trait + spr_density:trait):squirrel_id,
                   rcov =~ idh(trait:grid):units,
