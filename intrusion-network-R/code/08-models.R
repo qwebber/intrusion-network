@@ -184,6 +184,7 @@ saveRDS(mcmc3, "output/models/mcmc_instrength.RDS")
 
 
 ## Bivariate model
+p.var_str <- var(all$outstrength, na.rm = TRUE)
 prior2 <- list(R = list(V=diag(4)*(p.var_str/2), nu=4),
                G = list(G1 = list(V = diag(4)*(p.var_str/2), nu=4,
                                       alpha.V = diag(4)*p.var_str/2)))
@@ -210,6 +211,7 @@ mcmc4 <- MCMCglmm(cbind(scale(instrength),
                   saveZ = TRUE)
 
 summary(mcmc4)
+saveRDS(mcmc4, "output/models/mcmc_instrength-outstrength.RDS")
 
 
 ##################  CORRELATIONS ##################
