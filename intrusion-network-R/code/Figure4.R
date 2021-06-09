@@ -4,170 +4,105 @@
 ################### FIGURE 4 ################### 
 ###############################################
 
-library(data.table)
-library(ggplot2)
-
-
-##################  CORRELATIONS ##################
-## CORRELATIONS between Intercept in-strength and Intercept out-strength:
-cor_str_terr <- mcmc4$VCV[,"traitinstrength:traitoutstrength.squirrel_id"]/
-  (sqrt(mcmc4$VCV[,"traitinstrength:traitinstrength.squirrel_id"])*
-     sqrt(mcmc4$VCV[,"traitoutstrength:traitoutstrength.squirrel_id"]))
-
-median(cor_str_terr)
-HPDinterval(cor_str_terr)
-
-aa <- ggplot(all, aes(outstrength, instrength)) +
-  geom_point(aes(color = as.factor(year))) +
-  theme(legend.position = 'none') + 
-  geom_smooth(method = "loess") 
-bb <- ggplot(all, aes(area_ha, instrength)) +
-  geom_point(aes(color = as.factor(year))) +
-  theme(legend.position = 'none') + 
-  geom_smooth(method = "loess") 
-cc <- ggplot(all, aes(area_ha, outstrength)) +
-  geom_point(aes(color = as.factor(year))) +
-  theme(legend.position = 'none') + 
-  geom_smooth(method = "lm") 
-grid.arrange(aa,bb,cc, nrow = 1)  
-
-#### EFFECTS OF SPECIALIZATION ON FITNESS ####
+### Packages ----
+libs <- c('data.table', 'dplyr', 'MCMCglmm',
+          'ggplot2', 'gridExtra')
+lapply(libs, require, character.only = TRUE)
 
 ## load models
 outIn <- readRDS("output/models/mcmc_instrength-outstrength.RDS")
-areaOut <- readRDS("output/models/mcmc_area-outtstrength.RDS")
+areaOut <- readRDS("output/models/mcmc_area-outstrength.RDS")
 areaIn <- readRDS("output/models/mcmc_area-intstrength.RDS")
 
 
-## Low Density (mod 2)
-df_adapt_PSi_low <- data.table(Trait = attr(colMeans(mod2$Sol), "names"),
-                               Value = colMeans(mod2$Sol)) 
-df_adapt_PSi_low$Trait <- gsub(pattern = ".1:",replacement = "", as.factor(df_adapt_PSi_low$Trait)) 
-df_adapt_PSi_low$Trait <- gsub(pattern = "l.1",replacement = "", as.factor(df_adapt_PSi_low$Trait)) 
-df_adapt_PSi_low2 <- df_adapt_PSi_low[29:416,]
-df_adapt_PSi_low2[, c('Trait', 'ANIMAL_ID' ,'ID') := tstrsplit(Trait, '.', fixed = TRUE)]
+## out-strength - in-strength
+df_outIn <- data.table(Trait = attr(colMeans(outIn$Sol), "names"),
+                               Value = colMeans(outIn$Sol)) 
+df_outIn2 <- df_outIn[59:length(df_outIn$Trait),]
+df_outIn2[, c('Trait' ,'xx' ,'squirrel_id') := tstrsplit(Trait, '.', fixed = TRUE)][,c("xx") := NULL]
 
-df_adapt_PSi_low2$Trait[df_adapt_PSi_low2$Trait == "traitPSi"] <- 'IntPSi'  
-df_adapt_PSi_low2$Trait[df_adapt_PSi_low2$Trait == "traitSurviva"] <- 'IntSurv'  
-df_adapt_PSi_low2$Trait[df_adapt_PSi_low2$Trait == "traitPSi:scalePopDen"] <- 'PlastPSi'  
-df_adapt_PSi_low2$Trait[df_adapt_PSi_low2$Trait == "traitSurvivalscalePopDen"] <- 'PlastSurv'  
-
-df_adapt_PSi_low2[, c("ANIMAL_ID") := NULL]
-
-IntPSiLow <- df_adapt_PSi_low2[Trait == "IntPSi"][,c("Trait") := NULL]
-colnames(IntPSiLow)[1] <- "IntPSi"
-IntPSiLow$density <- "Low"
-
-IntSurvLow <- df_adapt_PSi_low2[Trait == "IntSurv"][,c("Trait") := NULL]
-colnames(IntSurvLow)[1] <- "IntSurv"
-IntSurvLow$density <- "Low"
-
-## High Density (mod3)
-
-mod3 <- readRDS("output/models/3-ModHighDensityPSi.RDS")
-summary(mod3)
-
-df_adapt_PSi_high <- data.table(Trait = attr(colMeans(mod3$Sol), "names"),
-                                Value = colMeans(mod3$Sol)) 
-df_adapt_PSi_high$Trait <- gsub(pattern = ".1:",replacement = "", as.factor(df_adapt_PSi_high$Trait)) 
-df_adapt_PSi_high$Trait <- gsub(pattern = "l.1",replacement = "", as.factor(df_adapt_PSi_high$Trait)) 
-df_adapt_PSi_high2 <- df_adapt_PSi_high[31:390,]
-df_adapt_PSi_high2[, c('Trait', 'ANIMAL_ID' ,'ID') := tstrsplit(Trait, '.', fixed = TRUE)]
-
-df_adapt_PSi_high2$Trait[df_adapt_PSi_high2$Trait == "traitPSi"] <- 'IntPSi'  
-df_adapt_PSi_high2$Trait[df_adapt_PSi_high2$Trait == "traitSurviva"] <- 'IntSurv'  
-df_adapt_PSi_high2$Trait[df_adapt_PSi_high2$Trait == "traitPSi:scalePopDen"] <- 'PlastPSi'  
-df_adapt_PSi_high2$Trait[df_adapt_PSi_high2$Trait == "traitSurvivalscalePopDen"] <- 'PlastSurv'  
-
-df_adapt_PSi_high2[, c("ANIMAL_ID") := NULL]
+df_outIn2$Trait[df_outIn2$Trait == "traitinstrengthScale"] <- 'inStrength'  
+df_outIn2$Trait[df_outIn2$Trait == "traitoutstrengthScale"] <- 'outStrength'  
+df_outIn2$Trait[df_outIn2$Trait == "traitinstrengthScale:spr_density"] <- 'plastInStr'  
+df_outIn2$Trait[df_outIn2$Trait == "traitoutstrengthScale:spr_density"] <- 'plastOutStr'  
 
 
-IntPSiHigh <- df_adapt_PSi_high2[Trait == "IntPSi"][,c("Trait") := NULL]
-colnames(IntPSiHigh)[1] <- "IntPSi"
-IntPSiHigh$density <- "High"
+outInDF <- data.table(interceptIn = df_outIn2[Trait == "inStrength"]$Value,
+                    interceptOut = df_outIn2[Trait == "outStrength"]$Value,
+                    slopeIn = df_outIn2[Trait == "plastInStr"]$Value, 
+                    slopeOut =  df_outIn2[Trait == "plastOutStr"]$Value, 
+                    squirrel_id = df_outIn2[Trait == "inStrength"]$squirrel_id)
+ 
+## CORRELATIONS between Intercept in-strength and Intercept out-strength:
+cor_in_out <- outIn$VCV[,"traitinstrengthScale:traitoutstrengthScale.squirrel_id"]/
+  (sqrt(outIn$VCV[,"traitinstrengthScale:traitinstrengthScale.squirrel_id"])*
+     sqrt(outIn$VCV[,"traitoutstrengthScale:traitoutstrengthScale.squirrel_id"]))
 
-IntSurvHigh <- df_adapt_PSi_high2[Trait == "IntSurv"][,c("Trait") := NULL]
-colnames(IntSurvHigh)[1] <- "IntSurv"
-IntSurvHigh$density <- "High"
-
-PSiIntDF <- rbind(IntPSiLow, IntPSiHigh)
-SurvPSiDF <- rbind(IntSurvLow, IntSurvHigh)
-
-
-#### EFFECTS OF SOCIAL STRENGTH ON FITNESS ####
-
-mod4 <- readRDS("output/models/4-ModLowDensitySocial.RDS")
-summary(mod4)
-
-## Low Density (mod 2)
-df_adapt_soc_low <- data.table(Trait = attr(colMeans(mod4$Sol), "names"),
-                               Value = colMeans(mod4$Sol)) 
-df_adapt_soc_low$Trait <- gsub(pattern = ".1:",replacement = "", as.factor(df_adapt_soc_low$Trait)) 
-df_adapt_soc_low$Trait <- gsub(pattern = "l.1",replacement = "", as.factor(df_adapt_soc_low$Trait)) 
-df_adapt_soc_low2 <- df_adapt_soc_low[29:388,]
-df_adapt_soc_low2[, c('Trait', 'ANIMAL_ID' ,'ID') := tstrsplit(Trait, '.', fixed = TRUE)]
-
-df_adapt_soc_low2$Trait[df_adapt_soc_low2$Trait == "traitstrength_soc"] <- 'IntSoc'  
-df_adapt_soc_low2$Trait[df_adapt_soc_low2$Trait == "traitSurviva"] <- 'IntSurvSoc'  
-df_adapt_soc_low2$Trait[df_adapt_soc_low2$Trait == "traitstrength_soc:scalePopDen"] <- 'PlastSoc'  
-df_adapt_soc_low2$Trait[df_adapt_soc_low2$Trait == "traitSurvivalscalePopDen"] <- 'PlastSurvSoc'  
-
-df_adapt_soc_low2[, c("ANIMAL_ID") := NULL]
-
-IntSocLow <- df_adapt_soc_low2[Trait == "IntSoc"][,c("Trait") := NULL]
-colnames(IntSocLow)[1] <- "IntSoc"
-IntSocLow$density <- "Low"
-
-IntSurvSocLow <- df_adapt_soc_low2[Trait == "IntSurvSoc"][,c("Trait") := NULL]
-colnames(IntSurvSocLow)[1] <- "IntSurvSoc"
-IntSurvSocLow$density <- "Low"
-
-## High Density (mod3)
-
-mod5 <- readRDS("output/models/5-ModHighDensitySocial.RDS")
-summary(mod5)
-
-df_adapt_soc_high <- data.table(Trait = attr(colMeans(mod5$Sol), "names"),
-                                Value = colMeans(mod5$Sol)) 
-df_adapt_soc_high$Trait <- gsub(pattern = ".1:",replacement = "", as.factor(df_adapt_soc_high$Trait)) 
-df_adapt_soc_high$Trait <- gsub(pattern = "l.1",replacement = "", as.factor(df_adapt_soc_high$Trait)) 
-df_adapt_soc_high2 <- df_adapt_soc_high[31:360,]
-df_adapt_soc_high2[, c('Trait', 'ANIMAL_ID' ,'ID') := tstrsplit(Trait, '.', fixed = TRUE)]
-
-df_adapt_soc_high2$Trait[df_adapt_soc_high2$Trait == "traitstrength_soc"] <- 'IntSoc'  
-df_adapt_soc_high2$Trait[df_adapt_soc_high2$Trait == "traitSurviva"] <- 'IntSurvSoc'  
-df_adapt_soc_high2$Trait[df_adapt_soc_high2$Trait == "traitstrength_soc:scalePopDen"] <- 'PlastSoc'  
-df_adapt_soc_high2$Trait[df_adapt_soc_high2$Trait == "traitSurvivalscalePopDen"] <- 'PlastSurvSoc'  
-
-df_adapt_soc_high2[, c("ANIMAL_ID") := NULL]
+mean(cor_in_out)
+HPDinterval(cor_in_out)
 
 
-IntSocHigh <- df_adapt_soc_high2[Trait == "IntSoc"][,c("Trait") := NULL]
-colnames(IntSocHigh)[1] <- "IntSoc"
-IntSocHigh$density <- "High"
+## out-strength - territory size
+df_outArea <- data.table(Trait = attr(colMeans(areaOut$Sol), "names"),
+                       Value = colMeans(areaOut$Sol)) 
+df_outArea2 <- df_outArea[59:length(df_outArea$Trait),]
+df_outArea2[, c('Trait' ,'xx' ,'squirrel_id') := tstrsplit(Trait, '.', fixed = TRUE)][,c("xx") := NULL]
 
-IntSurvSocHigh <- df_adapt_soc_high2[Trait == "IntSurvSoc"][,c("Trait") := NULL]
-colnames(IntSurvSocHigh)[1] <- "IntSurvSoc"
-IntSurvSocHigh$density <- "High"
-
-SocIntDF <- rbind(IntSocLow, IntSocHigh)
-SurvSocDF <- rbind(IntSurvSocLow, IntSurvSocHigh)
-
-
-
-all <- cbind(SocIntDF, 
-             SurvSocDF[,c("ID", "density") := NULL],
-             PSiIntDF[,c("ID", "density") := NULL], 
-             SurvPSiDF[,c("ID", "density") := NULL]) 
+df_outArea2$Trait[df_outArea2$Trait == "traitareaScale"] <- 'area'  
+df_outArea2$Trait[df_outArea2$Trait == "traitoutstrengthScale"] <- 'outStrength'  
+df_outArea2$Trait[df_outArea2$Trait == "traitareaScale:spr_density"] <- 'plastArea'  
+df_outArea2$Trait[df_outArea2$Trait == "traitoutstrengthScale:spr_density"] <- 'plastOutStr'  
 
 
-png("graphics/Fig3_fit_covariance.png", width = 4000, height = 4000, res = 600, units = "px")
-ggplot(all, aes(IntPSi, IntSurv, group = density)) +
-  geom_point(aes(color = density), size = 2, alpha = 0.65) +
-  geom_smooth(aes(color = density), method = "lm") +
-  xlab(expression(Specialist %<->% Generalist)) +
-  ylab(expression(`Low fitness` %<->% `High fitness`)) +
-  scale_color_manual(values=c("#E69F00", "#56B4E9")) + 
+outAreaDF <- data.table(interceptArea = df_outArea2[Trait == "area"]$Value,
+                      interceptOut = df_outArea2[Trait == "outStrength"]$Value,
+                      slopeArea = df_outArea2[Trait == "plastArea"]$Value, 
+                      slopeOut =  df_outArea2[Trait == "plastOutStr"]$Value, 
+                      squirrel_id = df_outArea2[Trait == "outStrength"]$squirrel_id)
+
+## CORRELATIONS between Intercept in-strength and Intercept out-strength:
+cor_area_out <- areaOut$VCV[,"traitareaScale:traitoutstrengthScale.squirrel_id"]/
+  (sqrt(areaOut$VCV[,"traitareaScale:traitareaScale.squirrel_id"])*
+     sqrt(areaOut$VCV[,"traitoutstrengthScale:traitoutstrengthScale.squirrel_id"]))
+
+mean(cor_area_out)
+HPDinterval(cor_area_out)
+
+
+## in-strength - territory size
+df_inArea <- data.table(Trait = attr(colMeans(areaIn$Sol), "names"),
+                         Value = colMeans(areaIn$Sol)) 
+df_inArea2 <- df_inArea[59:length(df_inArea$Trait),]
+df_inArea2[, c('Trait' ,'xx' ,'squirrel_id') := tstrsplit(Trait, '.', fixed = TRUE)][,c("xx") := NULL]
+
+df_inArea2$Trait[df_inArea2$Trait == "traitareaScale"] <- 'area'  
+df_inArea2$Trait[df_inArea2$Trait == "traitinstrengthScale"] <- 'inStrength'  
+df_inArea2$Trait[df_inArea2$Trait == "traitareaScale:spr_density"] <- 'plastArea'  
+df_inArea2$Trait[df_inArea2$Trait == "traitinstrengthScale:spr_density"] <- 'plastinStr'  
+
+
+inAreaDF <- data.table(interceptArea = df_inArea2[Trait == "area"]$Value,
+                        interceptin = df_inArea2[Trait == "inStrength"]$Value,
+                        slopeArea = df_inArea2[Trait == "plastArea"]$Value, 
+                        slopein =  df_inArea2[Trait == "plastinStr"]$Value, 
+                        squirrel_id = df_inArea2[Trait == "inStrength"]$squirrel_id)
+
+## CORRELATIONS between Intercept in-strength and Intercept in-strength:
+cor_area_in <- areaIn$VCV[,"traitareaScale:traitinstrengthScale.squirrel_id"]/
+  (sqrt(areaIn$VCV[,"traitareaScale:traitareaScale.squirrel_id"])*
+     sqrt(areaIn$VCV[,"traitinstrengthScale:traitinstrengthScale.squirrel_id"]))
+
+mean(cor_area_in)
+HPDinterval(cor_area_in)
+
+
+png("figures/Fig4.png", width = 4000, height = 4000, res = 600, units = "px")
+fig4a <- ggplot(outInDF, aes(interceptOut, interceptIn)) +
+  geom_point(size = 2, alpha = 0.65) +
+  #geom_smooth(method = "lm") +
+  ylab("In-intrusion-strength") +
+  xlab("Out-intrusion-strength") +
+  ggtitle("A)") +
   theme(legend.position = c(0.1, 0.9),
         plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
         legend.title = element_blank(),
@@ -180,22 +115,59 @@ ggplot(all, aes(IntPSi, IntSurv, group = density)) +
         panel.grid.minor = element_blank(),
         panel.background = element_blank(),
         panel.border = element_rect(colour = "black", fill=NA, size=1))
-dev.off()
 
-png("graphics/FigS5.png", width = 4000, height = 4000, res = 600, units = "px")
-ggplot(all, aes(IntSoc, IntSurvSoc, group = density)) +
-  geom_point(aes(color = density), size = 2, alpha = 0.65) +
-  geom_smooth(aes(color = density), method = "lm", se = F) +
-  xlab('Social strength') +
-  ylab(expression(`Low fitness` %<->% `High fitness`)) +
-  scale_color_manual(values=c("#E69F00", "#56B4E9")) + 
-  theme(legend.position = 'none',
+fig4b <- ggplot(outAreaDF, aes(interceptOut, interceptArea)) +
+  geom_jitter(size = 2, alpha = 0.65) +
+  #geom_smooth(method = "lm") +
+  ylab("Area") +
+  xlab("Out-intrusion-strength") +
+  ggtitle("B)") +
+  theme(legend.position = c(0.1, 0.9),
         plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
-        plot.title = element_text(size = 20),
+        legend.title = element_blank(),
+        legend.text = element_text(size = 16),
+        legend.key = element_blank(),
         axis.text=element_text(size=12, color = "black"),
+        plot.title = element_text(size = 20),
         axis.title=element_text(size=20),
         strip.text = element_text(size=12,face = "bold"),
         panel.grid.minor = element_blank(),
         panel.background = element_blank(),
         panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+fig4c <- ggplot(inAreaDF, aes(interceptin, interceptArea)) +
+  geom_jitter(size = 2, alpha = 0.65) +
+  geom_smooth(method = "lm") +
+  ylab("Area") +
+  xlab("In-intrusion-strength") +
+  ggtitle("C)") +
+  theme(legend.position = c(0.1, 0.9),
+        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
+        legend.title = element_blank(),
+        legend.text = element_text(size = 16),
+        legend.key = element_blank(),
+        axis.text=element_text(size=12, color = "black"),
+        plot.title = element_text(size = 20),
+        axis.title=element_text(size=20),
+        strip.text = element_text(size=12,face = "bold"),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+grid.arrange(fig4a, fig4b, fig4c, nrow = 1)
+
 dev.off()
+
+ggplot(all, aes(outstrength, instrength)) +
+  geom_point(aes(color = as.factor(year))) +
+  theme(legend.position = 'none') + 
+  geom_smooth(method = "loess") 
+ggplot(all, aes(area_ha, instrength)) +
+  geom_point(aes(color = as.factor(year))) +
+  theme(legend.position = 'none') + 
+  geom_smooth(method = "loess") 
+ggplot(all, aes(area_ha, outstrength)) +
+  geom_point(aes(color = as.factor(year))) +
+  theme(legend.position = 'none') + 
+  geom_smooth(method = "lm") 
+grid.arrange(aa,bb,cc, nrow = 1)  
