@@ -20,8 +20,10 @@ census_all$squirrel_id <- as.character(census_all$squirrel_id)
 
 ## load home made functions
 source("functions/get_spdf.R")
+source("functions/get_buffer.R")
 source("functions/get_intersection.R")
 source("functions/get_edgelist.R")
+
 
 ######################################################
 ############ VALIDATION 1: CENSUS MIDDEN #############
@@ -36,13 +38,18 @@ yr <- fread("output/unique-grid-years.csv")
 n = length(unique(yr$gr_year))
 
 # Generate spdf points ---------------------------------
-out_spdf <- get_spdf(df = census_all[,c("julian","locx", "locy", "squirrel_id", "gr_year")], 
+out_spdf <- get_spdf(df = census_all[,c("locx", "locy", "squirrel_id", "gr_year")], 
                      n = n,
                      yr = yr)
 
+# Generate buffer around spdf points ---------------------------------
+buf_spdf <- get_buffer(df = out_spdf,
+                       n = n,
+                       buff = 15)
+
 # Intersection between polygon and points ---------------------------------
 intersect_out <- get_intersection(poly = polys, 
-                                  spdf = out_spdf,
+                                  spdf = buf_spdf,
                                   n = n)
 
 # Generate edge list based on polygon-point overlap ---------------------------------
@@ -77,7 +84,7 @@ all$year <- as.factor(all$year)
 ## remove individuals that don't make it to final DF
 df <- merge(df, all[,c("id_yr_gr")], by = "id_yr_gr")
 
-on_territory <- all[, length(unique(squirrel_id)), by = c("gr_year")]
+on_territory <- df[, length(unique(squirrel_id)), by = c("gr_year")]
 setnames(on_territory, "V1", "total_ids")
 
 edge_list_own$id_yr_gr <- as.factor(paste(edge_list_own$census, edge_list_own$gr_year, sep = "_"))
@@ -90,9 +97,15 @@ setnames(on_territory, "V1", "ids_on_terr")
 ## validation of number of squirrel census locs that were on/off territories
 on_territory$propOn <- on_territory$ids_on_terr/on_territory$total_ids
 on_territory$off <- on_territory$total_ids - on_territory$ids_on_terr
+on_territory[, c("grid", "year") := tstrsplit(gr_year, "_", fixed=TRUE)]
 
-mean(on_territory$propOn)
-sd(on_territory$propOn)
+on_territory[, sum(total_ids), by = "grid"]
+on_territory[, sum(ids_on_terr ), by = "grid"]
+## KL: 
+1011/1132
+## SU: 
+620/673
+
 
 ### CALCULATE DISTANCE BETWEEN CENSUS MIDDEN AND KDE CENTROID 
 
