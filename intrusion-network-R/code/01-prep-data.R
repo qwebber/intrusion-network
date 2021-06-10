@@ -138,5 +138,19 @@ df2 <- setDT(ddply(df2, c('year', 'grid')))
 df2$locx <- df2$locx*30
 df2$locy <- df2$locy*30
 
+#### assign a jitter to all locx and locy
+
+## for trappign data use 15m jitter
+dfTrap <- df2[data == "trap"]
+dfTrap$locx <- dfTrap$locx + sample(1:15, size = length(dfTrap$locx), replace = T)
+dfTrap$locy <- dfTrap$locy + sample(1:15, size = length(dfTrap$locy), replace = T)
+
+## for behavioural data use 3m jitter
+dfBehav <- df2[data == "behaviour"]
+dfBehav$locx <- dfBehav$locx + sample(1:3, size = length(dfBehav$locx), replace = T)
+dfBehav$locy <- dfBehav$locy + sample(1:3, size = length(dfBehav$locy), replace = T)
+
+df2 <- rbind(dfTrap, dfBehav)
+
 saveRDS(df2, "output/spatial-locs.RDS")
 
