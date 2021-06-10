@@ -42,113 +42,8 @@ df$squirrel_id_yr <- as.factor(paste(df$squirrel_id, df$gr_year, sep = "_"))
 ## parameters for kernel
 params = c(grid = 400, extent = 7)
 
-################################################
-### RUN VISUAL DIAGNOSTICS ON PROBLEM YEARS ####
-################################################
-
-## problem years include KL_1996, SU_1998, KL_1999, KL_2016
-
-## KL_1996
-ggplot(df[gr_year == "KL_1996"]) +
-  geom_point(aes(locx/30, locy/30, color = squirrel_id), 
-             alpha = 0.5) + 
-  theme(legend.position = 'none') +
-  facet_wrap(~squirrel_id, scale = "free")
-## possible problem squirrel_ids
-## 4245 in KL_1996
-
-
-## SU_1998
-ggplot(df[gr_year == "SU_1998"]) +
-  geom_point(aes(locx/30, locy/30, color = squirrel_id), 
-             alpha = 0.5) + 
-  theme(legend.position = 'none') +
-  facet_wrap(~squirrel_id, scale = "free")
-## possible problem squirrel_ids
-## 4235 in SU_1998
-## 3709 in SU_1998
-## 5378 in SU_1998
-## 5001 in SU_1998
-## 4312 in SU_1998
-## 4286 in SU_1998
-
-## KL_1999
-ggplot(df[gr_year == "KL_1999"]) +
-  geom_point(aes(locx/30, locy/30, color = squirrel_id), 
-              alpha = 0.5) + 
-  theme(legend.position = 'none') +
-  facet_wrap(~squirrel_id, scale = "free")
-## possible erroneous squirrel_ids
-## 4453 in KL_1999
-## 4465 in KL_1999
-## 4774 in KL_1999
-## 4783 in KL_1999
-## 4818 in KL_1999
-## 4842 in KL_1999
-## 5518 in KL_1999
-## 5575 in KL_1999
-## 6532 in KL_1999
-
-
-## KL_2016
-ggplot(df[gr_year == "KL_2016"]) +
-  geom_point(aes(locx/30, locy/30, color = squirrel_id), 
-             alpha = 0.5) + 
-  theme(legend.position = 'none') +
-  facet_wrap(~squirrel_id, scale = "free")
-## possible erroneous squirrel_ids
-## 12027 in KL_2016
-## 12028 in KL_2016
-
-####################################################     
-##### run polygons in batches for efficiency ##### 
-####################################################
-
-## cut out problem individuals
-df_poly90s <- df[year < 2000 & squirrel_id_yr != "4245_KL_1996" &
-                           squirrel_id_yr != "4235_SU_1998" &
-                           squirrel_id_yr != "3709_SU_1998" & 
-                           squirrel_id_yr != "5378_SU_1998" & 
-                           squirrel_id_yr != "5001_SU_1998" & 
-                           squirrel_id_yr != "4312_SU_1998" & 
-                           squirrel_id_yr != "4286_SU_1998" & 
-                           
-                   squirrel_id_yr != "4453_KL_1999" & 
-                   squirrel_id_yr != "4465_KL_1999" & 
-                   squirrel_id_yr != "4774_KL_1999" &
-                   squirrel_id_yr != "4783_KL_1999" & 
-                   squirrel_id_yr != "4818_KL_1999" &
-                   squirrel_id_yr != "4842_KL_1999" &
-                   squirrel_id_yr != "5518_KL_1999" &
-                   squirrel_id_yr != "5755_KL_1999" &
-                   squirrel_id_yr != "6532_KL_1999"  ]
-
-## new file with just problem individuals
-df_probs <- df[squirrel_id_yr == "4245_KL_1996" |
-                 squirrel_id_yr == "4235_SU_1998" |
-                 squirrel_id_yr == "3709_SU_1998" | 
-                 squirrel_id_yr == "5378_SU_1998" | 
-                 squirrel_id_yr == "5001_SU_1998" | 
-                 squirrel_id_yr == "4312_SU_1998" | 
-                 squirrel_id_yr == "4286_SU_1998" | 
-                 
-                 squirrel_id_yr == "4453_KL_1999" | 
-                 squirrel_id_yr == "4465_KL_1999" | 
-                 squirrel_id_yr == "4774_KL_1999" |
-                 squirrel_id_yr == "4783_KL_1999" | 
-                 squirrel_id_yr == "4818_KL_1999" |
-                 squirrel_id_yr == "4842_KL_1999" |
-                 squirrel_id_yr == "5518_KL_1999" |
-                 squirrel_id_yr == "5755_KL_1999" |
-                 squirrel_id_yr == "6532_KL_1999"  ]
-
-## assign a jitter to problem individuals that have no variation in locs
-df_probs$locx <- df_probs$locx + sample(1:10, size = length(df_probs$locx), replace = T)
-df_probs$locy <- df_probs$locy + sample(1:10, size = length(df_probs$locy), replace = T)
-
-## bring data back togethre
-df_poly90s <- rbind(df_probs,df_poly90s)
-
+## subset to 1996 - 1999
+df_poly90s <- df[year < 2000]
 df_poly90s <- df_poly90s[order(df_poly90s$year), ]
 
 yr90s <- data.table(gr_year = as.character(unique(df_poly90s$gr_year)))
@@ -245,3 +140,4 @@ out_polygon20 <- get_polygon(input = df_poly2020,
 names(out_polygon20) <- yr20$gr_year
 
 saveRDS(out_polygon20, "output/edge-list-inputs/polygons-2016-2020.RDS")
+
