@@ -1,0 +1,99 @@
+---
+title: "Table 1"
+output: word_document
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+    echo = FALSE,
+    warning = FALSE,
+    message = FALSE,
+    eval = TRUE,
+    results = 'hide'
+)
+knitr::opts_knit$set(root.dir = '../')
+```
+
+```{r prep, results = 'hide'}
+library(data.table)
+library(kableExtra)
+library(ggplot2)
+library(MCMCglmm)
+library(gridExtra)
+
+# Table 1
+mcmc5 <- readRDS("output/models/mcmc_instrength-outstrength.RDS")
+
+```
+
+
+
+(ref:tabc1) **Table 1**: Summary of behavioural reaction norm model with out-intrusion-strength and in-intrusion strength as co-response variables in a bivariate Bayesian mixed model testing the effects of population density, age, sex, year (1996–2010), and grid 95% credible intervals are displayed in brackets for each posterior mean. See Table 3 of main text for random structure results. Note, reference category for Herd is Buchans and for Year is 2006.
+
+\captionsetup[table]{labelformat=empty}
+```{r tabc1, results = 'asis'}
+
+fixed <- data.table(summary(mcmc5)[["solutions"]], keep.rownames = 'term')
+
+setnames(fixed, 
+				 c('l-95% CI', 'u-95% CI'),
+				 c('low', 'up'))
+
+fixed[, term := gsub('trait', '', term)]
+fixed[, c('one', 'two') := tstrsplit(term, ':')]
+#fixed[, one := ifelse(one == 'instrengthScale', 'outstrengthScale')]
+
+newnames <- data.table(
+	old = c('age', 'gridSU', 'sexM', 'spr_density'),
+	new = c('Age', 'Grid (SU)', 'Sex (M)', 'Density')
+)
+
+fixed[is.na(two) & one == 'Out-Strength', c('two', 'eff') := .('Out-Strength', 'Out-Strength')]
+fixed[is.na(two) & one == 'In-Strength', c('two', 'eff') := .('In-Strength', 'In-Strength')]
+
+
+cast <- dcast(fixed, two ~ one, value.var = c('post.mean', 'low', 'up', 'pMCMC'))
+
+
+#cast[grepl('HERD', two), c('two', 'HERD') := .(gsub('HERD', '', two), TRUE)]
+cast[grepl('year', two), c('two', 'year') := .(gsub('year', '', two), TRUE)]
+cast[newnames, on = 'two == old', two := new]
+
+#cast[(year), two := paste0('-', two)]
+
+#setorder(cast, two)
+#cast[is.na(year), o := c(3, 2, 1, 4)]
+
+tabc1 <- cast
+
+
+numcols <- setdiff(colnames(tabc1), 'two')
+tabc1[, (numcols) := lapply(.SD, round, digits = 2), .SDcols = numcols]
+
+tabc1[!is.na(post.mean_instrengthScale), post_instrength := paste0(post.mean_instrengthScale, ' (', low_instrengthScale, ', ', up_instrengthScale, ')')]
+
+tabc1[!is.na(post.mean_outstrengthScale), post_outstrength := paste0(post.mean_outstrengthScale, ' (', low_outstrengthScale, ', ', up_outstrengthScale, ')')]
+
+#tabc1 <- rbindlist(list(tabc1[1:4],
+#					data.table(two = 'Herd'),
+#					tabc1[5:9],
+#					data.table(two = 'Year'),
+#					tabc1[10:16]),
+#					fill = TRUE)
+
+tabc1 <- tabc1[, .(two, post_instrength, pMCMC_instrengthScale, post_outstrength, pMCMC_outstrengthScale)]
+
+tabc1[, c('pMCMC_instrengthScale', 'pMCMC_outstrengthScale') := lapply(.SD, as.character, digits = 2), .SDcols = c('pMCMC_instrengthScale', 'pMCMC_outstrengthScale')]
+tabc1[pMCMC_instrengthScale == '0', pMCMC_instrengthScale := '<0.005']
+tabc1[pMCMC_outstrengthScale == '0', pMCMC_outstrengthScale := '<0.005']
+
+setnames(tabc1, c('Fixed effect', 'Posterior mean', 'p-value', 'Posterior mean', 'p-value'))
+
+options(knitr.kable.NA = '') 
+knitr::kable(tabc1,
+             caption = '(ref:tabc1)',
+             booktabs = TRUE,
+             linesep = "") %>%
+  add_header_above(c(" ", "instrength" = 2, "outstrength" = 2))
+```
