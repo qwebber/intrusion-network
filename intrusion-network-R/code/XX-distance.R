@@ -1,26 +1,71 @@
 
 
-census_all <- readRDS("output/auxilliary-data/census-all.RDS")
-census_all <- census_all[grid == "KL" & grid == "SU" |
-             year >= 1996]
 
-n<-length(census_all$squirrel_id)
+### Packages ----
+libs <- c('data.table', 
+          'sp', 'adehabitatHR',
+          'sf', 'spatsoc',
+          'ggplot2', 'krsp')
+lapply(libs, require, character.only = TRUE)
 
-census_all$social_survival<-NULL
-census_all$social_repro<-NULL
+df <- readRDS("output/spatial-locs.RDS")
+df$squirrel_id <- as.character(df$squirrel_id)
+df$gr_year <- as.character(df$gr_year)
 
-for (j in 1:n) {
-  temp<-subset(census_all, census_all$grid==census_all$grid[j]&census_all$year==census_all$year[j]&census_all$squirrel_id!=census_all$squirrel_id[j]) # consider only those observations from the same grid and year
-  temp$distance<-sqrt((30*(temp$locx-census_all$locx[j]))^2+(30*(temp$locy-census_all$locy[j]))^2)
-  n2<-length(temp$squirrel_id)
-  for (i in 1:n2) {        
-    temp$fraction[i]<-length(subset(d_distance, d_distance > temp$distance[i]))/length(d_distance)
-  }
-  temp$surv_frac<-temp$survived*temp$fraction
-  temp$surv_frac2<-temp$survived2*temp$fraction
-  temp$repro_frac<-temp$all_litters_fit*temp$fraction
+df2 <- df[, median(locx), by = c("squirrel_id", "gr_year")]
+df2$locy <- df[, median(locy), by = c("squirrel_id", "gr_year")]$V1 
+setnames(df2, "V1", "locx")
+
+df_nn <- edge_dist(df2, id = "squirrel_id", coords = c("locx", "locy"), 
+                    timegroup = NULL, threshold = 10000, returnDist = T, 
+                    splitBy = "gr_year")
+
+df_nn$dyad <- as.factor(paste(df_nn$ID1, df_nn$ID2, df_nn$gr_year, sep = "_"))
+
+
+## load edge list data
+edge_list <- readRDS("output/edge-list-true.RDS")
+edge_list$gr_year <- as.factor(paste(edge_list$grid, edge_list$year, sep = "_"))
+yr <- fread("output/unique-grid-years.csv")
+
+yr <- data.table(gr_year = unique(edge_list$gr_year))
+
+## number of unique grid-years
+n <- length(unique(yr$gr_year))
+gr_year <- unique(yr$gr_year)
+
+## number of obs per owner
+edge_list[, Nowner := .N, by = c("owner", "grid", "year")]
+
+## number of obs per intruder
+edge_list[, Nintruder := .N, by = c("intruder", "grid", "year")]
+
+edge_list <- edge_list[edge != 0]
+
+## generate metrics
+out2 <- c()
+for(i in 1:n){ 
   
-  census_all$social_survival[j]<-sum(temp$surv_frac, na.rm=T)
-  census_all$social_survival2[j]<-sum(temp$surv_frac2, na.rm=T)
-  census_all$social_repro[j]<-sum(temp$repro_frac, na.rm=T)
+  k <- gr_year[i]
+  
+  out1 <- edge_list[gr_year == k][, .N, by = c("owner", "intruder", "Nintruder")]
+  
+  ## generate territoriality index (intrusions/intrusions + total locs)
+  out2[[i]] <- data.table(owner = out1$owner,
+                    intruder = out1$intruder, 
+                    TI = out1$N/(out1$N + out1$Nintruder),
+                    Nintrusions = out1$N,
+                    gr_year = k)
+  
+  
 }
+
+out2 <- rbindlist(out2, fill = T)
+out2[, c("year", "grid") := tstrsplit(gr_year, "_", fixed=TRUE)]
+out2$dyad <- as.factor(paste(out2$owner, out2$intruder, out2$gr_year, sep = "_"))
+
+aa <- merge(out2, df_nn, by = "dyad")
+
+ggplot(aa, aes(distance, TI)) +
+  geom_point() +
+  geom_smooth()
