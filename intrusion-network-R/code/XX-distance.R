@@ -22,7 +22,6 @@ df_nn <- edge_dist(df2, id = "squirrel_id", coords = c("locx", "locy"),
 
 df_nn$dyad <- as.factor(paste(df_nn$ID1, df_nn$ID2, df_nn$gr_year, sep = "_"))
 
-
 ## load edge list data
 edge_list <- readRDS("output/edge-list-true.RDS")
 edge_list$gr_year <- as.factor(paste(edge_list$grid, edge_list$year, sep = "_"))
@@ -48,14 +47,27 @@ for(i in 1:n){
   
   k <- gr_year[i]
   
-  out1 <- edge_list[gr_year == k][, .N, by = c("owner", "intruder", "Nintruder")]
+  df1 <- edge_list[gr_year == k][, .N, by = c("owner", "intruder", "Nintruder", "gr_year")]
+  
+    
+  ## generate territoriality index (intrusions/intrusions + total locs)
+  df2 <- data.table(owner = df1$owner,
+                    intruder = df1$intruder, 
+                    Nintruder = df1$Nintruder)
+    
+  adj <- AdjacencyFromEdgelist(df2)
+    
+  diag(adj$adjacency) <- 0
+  
+  adj2 <- as.matrix(adj$adjacency)
+  colnames(adj2) <- adj$nodelist
+  rownames(adj2) <- adj$nodelist
+  
+  out1 <- data.table(setNames(melt(adj2), c('owner', 'intruder', 'Nintruder')))
+  out1$gr_year <- k  
   
   ## generate territoriality index (intrusions/intrusions + total locs)
-  out2[[i]] <- data.table(owner = out1$owner,
-                    intruder = out1$intruder, 
-                    TI = out1$N/(out1$N + out1$Nintruder),
-                    Nintrusions = out1$N,
-                    gr_year = k)
+  out2[[i]] <- out1
   
   
 }
@@ -64,8 +76,10 @@ out2 <- rbindlist(out2, fill = T)
 out2[, c("year", "grid") := tstrsplit(gr_year, "_", fixed=TRUE)]
 out2$dyad <- as.factor(paste(out2$owner, out2$intruder, out2$gr_year, sep = "_"))
 
-aa <- merge(out2, df_nn, by = "dyad")
+aa <- merge(out2[, c("gr_year") := NULL], df_nn, by = "dyad")
+aa[, c("dyad", "ID1", "ID2") := NULL]
+aa$dyad <- as.factor(paste(aa$owner, aa$intruder, sep = "_"))
 
-ggplot(aa, aes(distance, TI)) +
+ggplot(aa, aes(distance, Nintruder)) +
   geom_point() +
   geom_smooth()
