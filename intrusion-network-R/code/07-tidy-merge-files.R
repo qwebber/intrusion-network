@@ -48,5 +48,15 @@ terr$id_yr_gr <- as.factor(paste(terr$squirrel_id, terr$grid, terr$year, sep = "
 
 all2 <- merge(all, terr[,c("area_m2", "id_yr_gr")], by = "id_yr_gr")
 
+## add mast fixed effect
+all2[, mast := (year == 1998 |
+      year == 2005 | 
+      year == 2010 | 
+      year == 2014 | 
+      year == 2019)]
+all2$mast[all2$mast == TRUE] <- "mast"
+all2$mast[all2$mast == FALSE] <- "nomast"
+
+
 saveRDS(all2, "output/final-df.RDS")
 
