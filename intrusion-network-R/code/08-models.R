@@ -65,7 +65,7 @@ all[year != 1998 |
       year != 2019][, sd(area_ha)]
 
 
-## average territory size mast years
+## average out-strength for mast years
 all[year == 1998 |
       year == 2005 | 
       year == 2010 | 
@@ -91,6 +91,35 @@ all[year != 1998 |
       year != 2014 | 
       year != 2019][, sd(outstrength)]
 
+
+## average in-strength for mast years
+all[year == 1998 |
+       year == 2005 | 
+       year == 2010 | 
+       year == 2014 | 
+       year == 2019][, median(instrength)]
+
+all[year == 1998 |
+       year == 2005 | 
+       year == 2010 | 
+       year == 2014 | 
+       year == 2019][, sd(instrength)]
+
+## average intrusion strength non-mast years
+all[year != 1998 |
+       year != 2005 | 
+       year != 2010 | 
+       year != 2014 | 
+       year != 2019][, median(instrength)]
+
+all[year != 1998 |
+       year != 2005 | 
+       year != 2010 | 
+       year != 2014 | 
+       year != 2019][, sd(instrength)]
+
+
+
 ############################ 
 #### INTRUSION STRENGTH ####
 ############################ 
@@ -105,7 +134,7 @@ mcmc1 <- MCMCglmm(outstrengthScale ~
                       sex + 
                       age + 
                       spr_density + 
-                      year,
+                      mast,
                     random =~ us(1 + spr_density):squirrel_id,
                     rcov = ~units,
                     family = "gaussian",
@@ -135,7 +164,7 @@ mcmc2 <- MCMCglmm(areaScale ~
                     sex + 
                     age + 
                     spr_density + 
-                    year,
+                    mast,
                   random =~ us(1 + spr_density):squirrel_id,
                   rcov = ~units,
                   family = "gaussian",
@@ -166,7 +195,7 @@ mcmc3 <- MCMCglmm(instrengthScale ~
                     sex + 
                     age + 
                     spr_density + 
-                    year,
+                     mast,
                   random =~ us(1 + spr_density):squirrel_id,
                   rcov = ~units,
                   family = "gaussian",
@@ -185,8 +214,8 @@ saveRDS(mcmc3, "output/models/mcmc_instrength.RDS")
 
 ## Bivariate model
 p.var_str <- var(all$outstrength, na.rm = TRUE)
-prior2 <- list(R = list(V=diag(4)*(p.var_str/2), nu=4),
-               G = list(G1 = list(V = diag(4)*(p.var_str/2), nu=4,
+prior2 <- list(R = list(V=diag(2)*(p.var_str/2), nu=4), ## 2x2 matrix for random effects 
+               G = list(G1 = list(V = diag(4)*(p.var_str/2), nu=4, ## 4x4 matrix for among-individual section
                                       alpha.V = diag(4)*p.var_str/2)))
 
 mcmc4 <- MCMCglmm(cbind(instrengthScale, 
@@ -195,10 +224,10 @@ mcmc4 <- MCMCglmm(cbind(instrengthScale,
                     trait:grid +
                     trait:sex + 
                     trait:age + 
-                    trait:spr_density +
-                    trait:year,
+                    trait:spr_density + 
+                    trait:mast,
                   random =~ us(trait + spr_density:trait):squirrel_id,
-                  rcov =~ idh(trait:grid):units,
+                  rcov =~ idh(trait):units,
                   family = c("gaussian","gaussian"),
                   prior = prior2,
                   #nitt=420000,
@@ -220,10 +249,10 @@ mcmc5 <- MCMCglmm(cbind(areaScale,
                     trait:grid +
                     trait:sex + 
                     trait:age + 
-                    trait:spr_density +
-                    trait:year,
+                    trait:spr_density + 
+                    trait:mast,
                   random =~ us(trait + spr_density:trait):squirrel_id,
-                  rcov =~ idh(trait:grid):units,
+                  rcov =~ idh(trait):units,
                   family = c("gaussian","gaussian"),
                   prior = prior2,
                   #nitt=420000,
@@ -246,10 +275,10 @@ mcmc6 <- MCMCglmm(cbind(areaScale,
                     trait:grid +
                     trait:sex + 
                     trait:age + 
-                    trait:spr_density +
-                    trait:year,
+                    trait:spr_density + 
+                    trait:mast,
                   random =~ us(trait + spr_density:trait):squirrel_id,
-                  rcov =~ idh(trait:grid):units,
+                  rcov =~ idh(trait):units,
                   family = c("gaussian","gaussian"),
                   prior = prior2,
                   #nitt=420000,
