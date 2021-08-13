@@ -13,12 +13,16 @@ lapply(libs, require, character.only = TRUE)
 outIn <- readRDS("output/models/mcmc_instrength-outstrength.RDS")
 areaOut <- readRDS("output/models/mcmc_area-outstrength.RDS")
 areaIn <- readRDS("output/models/mcmc_area-intstrength.RDS")
+summary(outIn)
+summary(areaOut)
+summary(areaIn)
 
+aa <- data.table(fixef(outIn))
 
 ## out-strength - in-strength
 df_outIn <- data.table(Trait = attr(colMeans(outIn$Sol), "names"),
                                Value = colMeans(outIn$Sol)) 
-df_outIn2 <- df_outIn[59:length(df_outIn$Trait),]
+df_outIn2 <- df_outIn[13:length(df_outIn$Trait),]
 df_outIn2[, c('Trait' ,'xx' ,'squirrel_id') := tstrsplit(Trait, '.', fixed = TRUE)][,c("xx") := NULL]
 
 df_outIn2$Trait[df_outIn2$Trait == "traitinstrengthScale"] <- 'inStrength'  
@@ -45,7 +49,7 @@ HPDinterval(cor_in_out)
 ## out-strength - territory size
 df_outArea <- data.table(Trait = attr(colMeans(areaOut$Sol), "names"),
                        Value = colMeans(areaOut$Sol)) 
-df_outArea2 <- df_outArea[59:length(df_outArea$Trait),]
+df_outArea2 <- df_outArea[13:length(df_outArea$Trait),]
 df_outArea2[, c('Trait' ,'xx' ,'squirrel_id') := tstrsplit(Trait, '.', fixed = TRUE)][,c("xx") := NULL]
 
 df_outArea2$Trait[df_outArea2$Trait == "traitareaScale"] <- 'area'  
@@ -72,7 +76,7 @@ HPDinterval(cor_area_out)
 ## in-strength - territory size
 df_inArea <- data.table(Trait = attr(colMeans(areaIn$Sol), "names"),
                          Value = colMeans(areaIn$Sol)) 
-df_inArea2 <- df_inArea[59:length(df_inArea$Trait),]
+df_inArea2 <- df_inArea[13:length(df_inArea$Trait),]
 df_inArea2[, c('Trait' ,'xx' ,'squirrel_id') := tstrsplit(Trait, '.', fixed = TRUE)][,c("xx") := NULL]
 
 df_inArea2$Trait[df_inArea2$Trait == "traitareaScale"] <- 'area'  
@@ -99,7 +103,7 @@ HPDinterval(cor_area_in)
 png("figures/Fig4.png", width = 6000, height = 3000, res = 600, units = "px")
 fig4a <- ggplot(outInDF, aes(interceptOut, interceptIn)) +
   geom_point(size = 2, alpha = 0.65) +
-  #geom_smooth(method = "lm") +
+  geom_smooth(method = "lm", color = "darkblue", se = F) +
   ylab("In-intrusion-strength") +
   xlab("Out-intrusion-strength") +
   ggtitle("A)") +
@@ -118,7 +122,7 @@ fig4a <- ggplot(outInDF, aes(interceptOut, interceptIn)) +
 
 fig4b <- ggplot(outAreaDF, aes(interceptOut, interceptArea)) +
   geom_jitter(size = 2, alpha = 0.65) +
-  #geom_smooth(method = "lm") +
+  geom_smooth(method = "lm", color = "darkblue", se = F) +
   ylab("Territory size (ha)") +
   xlab("Out-intrusion-strength") +
   ggtitle("B)") +
@@ -137,7 +141,7 @@ fig4b <- ggplot(outAreaDF, aes(interceptOut, interceptArea)) +
 
 fig4c <- ggplot(inAreaDF, aes(interceptin, interceptArea)) +
   geom_jitter(size = 2, alpha = 0.65) +
-  #geom_smooth(method = "lm") +
+  geom_smooth(method = "lm", color = "darkblue", se = F) +
   ylab("Territory size (ha)") +
   xlab("In-intrusion-strength") +
   ggtitle("C)") +
@@ -160,16 +164,32 @@ dev.off()
 
 
 
-ggplot(all, aes(outstrength, instrength)) +
+aa <- ggplot(all, aes(outstrength, instrength)) +
   geom_point(aes(color = as.factor(year))) +
   theme(legend.position = 'none') + 
   geom_smooth(method = "loess") 
-ggplot(all, aes(area_ha, instrength)) +
+bb <- ggplot(all, aes(area_ha, instrength)) +
   geom_point(aes(color = as.factor(year))) +
   theme(legend.position = 'none') + 
   geom_smooth(method = "loess") 
-ggplot(all, aes(area_ha, outstrength)) +
+cc <- ggplot(all, aes(area_ha, outstrength)) +
   geom_point(aes(color = as.factor(year))) +
   theme(legend.position = 'none') + 
   geom_smooth(method = "lm") 
 grid.arrange(aa,bb,cc, nrow = 1)  
+
+
+ggplot(all, aes(sex, outstrength)) +
+  geom_boxplot(notch = T,
+               outlier.color = NA) +
+  geom_jitter(alpha = 0.5)
+ggplot(all, aes(sex, instrength)) +
+  geom_boxplot(notch = T, 
+               outlier.color= NA) +
+  geom_jitter(alpha = 0.5)
+ggplot(all, aes(sex, area_ha)) +
+  geom_boxplot(notch = T, 
+               outlier.color= NA) +
+  geom_jitter(alpha = 0.5)
+
+
