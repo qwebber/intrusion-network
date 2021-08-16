@@ -13,6 +13,12 @@ df$gr_year <- as.character(df$gr_year)
 
 df <- df[order(df$year), ]
 
+## summary stats for spatial data
+locs <- df[, .N, by = c("gr_year", "squirrel_id")]
+median(df[, .N, by = c("gr_year", "squirrel_id")]$N)
+range(df[, .N, by = c("gr_year", "squirrel_id")]$N)
+fwrite(locs, "output/number_locs.csv")
+
 ## prj
 prj <- '+init=epsg:26911'
 
