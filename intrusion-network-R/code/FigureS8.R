@@ -67,7 +67,7 @@ df_in <- df_in[!is.na(df_in$grid)]
 
 col <- c("#f1a340", "#998ec3")
 
-png("figures/FigS8.png", height = 6000, width = 8000, units = "px", res = 600)
+#png("figures/FigS8.png", height = 6000, width = 8000, units = "px", res = 600)
 Fig4A <- ggplot(data = df_fit_strength) +
   geom_jitter(aes(spr_density, Value, group = as.factor(squirrel_id), color = grid),
               alpha = 0.5) +
@@ -140,6 +140,8 @@ Fig4C <- ggplot(data = df_in) +
       colour = "black",
       fill = NA,
       size = 0.5)) 
+
+
 
 Fig4D <- ggplot(data = df_fit_strength) +
   geom_smooth(aes(spr_density, Value, group = as.factor(squirrel_id), color = grid),
@@ -225,6 +227,7 @@ Fig4F <- ggplot(data = df_in) +
       fill = NA,
       size = 0.5)) 
 
+
 grid.arrange(Fig4A, Fig4B, Fig4C, 
              Fig4D, Fig4E, Fig4F, nrow = 2)
-dev.off()
+#dev.off()
