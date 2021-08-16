@@ -104,8 +104,5 @@ edge_list[, c("grid", "year") := tstrsplit(gr_year, "_", fixed=TRUE)]
 ggplot(edge_list[, .N, by = c("grid", "year")]) + 
   geom_point(aes(year, N, color = grid))
 
-## remove KL-2006
-edge_list <- edge_list[gr_year != "KL_2006"]
-
 ## export edge list
 saveRDS(edge_list, "output/edge_list.RDS")
