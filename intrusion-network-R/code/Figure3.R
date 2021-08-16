@@ -35,7 +35,7 @@ mcmc_in <- readRDS("output/models/mcmc_instrength.RDS")
 ## convert to BRN format
 df_strength <- cbind(all,
                      fit = predict(mcmc_strength, marginal = NULL)) %>%
-  group_by(squirrel_id, grid, year, densityScale) %>%
+  group_by(squirrel_id, grid, year, densityScale, spr_density) %>%
   dplyr::summarise(fit = mean(fit.V1),
                    outstrengthScale = mean(outstrengthScale)) %>%
   tidyr::gather(Type, Value,
@@ -47,7 +47,7 @@ df_fit_strength <- df_fit_strength[!is.na(df_fit_strength$grid)]
 ## Territory size
 df_territory <- cbind(all,
                       fit = predict(mcmc_territory, marginal = NULL)) %>%
-  group_by(squirrel_id, grid, year, densityScale) %>%
+  group_by(squirrel_id, grid, year, densityScale, spr_density) %>%
   dplyr::summarise(fit = mean(fit.V1),
                    areaScale = mean(areaScale)) %>%
   tidyr::gather(Type, Value,
@@ -59,7 +59,7 @@ df_territory <- df_territory[!is.na(df_territory$grid)]
 ## In-strength
 df_in <- cbind(all,
                fit = predict(mcmc_in, marginal = NULL)) %>%
-  group_by(squirrel_id, grid, year, densityScale) %>%
+  group_by(squirrel_id, grid, year, densityScale, spr_density) %>%
   dplyr::summarise(fit = mean(fit.V1),
                    instrengthScale = mean(instrengthScale)) %>%
   tidyr::gather(Type, Value,
@@ -116,6 +116,91 @@ fig3A <- ggplot(data = density[year >1995],
       colour = "black",
       fill = NA,
       size = 0.5))
+
+
+Fig4D <- ggplot(data = df_fit_strength) +
+  geom_smooth(aes(spr_density, Value, group = as.factor(squirrel_id), color = grid),
+              #color = "darkgrey",
+              size = 0.25,
+              alpha = 0.5,
+              method = lm,
+              se = FALSE) +
+  geom_smooth(aes(spr_density, Value), 
+              method = lm, 
+              color = "black") +
+  scale_color_manual(values = col) +
+  ylim(-0.8, 1) +
+  xlab("Spring density (squirrels/ha)") +
+  ylab("Intrusion out-strength") +
+  ggtitle('D)') +
+  theme(
+    legend.position = 'none',
+    plot.title = element_text(size = 14, color = "black"),
+    axis.text.x = element_text(size = 12, color = "black", hjust = 1),
+    axis.text.y = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, color = "black"),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_rect(
+      colour = "black",
+      fill = NA,
+      size = 0.5))
+
+Fig4E <- ggplot(data = df_territory ) +
+  geom_smooth(aes(spr_density, Value, group = as.factor(squirrel_id), color = grid),
+              #color = "darkgrey",
+              size = 0.25,
+              alpha = 0.5,
+              method = lm,
+              se = FALSE) +
+  geom_smooth(aes(spr_density, Value), 
+              method = lm, 
+              color = "black") +
+  scale_color_manual(values = col) +
+  #ylim(-0.8, 1) +
+  xlab("Spring density (squirrels/ha)") +
+  ylab("Territory size (ha)") +
+  ggtitle('E)') +
+  theme(
+    legend.position = 'none',
+    plot.title = element_text(size = 14, color = "black"),
+    axis.text.x = element_text(size = 12, color = "black", hjust = 1),
+    axis.text.y = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, color = "black"),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_rect(
+      colour = "black",
+      fill = NA,
+      size = 0.5)) 
+
+Fig4F <- ggplot(data = df_in) +
+  geom_smooth(aes(spr_density, Value, group = as.factor(squirrel_id), color = grid),
+              #color = "darkgrey",
+              size = 0.25,
+              alpha = 0.5,
+              method = lm,
+              se = FALSE) +
+  geom_smooth(aes(spr_density, Value), 
+              method = lm, 
+              color = "black") +
+  scale_color_manual(values = col) +
+  scale_y_continuous(labels = scales::number_format(accuracy = 0.1)) +
+  xlab("Spring density (squirrels/ha)") +
+  ylab("Intrusion in-strength") +
+  ggtitle('F)') +
+  theme(
+    legend.position = 'none',
+    plot.title = element_text(size = 14, color = "black"),
+    axis.text.x = element_text(size = 12, color = "black", hjust = 1),
+    axis.text.y = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, color = "black"),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_rect(
+      colour = "black",
+      fill = NA,
+      size = 0.5)) 
 
 fig3B <- ggplot() +
   geom_smooth(data = df_fit_strength, 
@@ -248,8 +333,9 @@ fig3D <- ggplot() +
       colour = "black",
       fill = NA,
       size = 0.5))
-grid.arrange(fig3A,
-             fig3B,
-             fig3D,
-             fig3C, ncol = 1, nrow = 4)
-dev.off()
+grid.arrange(#fig3A,
+             Fig4D, Fig4E, Fig4F,
+             fig3B, 
+             fig3D, 
+             fig3C, ncol = 3, nrow = 2)
+fdev.off()
