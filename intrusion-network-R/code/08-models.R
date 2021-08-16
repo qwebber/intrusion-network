@@ -11,6 +11,8 @@ all$year <- as.factor(all$year)
 
 unique(all$gr_year)
 
+all <- all[gr_year != "KL_2006"]
+
 all$area_ha <- all$area_m2/10000
 
 all <- all[!is.na(all$sex)]
@@ -129,12 +131,13 @@ prior_out <- list(G=list(G1=list(V=diag(2)*(p.var_str/2), nu=4,
                                  alpha.V=diag(2)*p.var_str/2)),
                   R=list(V=diag(1)*(p.var_str/2), nu=4))
 
-mcmc1 <- MCMCglmm(outstrengthScale ~ 
+mcmc1 <- MCMCglmm(outstrength ~ 
                       grid +
                       sex + 
                       age + 
                       spr_density + 
-                      mast,
+                      mast + 
+                      N,
                     random =~ us(1 + spr_density):squirrel_id,
                     rcov = ~units,
                     family = "gaussian",
@@ -159,12 +162,13 @@ prior_area <- list(G=list(G1=list(V=diag(2)*(p.var_area/2), nu=4,
                                  alpha.V=diag(2)*p.var_area/2)),
                   R=list(V=diag(1)*(p.var_area/2), nu=4))
 
-mcmc2 <- MCMCglmm(areaScale ~ 
+mcmc2 <- MCMCglmm(area_ha ~ 
                     grid +
                     sex + 
                     age + 
                     spr_density + 
-                    mast,
+                    mast + 
+                     N,
                   random =~ us(1 + spr_density):squirrel_id,
                   rcov = ~units,
                   family = "gaussian",
@@ -190,12 +194,13 @@ prior_in <- list(G=list(G1=list(V=diag(2)*(p.var_in/2), nu=4,
                                   alpha.V=diag(2)*p.var_in/2)),
                    R=list(V=diag(1)*(p.var_in/2), nu=4))
 
-mcmc3 <- MCMCglmm(instrengthScale ~ 
+mcmc3 <- MCMCglmm(instrength ~ 
                     grid +
                     sex + 
                     age + 
                     spr_density + 
-                     mast,
+                     mast + 
+                     N,
                   random =~ us(1 + spr_density):squirrel_id,
                   rcov = ~units,
                   family = "gaussian",
