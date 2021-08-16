@@ -48,15 +48,22 @@ terr$id_yr_gr <- as.factor(paste(terr$squirrel_id, terr$grid, terr$year, sep = "
 
 all2 <- merge(all, terr[,c("area_m2", "id_yr_gr")], by = "id_yr_gr")
 
+## load number of locs
+locs <- fread("output/number_locs.csv")
+locs$id_yr_gr <- as.factor(paste(locs$squirrel_id, locs$gr_year, sep = "_"))
+
+## merge number of locs with main dataset
+all3 <- merge(all2, locs[,c("N","id_yr_gr")], by = "id_yr_gr")
+
 ## add mast fixed effect
-all2[, mast := (year == 1998 |
+all3[, mast := (year == 1998 |
       year == 2005 | 
       year == 2010 | 
       year == 2014 | 
       year == 2019)]
-all2$mast[all2$mast == TRUE] <- "mast"
-all2$mast[all2$mast == FALSE] <- "nomast"
+all3$mast[all3$mast == TRUE] <- "mast"
+all3$mast[all3$mast == FALSE] <- "nomast"
 
 
-saveRDS(all2, "output/final-df.RDS")
+saveRDS(all3, "output/final-df.RDS")
 
