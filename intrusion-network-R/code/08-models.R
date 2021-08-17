@@ -6,19 +6,17 @@ lapply(libs, require, character.only = TRUE)
 
 ## load data
 all <- readRDS("output/final-df.RDS")
+all <- all[gr_year != "KL_2006"]
 all$squirrel_id <- as.factor(all$squirrel_id)
 all$year <- as.factor(all$year)
 
 unique(all$gr_year)
-
-all <- all[gr_year != "KL_2006"]
-
 all$area_ha <- all$area_m2/10000
 
 all <- all[!is.na(all$sex)]
 all <- all[!is.na(all$grid)]
 
-## scale variables within year:
+## scale variables:
 all[, outstrengthScale := scale(outstrength)]
 all[, instrengthScale := scale(instrength)]
 all[, areaScale := scale(area_ha)]
@@ -216,15 +214,15 @@ mcmc3 <- MCMCglmm(instrength ~
 
 saveRDS(mcmc3, "output/models/mcmc_instrength.RDS")
 
-
-## Bivariate model
+## Tri-variate model
 p.var_str <- var(all$outstrength, na.rm = TRUE)
-prior2 <- list(R = list(V=diag(2)*(p.var_str/2), nu=4), ## 2x2 matrix for random effects 
-               G = list(G1 = list(V = diag(4)*(p.var_str/2), nu=4, ## 4x4 matrix for among-individual section
-                                      alpha.V = diag(4)*p.var_str/2)))
+prior2 <- list(R = list(V=diag(3)*(p.var_str/2), nu=4), ## 2x2 matrix for random effects 
+               G = list(G1 = list(V = diag(6)*(p.var_str/2), nu=4, ## 4x4 matrix for among-individual section
+                                      alpha.V = diag(6)*p.var_str/2)))
 
 mcmc4 <- MCMCglmm(cbind(instrengthScale, 
-                        outstrengthScale) ~ 
+                        outstrengthScale,
+                        areaScale) ~ 
                     trait-1 + 
                     trait:grid +
                     trait:sex + 
@@ -233,7 +231,7 @@ mcmc4 <- MCMCglmm(cbind(instrengthScale,
                     trait:mast,
                   random =~ us(trait + spr_density:trait):squirrel_id,
                   rcov =~ idh(trait):units,
-                  family = c("gaussian","gaussian"),
+                  family = c("gaussian","gaussian", "gaussian"),
                   prior = prior2,
                   #nitt=420000,
                   #burnin=20000,
@@ -245,57 +243,4 @@ mcmc4 <- MCMCglmm(cbind(instrengthScale,
                   saveZ = TRUE)
 
 summary(mcmc4)
-saveRDS(mcmc4, "output/models/mcmc_instrength-outstrength.RDS")
-
-
-mcmc5 <- MCMCglmm(cbind(areaScale, 
-                        outstrengthScale) ~ 
-                    trait-1 + 
-                    trait:grid +
-                    trait:sex + 
-                    trait:age + 
-                    trait:spr_density + 
-                    trait:mast,
-                  random =~ us(trait + spr_density:trait):squirrel_id,
-                  rcov =~ idh(trait):units,
-                  family = c("gaussian","gaussian"),
-                  prior = prior2,
-                  #nitt=420000,
-                  #burnin=20000,
-                  #thin=100,
-                  verbose = TRUE,
-                  data = all,
-                  pr=TRUE,
-                  saveX = TRUE,
-                  saveZ = TRUE)
-
-summary(mcmc5)
-saveRDS(mcmc5, "output/models/mcmc_area-outstrength.RDS")
-
-
-
-mcmc6 <- MCMCglmm(cbind(areaScale, 
-                        instrengthScale) ~ 
-                    trait-1 + 
-                    trait:grid +
-                    trait:sex + 
-                    trait:age + 
-                    trait:spr_density + 
-                    trait:mast,
-                  random =~ us(trait + spr_density:trait):squirrel_id,
-                  rcov =~ idh(trait):units,
-                  family = c("gaussian","gaussian"),
-                  prior = prior2,
-                  #nitt=420000,
-                  #burnin=20000,
-                  #thin=100,
-                  verbose = TRUE,
-                  data = all,
-                  pr=TRUE,
-                  saveX = TRUE,
-                  saveZ = TRUE)
-
-summary(mcmc6)
-saveRDS(mcmc6, "output/models/mcmc_area-intstrength.RDS")
-
-
+saveRDS(mcmc4, "output/models/mcmc_all.RDS")
