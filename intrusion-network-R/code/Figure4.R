@@ -1,195 +1,295 @@
 
-
-###############################################
-################### FIGURE 4 ################### 
-###############################################
-
 ### Packages ----
 libs <- c('data.table', 'dplyr', 'MCMCglmm',
           'ggplot2', 'gridExtra')
 lapply(libs, require, character.only = TRUE)
 
+## load data
+density <- readRDS("output/auxilliary-data/spring-density.RDS")
+#density <- setDT(density)[year > 1995] 
+density <- setDT(density)[grid == "KL" | grid == "SU"]
+
+## load data
+all <- readRDS("output/final-df.RDS")
+all <- all[gr_year != "KL_2006"]
+all$squirrel_id <- as.factor(all$squirrel_id)
+all$year <- as.factor(all$year)
+
+unique(all$gr_year)
+
+all$area_ha <- all$area_m2/10000
+
+all <- all[!is.na(all$sex)]
+all <- all[!is.na(all$grid)]
+
+## scale variables:
+all[, outstrengthScale := scale(outstrength)]
+all[, instrengthScale := scale(instrength)]
+all[, areaScale := scale(area_ha)]
+all[, densityScale := scale(spr_density)]
+
 ## load models
-outIn <- readRDS("output/models/mcmc_instrength-outstrength.RDS")
-areaOut <- readRDS("output/models/mcmc_area-outstrength.RDS")
-areaIn <- readRDS("output/models/mcmc_area-intstrength.RDS")
-summary(outIn)
-summary(areaOut)
-summary(areaIn)
+mcmc_strength <- readRDS("output/models/mcmc_strength.RDS")
+mcmc_territory <- readRDS("output/models/mcmc_territory.RDS")
+mcmc_in <- readRDS("output/models/mcmc_instrength.RDS")
 
-aa <- data.table(fixef(outIn))
+## convert to BRN format
+df_strength <- cbind(all,
+                     fit = predict(mcmc_strength, marginal = NULL)) %>%
+  group_by(squirrel_id, grid, year, densityScale, spr_density) %>%
+  dplyr::summarise(fit = mean(fit.V1),
+                   outstrengthScale = mean(outstrengthScale)) %>%
+  tidyr::gather(Type, Value,
+                fit:outstrengthScale)
 
-## out-strength - in-strength
-df_outIn <- data.table(Trait = attr(colMeans(outIn$Sol), "names"),
-                               Value = colMeans(outIn$Sol)) 
-df_outIn2 <- df_outIn[13:length(df_outIn$Trait),]
-df_outIn2[, c('Trait' ,'xx' ,'squirrel_id') := tstrsplit(Trait, '.', fixed = TRUE)][,c("xx") := NULL]
+df_fit_strength = setDT(df_strength)[Type == "fit"]
+df_fit_strength <- df_fit_strength[!is.na(df_fit_strength$grid)]
 
-df_outIn2$Trait[df_outIn2$Trait == "traitinstrengthScale"] <- 'inStrength'  
-df_outIn2$Trait[df_outIn2$Trait == "traitoutstrengthScale"] <- 'outStrength'  
-df_outIn2$Trait[df_outIn2$Trait == "traitinstrengthScale:spr_density"] <- 'plastInStr'  
-df_outIn2$Trait[df_outIn2$Trait == "traitoutstrengthScale:spr_density"] <- 'plastOutStr'  
+## Territory size
+df_territory <- cbind(all,
+                      fit = predict(mcmc_territory, marginal = NULL)) %>%
+  group_by(squirrel_id, grid, year, densityScale, spr_density) %>%
+  dplyr::summarise(fit = mean(fit.V1),
+                   areaScale = mean(areaScale)) %>%
+  tidyr::gather(Type, Value,
+                fit:areaScale)
 
+df_territory = setDT(df_territory)[Type == "fit"]
+df_territory <- df_territory[!is.na(df_territory$grid)]
 
-outInDF <- data.table(interceptIn = df_outIn2[Trait == "inStrength"]$Value,
-                    interceptOut = df_outIn2[Trait == "outStrength"]$Value,
-                    slopeIn = df_outIn2[Trait == "plastInStr"]$Value, 
-                    slopeOut =  df_outIn2[Trait == "plastOutStr"]$Value, 
-                    squirrel_id = df_outIn2[Trait == "inStrength"]$squirrel_id)
- 
-## CORRELATIONS between Intercept in-strength and Intercept out-strength:
-cor_in_out <- outIn$VCV[,"traitinstrengthScale:traitoutstrengthScale.squirrel_id"]/
-  (sqrt(outIn$VCV[,"traitinstrengthScale:traitinstrengthScale.squirrel_id"])*
-     sqrt(outIn$VCV[,"traitoutstrengthScale:traitoutstrengthScale.squirrel_id"]))
+## In-strength
+df_in <- cbind(all,
+               fit = predict(mcmc_in, marginal = NULL)) %>%
+  group_by(squirrel_id, grid, year, densityScale, spr_density) %>%
+  dplyr::summarise(fit = mean(fit.V1),
+                   instrengthScale = mean(instrengthScale)) %>%
+  tidyr::gather(Type, Value,
+                fit:instrengthScale)
 
-mean(cor_in_out)
-HPDinterval(cor_in_out)
+df_in = setDT(df_in)[Type == "fit"]
+df_in <- df_in[!is.na(df_in$grid)]
 
+col <- c("#f1a340", "#998ec3")
 
-## out-strength - territory size
-df_outArea <- data.table(Trait = attr(colMeans(areaOut$Sol), "names"),
-                       Value = colMeans(areaOut$Sol)) 
-df_outArea2 <- df_outArea[13:length(df_outArea$Trait),]
-df_outArea2[, c('Trait' ,'xx' ,'squirrel_id') := tstrsplit(Trait, '.', fixed = TRUE)][,c("xx") := NULL]
+png("figures/Fig3.png", width = 8000, height = 4000, units = "px", res = 600)
+Fig3A <- ggplot(data = df_fit_strength) +
+  geom_smooth(aes(spr_density, Value, group = as.factor(squirrel_id), color = grid),
+              #color = "darkgrey",
+              size = 0.25,
+              alpha = 0.5,
+              method = lm,
+              se = FALSE) +
+  geom_smooth(aes(spr_density, Value), 
+              method = lm, 
+              color = "black") +
+  scale_color_manual(values = col) +
+  xlab("Spring density (squirrels/ha)") +
+  ylab("Out-intrusion-strength") +
+  ggtitle('A)') +
+  theme(
+    legend.position = 'none',
+    plot.title = element_text(size = 14, color = "black"),
+    axis.text.x = element_text(size = 12, color = "black", hjust = 1),
+    axis.text.y = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, color = "black"),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_rect(
+      colour = "black",
+      fill = NA,
+      size = 0.5))
 
-df_outArea2$Trait[df_outArea2$Trait == "traitareaScale"] <- 'area'  
-df_outArea2$Trait[df_outArea2$Trait == "traitoutstrengthScale"] <- 'outStrength'  
-df_outArea2$Trait[df_outArea2$Trait == "traitareaScale:spr_density"] <- 'plastArea'  
-df_outArea2$Trait[df_outArea2$Trait == "traitoutstrengthScale:spr_density"] <- 'plastOutStr'  
+Fig3B <- ggplot(data = df_territory ) +
+  geom_smooth(aes(spr_density, Value, group = as.factor(squirrel_id), color = grid),
+              #color = "darkgrey",
+              size = 0.25,
+              alpha = 0.5,
+              method = lm,
+              se = FALSE) +
+  geom_smooth(aes(spr_density, Value), 
+              method = lm, 
+              color = "black") +
+  scale_color_manual(values = col) +
+  #ylim(-0.8, 1) +
+  xlab("Spring density (squirrels/ha)") +
+  ylab("Territory size") +
+  ggtitle('B)') +
+  theme(
+    legend.position = 'none',
+    plot.title = element_text(size = 14, color = "black"),
+    axis.text.x = element_text(size = 12, color = "black", hjust = 1),
+    axis.text.y = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, color = "black"),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_rect(
+      colour = "black",
+      fill = NA,
+      size = 0.5)) 
 
-
-outAreaDF <- data.table(interceptArea = df_outArea2[Trait == "area"]$Value,
-                      interceptOut = df_outArea2[Trait == "outStrength"]$Value,
-                      slopeArea = df_outArea2[Trait == "plastArea"]$Value, 
-                      slopeOut =  df_outArea2[Trait == "plastOutStr"]$Value, 
-                      squirrel_id = df_outArea2[Trait == "outStrength"]$squirrel_id)
-
-## CORRELATIONS between Intercept in-strength and Intercept out-strength:
-cor_area_out <- areaOut$VCV[,"traitareaScale:traitoutstrengthScale.squirrel_id"]/
-  (sqrt(areaOut$VCV[,"traitareaScale:traitareaScale.squirrel_id"])*
-     sqrt(areaOut$VCV[,"traitoutstrengthScale:traitoutstrengthScale.squirrel_id"]))
-
-mean(cor_area_out)
-HPDinterval(cor_area_out)
-
-
-## in-strength - territory size
-df_inArea <- data.table(Trait = attr(colMeans(areaIn$Sol), "names"),
-                         Value = colMeans(areaIn$Sol)) 
-df_inArea2 <- df_inArea[13:length(df_inArea$Trait),]
-df_inArea2[, c('Trait' ,'xx' ,'squirrel_id') := tstrsplit(Trait, '.', fixed = TRUE)][,c("xx") := NULL]
-
-df_inArea2$Trait[df_inArea2$Trait == "traitareaScale"] <- 'area'  
-df_inArea2$Trait[df_inArea2$Trait == "traitinstrengthScale"] <- 'inStrength'  
-df_inArea2$Trait[df_inArea2$Trait == "traitareaScale:spr_density"] <- 'plastArea'  
-df_inArea2$Trait[df_inArea2$Trait == "traitinstrengthScale:spr_density"] <- 'plastinStr'  
-
-
-inAreaDF <- data.table(interceptArea = df_inArea2[Trait == "area"]$Value,
-                        interceptin = df_inArea2[Trait == "inStrength"]$Value,
-                        slopeArea = df_inArea2[Trait == "plastArea"]$Value, 
-                        slopein =  df_inArea2[Trait == "plastinStr"]$Value, 
-                        squirrel_id = df_inArea2[Trait == "inStrength"]$squirrel_id)
-
-## CORRELATIONS between Intercept in-strength and Intercept in-strength:
-cor_area_in <- areaIn$VCV[,"traitareaScale:traitinstrengthScale.squirrel_id"]/
-  (sqrt(areaIn$VCV[,"traitareaScale:traitareaScale.squirrel_id"])*
-     sqrt(areaIn$VCV[,"traitinstrengthScale:traitinstrengthScale.squirrel_id"]))
-
-mean(cor_area_in)
-HPDinterval(cor_area_in)
-
-
-png("figures/Fig4.png", width = 6000, height = 3000, res = 600, units = "px")
-fig4a <- ggplot(outInDF, aes(interceptOut, interceptIn)) +
-  geom_point(size = 2, alpha = 0.65) +
-  geom_smooth(method = "lm", color = "darkblue", se = F) +
+Fig3C <- ggplot(data = df_in) +
+  geom_smooth(aes(spr_density, Value, group = as.factor(squirrel_id), color = grid),
+              #color = "darkgrey",
+              size = 0.25,
+              alpha = 0.5,
+              method = lm,
+              se = FALSE) +
+  geom_smooth(aes(spr_density, Value), 
+              method = lm, 
+              color = "black") +
+  scale_color_manual(values = col) +
+  scale_y_continuous(labels = scales::number_format(accuracy = 0.1)) +
+  xlab("Spring density (squirrels/ha)") +
   ylab("In-intrusion-strength") +
-  xlab("Out-intrusion-strength") +
-  ggtitle("A)") +
-  theme(legend.position = c(0.1, 0.9),
-        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
-        legend.title = element_blank(),
-        legend.text = element_text(size = 16),
-        legend.key = element_blank(),
-        axis.text=element_text(size=12, color = "black"),
-        plot.title = element_text(size = 20),
-        axis.title=element_text(size=20),
-        strip.text = element_text(size=12,face = "bold"),
-        panel.grid.minor = element_blank(),
-        panel.background = element_blank(),
-        panel.border = element_rect(colour = "black", fill=NA, size=1))
+  ggtitle('C)') +
+  theme(
+    legend.position = 'none',
+    plot.title = element_text(size = 14, color = "black"),
+    axis.text.x = element_text(size = 12, color = "black", hjust = 1),
+    axis.text.y = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, color = "black"),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_rect(
+      colour = "black",
+      fill = NA,
+      size = 0.5)) 
 
-fig4b <- ggplot(outAreaDF, aes(interceptOut, interceptArea)) +
-  geom_jitter(size = 2, alpha = 0.65) +
-  geom_smooth(method = "lm", color = "darkblue", se = F) +
-  ylab("Territory size (ha)") +
-  xlab("Out-intrusion-strength") +
-  ggtitle("B)") +
-  theme(legend.position = c(0.1, 0.9),
-        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
-        legend.title = element_blank(),
-        legend.text = element_text(size = 16),
-        legend.key = element_blank(),
-        axis.text=element_text(size=12, color = "black"),
-        plot.title = element_text(size = 20),
-        axis.title=element_text(size=20),
-        strip.text = element_text(size=12,face = "bold"),
-        panel.grid.minor = element_blank(),
-        panel.background = element_blank(),
-        panel.border = element_rect(colour = "black", fill=NA, size=1))
+fig3D <- ggplot() +
+  geom_smooth(data = df_fit_strength, 
+              aes(year, Value, group = as.factor(squirrel_id), color = grid),
+              #color = "darkgrey",
+              size = 0.25,
+              method = lm,
+              se = FALSE) +
+  geom_vline(aes(xintercept = 3), lty = 2) + # 1998
+  geom_vline(aes(xintercept = 10), lty = 2) + # 2005
+  geom_vline(aes(xintercept = 15), lty = 2) + # 2010
+  geom_vline(aes(xintercept = 19), lty = 2) + # 2014
+  geom_vline(aes(xintercept = 24), lty = 2) + # 2019
+  scale_x_discrete(breaks = c(1996, 1998, 
+                              2000, 2002, 
+                              2004, 2006, 
+                              2008, 2010, 
+                              2012, 2014,
+                              2016, 2018, 
+                              2020),
+                     labels = c("1996", "1998", 
+                                "2000", "2002", 
+                                "2004", "2006",
+                                "2008", "2010", 
+                                "2012", "2014", 
+                                "2016", "2018", 
+                                "2020")) +
+  xlab("Year") +
+  ylab("Out-intrusion-strength") +
+  scale_color_manual(values = col) +
+  ggtitle('D)') +
+  theme(
+    legend.position = 'none',
+    plot.title = element_text(size = 14, color = "black"),
+    axis.text.x = element_text(size = 12, color = "black", angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, color = "black"),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_rect(
+      colour = "black",
+      fill = NA,
+      size = 0.5))
 
-fig4c <- ggplot(inAreaDF, aes(interceptin, interceptArea)) +
-  geom_jitter(size = 2, alpha = 0.65) +
-  geom_smooth(method = "lm", color = "darkblue", se = F) +
-  ylab("Territory size (ha)") +
-  xlab("In-intrusion-strength") +
-  ggtitle("C)") +
-  theme(legend.position = c(0.1, 0.9),
-        plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
-        legend.title = element_blank(),
-        legend.text = element_text(size = 16),
-        legend.key = element_blank(),
-        axis.text=element_text(size=12, color = "black"),
-        plot.title = element_text(size = 20),
-        axis.title=element_text(size=20),
-        strip.text = element_text(size=12,face = "bold"),
-        panel.grid.minor = element_blank(),
-        panel.background = element_blank(),
-        panel.border = element_rect(colour = "black", fill=NA, size=1))
+fig3E <- ggplot() +
+  geom_smooth(data = df_territory, 
+              aes(year, Value, group = as.factor(squirrel_id), color = grid),
+              #color = "darkgrey",
+              size = 0.25,
+              method = lm,
+              se = FALSE) +
+  geom_vline(aes(xintercept = 3), lty = 2) + # 1998
+  geom_vline(aes(xintercept = 10), lty = 2) + # 2005
+  geom_vline(aes(xintercept = 15), lty = 2) + # 2010
+  geom_vline(aes(xintercept = 19), lty = 2) + # 2014
+  geom_vline(aes(xintercept = 24), lty = 2) + # 2019
+  scale_x_discrete(breaks = c(1996, 1998, 
+                              2000, 2002, 
+                              2004, 2006, 
+                              2008, 2010, 
+                              2012, 2014,
+                              2016, 2018, 
+                              2020),
+                    labels = c("1996", "1998", 
+                                "2000", "2002", 
+                                "2004", "2006",
+                                "2008", "2010", 
+                                "2012", "2014", 
+                                "2016", "2018", 
+                                "2020"))  +
+  scale_y_continuous(labels = scales::number_format(accuracy = 0.1)) + 
+  xlab("Year") +
+  ylab("Territory size") +
+  scale_color_manual(values = col) +
+  ggtitle('E)') +
+  theme(
+    legend.position = 'none',
+    plot.title = element_text(size = 14, color = "black"),
+    axis.text.x = element_text(size = 12, color = "black", angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, color = "black"),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_rect(
+      colour = "black",
+      fill = NA,
+      size = 0.5))
 
-grid.arrange(fig4a, fig4b, fig4c, nrow = 1)
-
+fig3F <- ggplot() +
+  geom_smooth(data = df_in, 
+              aes(year, Value, group = as.factor(squirrel_id), color = grid),
+              #color = "darkgrey",
+              size = 0.25,
+              method = lm,
+              se = FALSE) +
+  geom_vline(aes(xintercept = 3), lty = 2) + # 1998
+  geom_vline(aes(xintercept = 10), lty = 2) + # 2005
+  geom_vline(aes(xintercept = 15), lty = 2) + # 2010
+  geom_vline(aes(xintercept = 19), lty = 2) + # 2014
+  geom_vline(aes(xintercept = 24), lty = 2) + # 2019
+  scale_x_discrete(breaks = c(1996, 1998, 
+                              2000, 2002, 
+                              2004, 2006, 
+                              2008, 2010, 
+                              2012, 2014,
+                              2016, 2018, 
+                              2020),
+                   labels = c("1996", "1998", 
+                              "2000", "2002", 
+                              "2004", "2006",
+                              "2008", "2010", 
+                              "2012", "2014", 
+                              "2016", "2018", 
+                              "2020"))  +
+  scale_y_continuous(labels = scales::number_format(accuracy = 0.1)) + 
+  xlab("Year") +
+  ylab("In-intrusion-strength") +
+  scale_color_manual(values = col) +
+  ggtitle('F)') +
+  theme(
+    legend.position = 'none',
+    plot.title = element_text(size = 14, color = "black"),
+    axis.text.x = element_text(size = 12, color = "black", angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, color = "black"),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_rect(
+      colour = "black",
+      fill = NA,
+      size = 0.5))
+grid.arrange(
+             Fig3A, Fig3B, Fig3C,
+             fig3D, fig3E, fig3F, 
+             ncol = 3, nrow = 2)
 dev.off()
 
-
-
-aa <- ggplot(all, aes(outstrength, instrength)) +
-  geom_point(aes(color = as.factor(year))) +
-  theme(legend.position = 'none') + 
-  geom_smooth(method = "loess") 
-bb <- ggplot(all, aes(area_ha, instrength)) +
-  geom_point(aes(color = as.factor(year))) +
-  theme(legend.position = 'none') + 
-  geom_smooth(method = "loess") 
-cc <- ggplot(all, aes(area_ha, outstrength)) +
-  geom_point(aes(color = as.factor(year))) +
-  theme(legend.position = 'none') + 
-  geom_smooth(method = "lm") 
-grid.arrange(aa,bb,cc, nrow = 1)  
-
-
-ggplot(all, aes(sex, outstrength)) +
-  geom_boxplot(notch = T,
-               outlier.color = NA) +
-  geom_jitter(alpha = 0.5)
-ggplot(all, aes(sex, instrength)) +
-  geom_boxplot(notch = T, 
-               outlier.color= NA) +
-  geom_jitter(alpha = 0.5)
-ggplot(all, aes(sex, area_ha)) +
-  geom_boxplot(notch = T, 
-               outlier.color= NA) +
-  geom_jitter(alpha = 0.5)
 
 
