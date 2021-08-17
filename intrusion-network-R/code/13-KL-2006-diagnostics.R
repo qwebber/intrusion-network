@@ -18,36 +18,6 @@ all$area_ha <- all$area_m2/10000
 all <- all[!is.na(all$sex)]
 all <- all[!is.na(all$grid)]
 
-png("figures/FigS9.png", width = 4000, height = 4000, units = "px", res = 600)
-ggplot() +
-  geom_density(data = all[gr_year == "KL_2006"], aes(area_ha), 
-               fill = "red", 
-               alpha = 0.5) +
-  geom_vline(data = all[gr_year == "KL_2006"], 
-             aes(xintercept = mean(area_ha)), 
-             lty = 2) +
-  geom_density(data = all[gr_year != "KL_2006"], aes(area_ha), 
-               fill = "blue", 
-               alpha = 0.5) +
-  geom_vline(data = all[gr_year != "KL_2006"], 
-             aes(xintercept = mean(area_ha)), 
-             lty = 2) +
-  ylab("Density distribution") +
-  xlab("Territory size (ha)") +
-  theme(
-    legend.position = 'none',
-    plot.title = element_text(size = 14, color = "black"),
-    axis.text.x = element_text(size = 12, color = "black"),
-    axis.text.y = element_text(size = 12, color = "black"),
-    axis.title = element_text(size = 14, color = "black"),
-    panel.grid.minor = element_blank(),
-    panel.background = element_blank(),
-    panel.border = element_rect(
-      colour = "black",
-      fill = NA,
-      size = 1)) 
-dev.off()
-
 
 df <- readRDS("output/spatial-locs.RDS")
 df$squirrel_id <- as.character(df$squirrel_id)
