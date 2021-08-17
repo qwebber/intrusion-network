@@ -22,16 +22,6 @@ rep_area <- mcmc_all$VCV[,"traitareaScale:traitareaScale.squirrel_id"]/
   (mcmc_all$VCV[,"traitareaScale:traitareaScale.squirrel_id"] + 
      mcmc_all$VCV[,"traitareaScale.units"])
 
-## rep from area/out-strength model
-rep_area2 <- areaOut$VCV[,"traitareaScale:traitareaScale.squirrel_id"]/
-  (areaOut$VCV[,"traitareaScale:traitareaScale.squirrel_id"] + 
-     areaOut$VCV[,"traitareaScale.units"])
-
-rep_out2 <- areaOut$VCV[,"traitoutstrengthScale:traitoutstrengthScale.squirrel_id"]/
-  (areaOut$VCV[,"traitoutstrengthScale:traitoutstrengthScale.squirrel_id"] + 
-     areaOut$VCV[,"traitoutstrengthScale.units"])
-
-
 repAll <- data.table(rep = c(mean(rep_out), #mean(rep_out2),
                              mean(rep_in), #mean(rep_in2), 
                              mean(rep_area)), #mean(rep_area2)),
@@ -44,7 +34,10 @@ repAll <- data.table(rep = c(mean(rep_out), #mean(rep_out2),
                      trait = c("Out-strength", #"Out-strength", 
                                "In-strength", #"In-strength",
                                "Territory size")) #"Territory size"),
-                     
+
+repAll                     
+
+
 
 png("figures/FigX.png", height = 2500, width = 4000, units = "px", res = 500)
 ggplot(repAll) +
