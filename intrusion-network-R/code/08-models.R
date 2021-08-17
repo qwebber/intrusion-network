@@ -228,14 +228,15 @@ mcmc4 <- MCMCglmm(cbind(instrengthScale,
                     trait:sex + 
                     trait:age + 
                     trait:spr_density + 
-                    trait:mast,
+                    trait:mast + 
+                    trait:N,
                   random =~ us(trait + spr_density:trait):squirrel_id,
                   rcov =~ idh(trait):units,
                   family = c("gaussian","gaussian", "gaussian"),
                   prior = prior2,
-                  nitt=420000,
-                  burnin=20000,
-                  thin=100,
+                  #nitt=420000,
+                  #burnin=20000,
+                  #thin=100,
                   verbose = TRUE,
                   data = all,
                   pr=TRUE,
@@ -244,3 +245,52 @@ mcmc4 <- MCMCglmm(cbind(instrengthScale,
 
 summary(mcmc4)
 saveRDS(mcmc4, "output/models/mcmc_all.RDS")
+
+library(broom.mixed)
+
+coefs <- setDT(broom.mixed::tidy(mcmc4))
+coefs <- coefs[effect == "fixed"]
+
+coefs2 <- coefs[, c("trait", "variable") := tstrsplit(term, ":", fixed=TRUE)][,c("term") := NULL]
+
+## rename variables
+coefs2$variable[1:3] <- "Intercept"
+coefs2$variable[coefs2$variable == "gridSU"] <- "Grid (SU)"
+coefs2$variable[coefs2$variable == "sexM"] <- "Sex (M)"
+coefs2$variable[coefs2$variable == "age"] <- "Age"
+coefs2$variable[coefs2$variable == "spr_density"] <- "Density"
+coefs2$variable[coefs2$variable == "mastnomast"] <- "Mast (No mast)"
+coefs2$variable[coefs2$variable == "N"] <- "Number of locations"
+coefs2$trait[coefs2$trait == "traitareaScale"] <- "Territory size"
+coefs2$trait[coefs2$trait == "traitoutstrengthScale"] <- "Out-intrusion-strength"
+coefs2$trait[coefs2$trait == "traitinstrengthScale"] <- "In-intrusion-strength"
+
+ggplot(coefs2, aes(variable, estimate)) + 
+   geom_errorbar(aes(ymin = estimate - std.error, ymax = estimate + std.error, color = trait),
+              width = 0, 
+              size = 0.55,
+              position = position_dodge(width = 0.5)) +
+   geom_point(aes(color = trait), 
+              position = position_dodge(width = 0.5), 
+              size = 2) +
+   scale_color_manual(values = c("#66c2a5", "#fc8d62", "#8da0cb")) +
+   xlab("") +
+   ylab("Fixed effect coefficient (+/- 95% CI)") +
+   coord_flip() +
+   geom_hline(yintercept = 0, linetype = 'dotted') +
+   geom_vline(xintercept = 0.5, linetype = 'dotted') +
+   geom_vline(xintercept = 1.5, linetype = 'dotted') +
+   geom_vline(xintercept = 2.5, linetype = 'dotted') +
+   geom_vline(xintercept = 3.5, linetype = 'dotted') +
+   geom_vline(xintercept = 4.5, linetype = 'dotted') +
+   geom_vline(xintercept = 5.5, linetype = 'dotted') +
+   geom_vline(xintercept = 6.5, linetype = 'dotted') +
+   geom_vline(xintercept = 7.5, linetype = 'dotted') +
+   theme(#legend.position = 'none',
+      legend.title = element_text(size = 14, color = "black"),
+      legend.key = element_blank(),
+      axis.title = element_text(size = 14, color = 'black'),
+      axis.text = element_text(size = 12, color = 'black'),
+      panel.grid.minor = element_blank(),
+      panel.background = element_blank(), 
+      panel.border = element_rect(colour = "black", fill=NA, size = 1))
