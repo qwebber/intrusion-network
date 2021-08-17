@@ -11,6 +11,7 @@ density <- setDT(density)[grid == "KL" | grid == "SU"]
 
 ## load data
 all <- readRDS("output/final-df.RDS")
+all <- all[gr_year != "KL_2006"]
 all$squirrel_id <- as.factor(all$squirrel_id)
 all$year <- as.factor(all$year)
 
@@ -21,10 +22,10 @@ all$area_ha <- all$area_m2/10000
 all <- all[!is.na(all$sex)]
 all <- all[!is.na(all$grid)]
 
-## scale variables within year:
-all[, outstrengthScale := scale(outstrength), by = c("year", "grid")]
-all[, instrengthScale := scale(instrength), by = c("year", "grid")]
-all[, areaScale := scale(area_ha), by = c("year", "grid")]
+## scale variables:
+all[, outstrengthScale := scale(outstrength)]
+all[, instrengthScale := scale(instrength)]
+all[, areaScale := scale(area_ha)]
 all[, densityScale := scale(spr_density)]
 
 ## load models
@@ -70,55 +71,8 @@ df_in <- df_in[!is.na(df_in$grid)]
 
 col <- c("#f1a340", "#998ec3")
 
-png("figures/Fig3.png", width = 3000, height = 8000, units = "px", res = 600)
-fig3A <- ggplot(data = density[year >1995],
-       aes(as.factor(year), spr_density, group = grid, color = grid)) +
-  geom_point(size = 2) +
-  scale_color_manual(values = col) +
-  geom_line() +
-  ylab("Spring density (squirrels/ha)") +
-  xlab("Year") +
-  ggtitle("A)") +
-  scale_y_continuous(labels = scales::number_format(accuracy = 0.1),
-                     limits = c(0, 4.5)) +
-  scale_x_discrete(breaks = c(1996, 1998, 
-                                2000, 2002, 
-                                2004, 2006, 
-                                2008, 2010, 
-                                2012, 2014,
-                                2016, 2018, 
-                                2020),
-                     labels = c("1996", "1998", 
-                                "2000", "2002", 
-                                "2004", "2006",
-                                "2008", "2010", 
-                                "2012", "2014", 
-                                "2016", "2018", 
-                                "2020")) +
-  geom_vline(aes(xintercept = "1993"), lty = 2) + # 1993
-  geom_vline(aes(xintercept = "1998"), lty = 2) + # 1998
-  geom_vline(aes(xintercept = "2005"), lty = 2) + # 2005
-  geom_vline(aes(xintercept = "2010"), lty = 2) + # 2010
-  geom_vline(aes(xintercept = "2014"), lty = 2) + # 2014
-  geom_vline(aes(xintercept = "2019"), lty = 2) + # 2019
-  theme(
-    legend.position = c(0.8, 0.9),
-    legend.background = element_blank(),
-    legend.title = element_blank(),
-    legend.key = element_blank(),
-    plot.title = element_text(size = 14, color = "black"),
-    axis.text.x = element_text(size = 12, color = "black", angle = 45, hjust = 1),
-    axis.text.y = element_text(size = 12, color = "black"),
-    axis.title = element_text(size = 14, color = "black"),
-    panel.grid.minor = element_blank(),
-    panel.background = element_blank(),
-    panel.border = element_rect(
-      colour = "black",
-      fill = NA,
-      size = 0.5))
-
-
-Fig4D <- ggplot(data = df_fit_strength) +
+png("figures/Fig3.png", width = 8000, height = 4000, units = "px", res = 600)
+Fig3A <- ggplot(data = df_fit_strength) +
   geom_smooth(aes(spr_density, Value, group = as.factor(squirrel_id), color = grid),
               #color = "darkgrey",
               size = 0.25,
@@ -129,10 +83,9 @@ Fig4D <- ggplot(data = df_fit_strength) +
               method = lm, 
               color = "black") +
   scale_color_manual(values = col) +
-  ylim(-0.8, 1) +
   xlab("Spring density (squirrels/ha)") +
-  ylab("Intrusion out-strength") +
-  ggtitle('D)') +
+  ylab("Out-intrusion-strength") +
+  ggtitle('A)') +
   theme(
     legend.position = 'none',
     plot.title = element_text(size = 14, color = "black"),
@@ -146,7 +99,7 @@ Fig4D <- ggplot(data = df_fit_strength) +
       fill = NA,
       size = 0.5))
 
-Fig4E <- ggplot(data = df_territory ) +
+Fig3B <- ggplot(data = df_territory ) +
   geom_smooth(aes(spr_density, Value, group = as.factor(squirrel_id), color = grid),
               #color = "darkgrey",
               size = 0.25,
@@ -159,8 +112,8 @@ Fig4E <- ggplot(data = df_territory ) +
   scale_color_manual(values = col) +
   #ylim(-0.8, 1) +
   xlab("Spring density (squirrels/ha)") +
-  ylab("Territory size (ha)") +
-  ggtitle('E)') +
+  ylab("Territory size") +
+  ggtitle('B)') +
   theme(
     legend.position = 'none',
     plot.title = element_text(size = 14, color = "black"),
@@ -174,7 +127,7 @@ Fig4E <- ggplot(data = df_territory ) +
       fill = NA,
       size = 0.5)) 
 
-Fig4F <- ggplot(data = df_in) +
+Fig3C <- ggplot(data = df_in) +
   geom_smooth(aes(spr_density, Value, group = as.factor(squirrel_id), color = grid),
               #color = "darkgrey",
               size = 0.25,
@@ -187,8 +140,8 @@ Fig4F <- ggplot(data = df_in) +
   scale_color_manual(values = col) +
   scale_y_continuous(labels = scales::number_format(accuracy = 0.1)) +
   xlab("Spring density (squirrels/ha)") +
-  ylab("Intrusion in-strength") +
-  ggtitle('F)') +
+  ylab("In-intrusion-strength") +
+  ggtitle('C)') +
   theme(
     legend.position = 'none',
     plot.title = element_text(size = 14, color = "black"),
@@ -202,7 +155,7 @@ Fig4F <- ggplot(data = df_in) +
       fill = NA,
       size = 0.5)) 
 
-fig3B <- ggplot() +
+fig3D <- ggplot() +
   geom_smooth(data = df_fit_strength, 
               aes(year, Value, group = as.factor(squirrel_id), color = grid),
               #color = "darkgrey",
@@ -229,10 +182,9 @@ fig3B <- ggplot() +
                                 "2016", "2018", 
                                 "2020")) +
   xlab("Year") +
-  ylim(-0.8, 1) +
-  ylab("Intrusion out-strength") +
+  ylab("Out-intrusion-strength") +
   scale_color_manual(values = col) +
-  ggtitle('B)') +
+  ggtitle('D)') +
   theme(
     legend.position = 'none',
     plot.title = element_text(size = 14, color = "black"),
@@ -246,7 +198,7 @@ fig3B <- ggplot() +
       fill = NA,
       size = 0.5))
 
-fig3C <- ggplot() +
+fig3E <- ggplot() +
   geom_smooth(data = df_territory, 
               aes(year, Value, group = as.factor(squirrel_id), color = grid),
               #color = "darkgrey",
@@ -274,9 +226,9 @@ fig3C <- ggplot() +
                                 "2020"))  +
   scale_y_continuous(labels = scales::number_format(accuracy = 0.1)) + 
   xlab("Year") +
-  ylab("Territory size (ha)") +
+  ylab("Territory size") +
   scale_color_manual(values = col) +
-  ggtitle('D)') +
+  ggtitle('E)') +
   theme(
     legend.position = 'none',
     plot.title = element_text(size = 14, color = "black"),
@@ -290,7 +242,7 @@ fig3C <- ggplot() +
       fill = NA,
       size = 0.5))
 
-fig3D <- ggplot() +
+fig3F <- ggplot() +
   geom_smooth(data = df_in, 
               aes(year, Value, group = as.factor(squirrel_id), color = grid),
               #color = "darkgrey",
@@ -318,9 +270,9 @@ fig3D <- ggplot() +
                               "2020"))  +
   scale_y_continuous(labels = scales::number_format(accuracy = 0.1)) + 
   xlab("Year") +
-  ylab("Intrusion in-strength") +
+  ylab("In-intrusion-strength") +
   scale_color_manual(values = col) +
-  ggtitle('C)') +
+  ggtitle('F)') +
   theme(
     legend.position = 'none',
     plot.title = element_text(size = 14, color = "black"),
@@ -333,9 +285,56 @@ fig3D <- ggplot() +
       colour = "black",
       fill = NA,
       size = 0.5))
-grid.arrange(#fig3A,
-             Fig4D, Fig4E, Fig4F,
-             fig3B, 
-             fig3D, 
-             fig3C, ncol = 3, nrow = 2)
-fdev.off()
+grid.arrange(
+             Fig3A, Fig3B, Fig3C,
+             fig3D, fig3E, fig3F, 
+             ncol = 3, nrow = 2)
+dev.off()
+
+
+fig3A <- ggplot(data = density[year >1995],
+                aes(as.factor(year), spr_density, group = grid, color = grid)) +
+  geom_point(size = 2) +
+  scale_color_manual(values = col) +
+  geom_line() +
+  ylab("Spring density (squirrels/ha)") +
+  xlab("Year") +
+  ggtitle("A)") +
+  scale_y_continuous(labels = scales::number_format(accuracy = 0.1),
+                     limits = c(0, 4.5)) +
+  scale_x_discrete(breaks = c(1996, 1998, 
+                              2000, 2002, 
+                              2004, 2006, 
+                              2008, 2010, 
+                              2012, 2014,
+                              2016, 2018, 
+                              2020),
+                   labels = c("1996", "1998", 
+                              "2000", "2002", 
+                              "2004", "2006",
+                              "2008", "2010", 
+                              "2012", "2014", 
+                              "2016", "2018", 
+                              "2020")) +
+  geom_vline(aes(xintercept = "1993"), lty = 2) + # 1993
+  geom_vline(aes(xintercept = "1998"), lty = 2) + # 1998
+  geom_vline(aes(xintercept = "2005"), lty = 2) + # 2005
+  geom_vline(aes(xintercept = "2010"), lty = 2) + # 2010
+  geom_vline(aes(xintercept = "2014"), lty = 2) + # 2014
+  geom_vline(aes(xintercept = "2019"), lty = 2) + # 2019
+  theme(
+    legend.position = c(0.8, 0.9),
+    legend.background = element_blank(),
+    legend.title = element_blank(),
+    legend.key = element_blank(),
+    plot.title = element_text(size = 14, color = "black"),
+    axis.text.x = element_text(size = 12, color = "black", angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, color = "black"),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_rect(
+      colour = "black",
+      fill = NA,
+      size = 0.5))
+
