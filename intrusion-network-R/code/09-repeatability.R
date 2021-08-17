@@ -46,7 +46,7 @@ repAll <- data.table(rep = c(mean(rep_out), #mean(rep_out2),
                                "Territory size")) #"Territory size"),
                      
 
-png("figures/Fig5.png", height = 2500, width = 4000, units = "px", res = 500)
+png("figures/FigX.png", height = 2500, width = 4000, units = "px", res = 500)
 ggplot(repAll) +
   geom_point(aes(rep, trait, 
              color = Model), 
