@@ -16,14 +16,9 @@ png("figures/FigS6.png", height = 3000, width = 3000, units = "px", res = 600)
 ggplot(terr_overlap_all, aes(as.factor(year), y =area, fill=year)) +
   geom_jitter(shape = 21, alpha = 0.3, 
               position = position_jitterdodge(jitter.width = 3)) +
-  #geom_boxplot(outlier.color = NA, 
-  #             position = position_dodge2(), 
-  #             alpha = 0,
-  #             lwd = 0.6,
-  #             color = "black") +
   scale_fill_viridis_d() +
   scale_color_viridis_d() +
-  xlab("Kernel density estimator percentage") +
+  xlab("Year") +
   ylab("Area (ha) of overlap between territories") +
   theme(
     legend.position = 'none',
