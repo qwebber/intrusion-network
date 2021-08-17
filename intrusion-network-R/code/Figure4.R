@@ -42,7 +42,7 @@ df_strength <- cbind(all,
   tidyr::gather(Type, Value,
                 fit:outstrengthScale)
 
-df_fit_strength = setDT(df_strength)[Type == "fit"]
+df_fit_strength = subset(df_fit_strength, Type == "fit")
 df_fit_strength <- df_fit_strength[!is.na(df_fit_strength$grid)]
 
 ## Territory size
@@ -54,7 +54,7 @@ df_territory <- cbind(all,
   tidyr::gather(Type, Value,
                 fit:areaScale)
 
-df_territory = setDT(df_territory)[Type == "fit"]
+df_territory = subset(df_territory, Type == "fit")
 df_territory <- df_territory[!is.na(df_territory$grid)]
 
 ## In-strength
@@ -66,12 +66,12 @@ df_in <- cbind(all,
   tidyr::gather(Type, Value,
                 fit:instrengthScale)
 
-df_in = setDT(df_in)[Type == "fit"]
+df_in = subset(df_in, Type == "fit")
 df_in <- df_in[!is.na(df_in$grid)]
 
 col <- c("#f1a340", "#998ec3")
 
-png("figures/Fig3.png", width = 8000, height = 4000, units = "px", res = 600)
+png("figures/Fig4.png", width = 8000, height = 4000, units = "px", res = 600)
 Fig3A <- ggplot(data = df_fit_strength) +
   geom_smooth(aes(spr_density, Value, group = as.factor(squirrel_id), color = grid),
               #color = "darkgrey",
@@ -99,7 +99,7 @@ Fig3A <- ggplot(data = df_fit_strength) +
       fill = NA,
       size = 0.5))
 
-Fig3B <- ggplot(data = df_territory ) +
+ggplot(data = df_territory) +
   geom_smooth(aes(spr_density, Value, group = as.factor(squirrel_id), color = grid),
               #color = "darkgrey",
               size = 0.25,
@@ -114,10 +114,9 @@ Fig3B <- ggplot(data = df_territory ) +
   xlab("Spring density (squirrels/ha)") +
   ylab("Territory size") +
   ggtitle('B)') +
-  theme(
-    legend.position = 'none',
+  theme(legend.position = 'none',
     plot.title = element_text(size = 14, color = "black"),
-    axis.text.x = element_text(size = 12, color = "black", hjust = 1),
+    axis.text.x = element_text(size = 12, color = "black"),
     axis.text.y = element_text(size = 12, color = "black"),
     axis.title = element_text(size = 14, color = "black"),
     panel.grid.minor = element_blank(),
