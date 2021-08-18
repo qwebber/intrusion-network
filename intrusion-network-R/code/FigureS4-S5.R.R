@@ -95,6 +95,10 @@ ggplot() +
   facet_wrap(~gr_year, nrow = 5)
 dev.off()  
 
+## check if multiple kernels
+dim(polys2000)
+dim(st_cast(polys2000, 'POLYGON'))
+
 ## visual check to see if any individuals have two kernels
 
 ## SU2016: 43 individuals, 45 polygons 
