@@ -21,6 +21,7 @@ all[, outstrengthScale := scale(outstrength)]
 all[, instrengthScale := scale(instrength)]
 all[, areaScale := scale(area_ha)]
 all[, densityScale := scale(spr_density)]
+all[, NScale := scale(N)]
 
 
 ########################
@@ -134,8 +135,7 @@ mcmc1 <- MCMCglmm(outstrength ~
                       sex + 
                       age + 
                       spr_density + 
-                      mast + 
-                      N,
+                      mast,
                     random =~ us(1 + spr_density):squirrel_id,
                     rcov = ~units,
                     family = "gaussian",
@@ -165,8 +165,7 @@ mcmc2 <- MCMCglmm(area_ha ~
                     sex + 
                     age + 
                     spr_density + 
-                    mast + 
-                     N,
+                    mast,
                   random =~ us(1 + spr_density):squirrel_id,
                   rcov = ~units,
                   family = "gaussian",
@@ -197,8 +196,7 @@ mcmc3 <- MCMCglmm(instrength ~
                     sex + 
                     age + 
                     spr_density + 
-                     mast + 
-                     N,
+                     mast,
                   random =~ us(1 + spr_density):squirrel_id,
                   rcov = ~units,
                   family = "gaussian",
@@ -226,10 +224,9 @@ mcmc4 <- MCMCglmm(cbind(instrengthScale,
                     trait-1 + 
                     trait:grid +
                     trait:sex + 
-                    trait:age + 
+                    trait:poly(age, degree = 2) + 
                     trait:spr_density + 
-                    trait:mast + 
-                    trait:N,
+                    trait:mast, 
                   random =~ us(trait + spr_density:trait):squirrel_id,
                   rcov =~ idh(trait):units,
                   family = c("gaussian","gaussian", "gaussian"),
