@@ -102,9 +102,10 @@ on_territory[, c("grid", "year") := tstrsplit(gr_year, "_", fixed=TRUE)]
 on_territory[, sum(total_ids), by = "grid"]
 on_territory[, sum(ids_on_terr ), by = "grid"]
 ## KL: 
-1011/1132
+sum(on_territory[grid == "KL"]$ids_on_terr)/sum(on_territory[grid == "KL"]$total_ids)
 ## SU: 
-620/673
+sum(on_territory[grid == "SU"]$ids_on_terr)/sum(on_territory[grid == "SU"]$total_ids)
+
 
 
 ### CALCULATE DISTANCE BETWEEN CENSUS MIDDEN AND KDE CENTROID 
