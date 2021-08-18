@@ -12,6 +12,7 @@ polys <- readRDS("output/edge-list-inputs/polygons-all.RDS")
 gr_year <- data.table(id = names(polys))
 
 
+
 #### KL GRIDS ####
 
 ## generate annual KL polygons manually
@@ -52,7 +53,7 @@ polys2012$gr_year <- rep("2012 (n = 47)", length(polys2012$id_polygons))
 polys2013 <- sf::st_transform(polys[[34]])
 polys2013$gr_year <- rep("2013 (n = 77)", length(polys2013$id_polygons))
 polys2014 <- sf::st_transform(polys[[36]])
-polys2014$gr_year <- rep("2014 (n = 49)", length(polys2014$id_polygons))
+polys2014$gr_year <- rep("2014 (n = 94)", length(polys2014$id_polygons))
 polys2015 <- sf::st_transform(polys[[38]])
 polys2015$gr_year <- rep("2015 (n = 54)", length(polys2015$id_polygons))
 polys2016 <- sf::st_transform(polys[[39]])
@@ -96,8 +97,68 @@ ggplot() +
   facet_wrap(~gr_year, nrow = 5)
 dev.off()  
 
+## visual check to see if any individuals have two kernels
+
+## SU2016: 43 individuals, 45 polygons 
+## (squirrel_id == 12026 & squirrel_id == 13132 & squirrel_id == 20060)
+ggplot() +
+  geom_sf(data = polys$SU_2016[5,], 
+          aes(fill = id_polygons), 
+          alpha = 0.5)
+ggplot() +
+  geom_sf(data = polys$SU_2016[13,],  ## 13, 24
+          aes(fill = id_polygons), 
+          alpha = 0.5)
+
+rgeos::gContains(polys$KL_2016)
+
+## KL2016: 56 individuals, 58 polygons (squirrel_id == 11256 & squirrel_id == 19649)
+ggplot() +
+  geom_sf(data = polys$KL_2016[1,], 
+          aes(fill = id_polygons), 
+          alpha = 0.5)
+
+df <- readRDS("output/spatial-locs.RDS")
+df$squirrel_id <- as.character(df$squirrel_id)
+df$gr_year <- as.character(df$gr_year)
 
 
+
+ggplot() +
+  geom_sf(data = polys$KL_2016[14,], 
+          aes(fill = id_polygons), 
+          alpha = 0.5) +
+  geom_point(data = df[squirrel_id == 19649 & gr_year == "KL_2016"], 
+             aes(locx, locy, color = data),
+             alpha = 0.75) +
+  geom_point(data = census_all[squirrel_id == 19649 & gr_year == "KL_2016"], 
+             aes(locx, locy), shape = 23, size = 5, fill = "blue", color = "blue", 
+             alpha = 0.75) + 
+  theme(#legend.position = 'none',
+        plot.title = element_text(size = 14, color = "black"),
+        axis.text = element_blank(), #element_text(size = 12, color = "black"),
+        #axis.text.y = element_text(size = 12, color = "black"),
+        axis.title = element_text(size = 14, color = "black"),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        panel.border = element_rect(
+          colour = "black",
+          fill = NA,
+          size = 0.5)) 
+
+
+## SU2010: 17 individuals, 18 polygons (squirrel_id == 10325)
+ggplot() +
+     geom_sf(data = polys$SU_2010[3,], 
+                aes(fill = id_polygons), 
+                alpha = 0.5)
+## KL2005: 64 individuals, 65 polygons (squirrel_id == 6353)
+ggplot() +
+  geom_sf(data = polys$KL_2005[7,], 
+          aes(fill = id_polygons), 
+          alpha = 0.5)
+
+  
 #### SU GRIDS ####
 
 ## generate annual KL polygons manually
