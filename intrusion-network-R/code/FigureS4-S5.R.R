@@ -11,8 +11,16 @@ polys <- readRDS("output/edge-list-inputs/polygons-all.RDS")
 
 gr_year <- data.table(id = names(polys))
 
-#### KL GRIDS ####
+# Bind
+bound <- do.call(rbind, polys)
+bound$name <- tstrsplit(rownames(bound), '\\.')[[1]]
+bound$grid <- tstrsplit(bound$name, '_')[[1]]
+bound$yr <- tstrsplit(bound$name, '_', type.convert = TRUE)[[2]]
 
+bound
+
+
+#### KL GRIDS ####
 ## generate annual KL polygons manually
 polys1996 <- sf::st_transform(polys[[1]])
 polys1996$gr_year <- rep("1996 (n = 21)", length(polys1996$id_polygons))
