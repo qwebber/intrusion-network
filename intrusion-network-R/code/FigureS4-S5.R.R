@@ -19,6 +19,22 @@ bound$yr <- tstrsplit(bound$name, '_', type.convert = TRUE)[[2]]
 
 bound
 
+# eg fig
+ggplot() +
+  geom_sf(data = bound[bound$grid == 'KL',], 
+          aes(fill = id_polygons), 
+          alpha = 0.5) +
+  scale_fill_viridis_d() +
+  theme(legend.position = 'none',
+        legend.key = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        strip.background = element_rect(color = "black", fill = NA, size = 1),
+        strip.text = element_text(size = 12),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        panel.border = element_rect(colour = "black", fill=NA, size=1)) +
+  facet_wrap(~yr, nrow = 5)
 
 #### KL GRIDS ####
 ## generate annual KL polygons manually
