@@ -11,8 +11,6 @@ polys <- readRDS("output/edge-list-inputs/polygons-all.RDS")
 
 gr_year <- data.table(id = names(polys))
 
-
-
 #### KL GRIDS ####
 
 ## generate annual KL polygons manually
@@ -110,8 +108,6 @@ ggplot() +
           aes(fill = id_polygons), 
           alpha = 0.5)
 
-rgeos::gContains(polys$KL_2016)
-
 ## KL2016: 56 individuals, 58 polygons (squirrel_id == 11256 & squirrel_id == 19649)
 ggplot() +
   geom_sf(data = polys$KL_2016[1,], 
@@ -122,6 +118,8 @@ df <- readRDS("output/spatial-locs.RDS")
 df$squirrel_id <- as.character(df$squirrel_id)
 df$gr_year <- as.character(df$gr_year)
 
+edge_list <- readRDS("output/edge_list.RDS")
+edge_list2 <- edge_list[owner == 19649 & gr_year == "KL_2016"]
 
 
 ggplot() +
@@ -129,22 +127,23 @@ ggplot() +
           aes(fill = id_polygons), 
           alpha = 0.5) +
   geom_point(data = df[squirrel_id == 19649 & gr_year == "KL_2016"], 
-             aes(locx, locy, color = data),
+             aes(locx, locy),
              alpha = 0.75) +
   geom_point(data = census_all[squirrel_id == 19649 & gr_year == "KL_2016"], 
-             aes(locx, locy), shape = 23, size = 5, fill = "blue", color = "blue", 
-             alpha = 0.75) + 
+             aes(locx, locy,), #shape = 23, size = 5, fill = "blue", color = "blue", 
+             alpha = 0.75)  +
+  geom_point(data = edge_list2, 
+             aes(locx, locy, color = edge),
+             alpha = 0.75)  +
   theme(#legend.position = 'none',
-        plot.title = element_text(size = 14, color = "black"),
-        axis.text = element_blank(), #element_text(size = 12, color = "black"),
-        #axis.text.y = element_text(size = 12, color = "black"),
-        axis.title = element_text(size = 14, color = "black"),
-        panel.grid.minor = element_blank(),
+        legend.key = element_blank(),
+        axis.text=element_text(size=12, color = "black"),
+        axis.title=element_text(size=12),
+        axis.ticks = element_line(),
+        strip.text = element_text(size=12,face = "bold"),
+        panel.grid.major = element_line(color = "grey80"),
         panel.background = element_blank(),
-        panel.border = element_rect(
-          colour = "black",
-          fill = NA,
-          size = 0.5)) 
+        panel.border = element_rect(colour = "black", fill=NA, size=1))
 
 
 ## SU2010: 17 individuals, 18 polygons (squirrel_id == 10325)
