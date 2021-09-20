@@ -13,7 +13,8 @@ get_edgelist <- function(df, n){
                             intruder = df[[i]]$squirrel_id, ## id must be squirrel_id
                             locx = df[[i]]$locx, ## must be locx
                             locy = df[[i]]$locy, ## must be locy
-                            julian = df[[i]]$julian) ## ## must be julian
+                            julian = df[[i]]$julian,## ## must be julian
+                            data = df[[i]]$data) ## trap or behavioural
     
     ## assign TRUE or FALSE value to whether a squirrel is observed on 
     ## it's own territory (TRUE) or another territory (FALSE)
