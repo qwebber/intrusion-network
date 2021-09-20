@@ -97,7 +97,6 @@ bb <- intersect_out2[[47]]
 intersection_test <- st_intersection(x = out_spdf$KL_2020,  
                                          y = bb) 
 
-
 ggplot() +
   geom_sf(data = subset(bb, id_polygons == 22891)) +
   #geom_sf(data = subset(intersection_test, id_polygons.1 == 22891)) +
@@ -167,7 +166,7 @@ ggplot() +
     
 gridExtra::grid.arrange(aa,bb, nrow = 1)  
   
-
+############### END OF CHUNK #####################
   
 # Generate edge list based on polygon-point overlap ---------------------------------
 edge_out <- get_edgelist(df = intersect_out, 
