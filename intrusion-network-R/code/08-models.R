@@ -212,6 +212,68 @@ mcmc3 <- MCMCglmm(instrength ~
 
 saveRDS(mcmc3, "output/models/mcmc_instrength.RDS")
 
+
+############################
+## OUT-STRENGTH BEHAV OBS ##
+#############################
+p.var_outB <- var(all$outstrength_behav, na.rm = TRUE)
+
+prior_outB <- list(G=list(G1=list(V=diag(2)*(p.var_outB/2), nu=4,
+                                alpha.V=diag(2)*p.var_outB/2)),
+                 R=list(V=diag(1)*(p.var_outB/2), nu=4))
+
+mcmc4 <- MCMCglmm(outstrength_behav ~ 
+                     grid +
+                     sex + 
+                     age + 
+                     spr_density + 
+                     mast,
+                  random =~ us(1 + spr_density):squirrel_id,
+                  rcov = ~units,
+                  family = "gaussian",
+                  prior = prior_outB,
+                  #nitt=420000,
+                  #burnin=20000,
+                  #thin=100,
+                  verbose = TRUE,
+                  data = all,
+                  pr=TRUE,
+                  saveX = TRUE,
+                  saveZ = TRUE)
+
+saveRDS(mcmc4, "output/models/mcmc_outstrength_behav.RDS")
+
+############################
+## IN-STRENGTH BEHAV OBS ##
+#############################
+p.var_inB <- var(all$instrength_behav, na.rm = TRUE)
+
+prior_inB <- list(G=list(G1=list(V=diag(2)*(p.var_inB/2), nu=4,
+                                  alpha.V=diag(2)*p.var_inB/2)),
+                   R=list(V=diag(1)*(p.var_inB/2), nu=4))
+
+mcmc5 <- MCMCglmm(instrength_behav ~ 
+                     grid +
+                     sex + 
+                     age + 
+                     spr_density + 
+                     mast,
+                  random =~ us(1 + spr_density):squirrel_id,
+                  rcov = ~units,
+                  family = "gaussian",
+                  prior = prior_inB,
+                  #nitt=420000,
+                  #burnin=20000,
+                  #thin=100,
+                  verbose = TRUE,
+                  data = all,
+                  pr=TRUE,
+                  saveX = TRUE,
+                  saveZ = TRUE)
+
+saveRDS(mcmc5, "output/models/mcmc_instrength_behav.RDS")
+
+
 ## Tri-variate model
 p.var_str <- var(all$outstrength, na.rm = TRUE)
 prior2 <- list(R = list(V=diag(3)*(p.var_str/2), nu=4), ## 2x2 matrix for random effects 
