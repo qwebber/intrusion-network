@@ -33,7 +33,7 @@ for(i in 1:n){
   ## generate territoriality index (intrusions/intrusions + total locs)
   df2 <- data.table(owner = df1$owner,
                     intruder = df1$intruder, 
-                    TI = df1$N)#/(df1$N + df1$Nintruder))
+                    TI = df1$N/(df1$N + df1$Nintruder))
   
   adj <- AdjacencyFromEdgelist(df2)
   
@@ -70,7 +70,7 @@ for(i in 1:n){
   ## generate territoriality index (intrusions/intrusions + total locs)
   df2 <- data.table(owner = df1$owner,
                     intruder = df1$intruder, 
-                    TI = df1$N) #/(df1$N + df1$Nintruder))
+                    TI = df1$N/(df1$N + df1$Nintruder))
   
   adj <- AdjacencyFromEdgelist(df2)
   
@@ -106,7 +106,7 @@ for(i in 1:n){
   ## generate territoriality index (intrusions/intrusions + total locs)
   df2 <- data.table(owner = df1$owner,
                     intruder = df1$intruder, 
-                    TI = df1$N)#/(df1$N + df1$Nintruder))
+                    TI = df1$N/(df1$N + df1$Nintruder))
   
   adj <- AdjacencyFromEdgelist(df2)
   
