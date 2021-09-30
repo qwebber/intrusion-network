@@ -32,47 +32,47 @@ all[, densityScale := scale(spr_density)]
 mcmc_strength <- readRDS("output/models/mcmc_strength.RDS")
 mcmc_territory <- readRDS("output/models/mcmc_territory.RDS")
 mcmc_in <- readRDS("output/models/mcmc_instrength.RDS")
+mcmc_strength_behav <- readRDS("output/models/mcmc_outstrength_behav.RDS")
+mcmc_instrength_behav <- readRDS("output/models/mcmc_instrength_behav.RDS")
+
 
 ## convert to BRN format
 df_strength <- cbind(all,
                      fit = predict(mcmc_strength, marginal = NULL)) %>%
-  group_by(squirrel_id, grid, year, densityScale, spr_density) %>%
+  group_by(squirrel_id, grid, year, densityScale, spr_density, sex) %>%
   dplyr::summarise(fit = mean(fit.V1),
                    outstrengthScale = mean(outstrengthScale)) %>%
   tidyr::gather(Type, Value,
                 fit:outstrengthScale)
 
-df_fit_strength = subset(df_fit_strength, Type == "fit")
-df_fit_strength <- df_fit_strength[!is.na(df_fit_strength$grid)]
+df_strength = subset(df_strength, Type == "fit")
 
 ## Territory size
 df_territory <- cbind(all,
                       fit = predict(mcmc_territory, marginal = NULL)) %>%
-  group_by(squirrel_id, grid, year, densityScale, spr_density) %>%
+  group_by(squirrel_id, grid, year, densityScale, spr_density, sex) %>%
   dplyr::summarise(fit = mean(fit.V1),
                    areaScale = mean(areaScale)) %>%
   tidyr::gather(Type, Value,
                 fit:areaScale)
 
 df_territory = subset(df_territory, Type == "fit")
-df_territory <- df_territory[!is.na(df_territory$grid)]
 
 ## In-strength
 df_in <- cbind(all,
                fit = predict(mcmc_in, marginal = NULL)) %>%
-  group_by(squirrel_id, grid, year, densityScale, spr_density) %>%
+  group_by(squirrel_id, grid, year, densityScale, spr_density, sex) %>%
   dplyr::summarise(fit = mean(fit.V1),
                    instrengthScale = mean(instrengthScale)) %>%
   tidyr::gather(Type, Value,
                 fit:instrengthScale)
 
 df_in = subset(df_in, Type == "fit")
-df_in <- df_in[!is.na(df_in$grid)]
 
 col <- c("#f1a340", "#998ec3")
 
 png("figures/Fig4.png", width = 8000, height = 4000, units = "px", res = 600)
-Fig3A <- ggplot(data = df_fit_strength) +
+Fig4A <- ggplot(data = df_strength) +
   geom_smooth(aes(spr_density, Value, group = as.factor(squirrel_id), color = grid),
               #color = "darkgrey",
               size = 0.25,
@@ -99,7 +99,7 @@ Fig3A <- ggplot(data = df_fit_strength) +
       fill = NA,
       size = 0.5))
 
-ggplot(data = df_territory) +
+Fig4B <- ggplot(data = df_territory) +
   geom_smooth(aes(spr_density, Value, group = as.factor(squirrel_id), color = grid),
               #color = "darkgrey",
               size = 0.25,
@@ -126,7 +126,7 @@ ggplot(data = df_territory) +
       fill = NA,
       size = 0.5)) 
 
-Fig3C <- ggplot(data = df_in) +
+Fig4C <- ggplot(data = df_in) +
   geom_smooth(aes(spr_density, Value, group = as.factor(squirrel_id), color = grid),
               #color = "darkgrey",
               size = 0.25,
@@ -152,10 +152,10 @@ Fig3C <- ggplot(data = df_in) +
     panel.border = element_rect(
       colour = "black",
       fill = NA,
-      size = 0.5)) 
+      size = 0.5))
 
-fig3D <- ggplot() +
-  geom_smooth(data = df_fit_strength, 
+fig4D <- ggplot() +
+  geom_smooth(data = df_strength, 
               aes(year, Value, group = as.factor(squirrel_id), color = grid),
               #color = "darkgrey",
               size = 0.25,
@@ -197,7 +197,7 @@ fig3D <- ggplot() +
       fill = NA,
       size = 0.5))
 
-fig3E <- ggplot() +
+fig4E <- ggplot() +
   geom_smooth(data = df_territory, 
               aes(year, Value, group = as.factor(squirrel_id), color = grid),
               #color = "darkgrey",
@@ -241,7 +241,7 @@ fig3E <- ggplot() +
       fill = NA,
       size = 0.5))
 
-fig3F <- ggplot() +
+fig4F <- ggplot() +
   geom_smooth(data = df_in, 
               aes(year, Value, group = as.factor(squirrel_id), color = grid),
               #color = "darkgrey",
@@ -285,10 +285,50 @@ fig3F <- ggplot() +
       fill = NA,
       size = 0.5))
 grid.arrange(
-             Fig3A, Fig3B, Fig3C,
-             fig3D, fig3E, fig3F, 
+             Fig4A, Fig4B, Fig4C,
+             fig4D, fig4E, fig4F, 
              ncol = 3, nrow = 2)
 dev.off()
 
 
 
+## convert to BRN format
+df_strength_behav <- cbind(all,
+                     fit = predict(mcmc_strength_behav, marginal = NULL)) %>%
+  group_by(squirrel_id, grid, year, densityScale, spr_density) %>%
+  dplyr::summarise(fit = mean(fit.V1),
+                   outstrengthScale = mean(outstrengthScale)) %>%
+  tidyr::gather(Type, Value,
+                fit:outstrengthScale)
+
+df_strength_behav = subset(df_strength_behav, Type == "fit")
+df_strength_behav <- df_strength_behav[!is.na(df_strength_behav$grid)]
+
+
+
+ggplot(data = df_strength_behav) +
+  geom_smooth(aes(spr_density, Value, group = as.factor(squirrel_id), color = grid),
+              #color = "darkgrey",
+              size = 0.25,
+              alpha = 0.5,
+              method = lm,
+              se = FALSE) +
+  geom_smooth(aes(spr_density, Value), 
+              method = lm, 
+              color = "black") +
+  scale_color_manual(values = col) +
+  xlab("Spring density (squirrels/ha)") +
+  ylab("Out-intrusion-strength") +
+  ggtitle('A)') +
+  theme(
+    legend.position = 'none',
+    plot.title = element_text(size = 14, color = "black"),
+    axis.text.x = element_text(size = 12, color = "black", hjust = 1),
+    axis.text.y = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, color = "black"),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_rect(
+      colour = "black",
+      fill = NA,
+      size = 0.5))
