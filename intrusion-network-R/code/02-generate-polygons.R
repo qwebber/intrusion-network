@@ -33,7 +33,7 @@ fwrite(yr, "output/unique-grid-years.csv")
 n = length(unique(yr$gr_year))
 
 # Generate spdf points ---------------------------------
-out_spdf <- get_spdf(df = df[,c("julian","locx", "locy", "squirrel_id", "gr_year", "data")], 
+out_spdf <- get_spdf(df = df[,c("julian","locx", "locy", "squirrel_id", "gr_year", "data", "mode", "behaviour" ,"detail")], 
                n = n,
                yr = yr)
 
