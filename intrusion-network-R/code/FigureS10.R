@@ -1,8 +1,8 @@
 
+
+
 ### Packages ----
-libs <- c('data.table','dplyr',
-          'ggplot2', 'gridExtra', 
-          'MCMCglmm')
+libs <- c('data.table','ggplot2', 'gridExtra')
 lapply(libs, require, character.only = TRUE)
 
 ## load data
@@ -12,64 +12,26 @@ all$squirrel_id <- as.factor(all$squirrel_id)
 all$year <- as.factor(all$year)
 
 unique(all$gr_year)
-
 all$area_ha <- all$area_m2/10000
 
 all <- all[!is.na(all$sex)]
 all <- all[!is.na(all$grid)]
 
-## scale variables within year:
-all[, outstrengthScale := scale(outstrength), by = c("year", "grid")]
-all[, instrengthScale := scale(instrength), by = c("year", "grid")]
-all[, areaScale := scale(area_ha), by = c("year", "grid")]
-all[, densityScale := scale(spr_density)]
-
-## load models
-mcmc_strength <- readRDS("output/models/mcmc_outstrength_behav.RDS")
-mcmc_in <- readRDS("output/models/mcmc_instrength_behav.RDS")
-
-## convert to BRN format
-df_strength <- cbind(all,
-                     fit = predict(mcmc_strength, marginal = NULL)) %>%
-  group_by(squirrel_id, grid, year, spr_density) %>%
-  dplyr::summarise(fit = mean(fit.V1),
-                   outstrengthScale = mean(outstrengthScale)) %>%
-  tidyr::gather(Type, Value,
-                fit:outstrengthScale)
-
-df_fit_strength = setDT(df_strength)[Type == "fit"]
-
-## In-strength
-df_in <- cbind(all, 
-               fit = predict(mcmc_in, marginal = NULL)) %>%
-  group_by(squirrel_id, grid, year, spr_density) %>%
-  dplyr::summarise(fit = mean(fit.V1),
-                   instrengthScale = mean(instrengthScale)) %>%
-  tidyr::gather(Type, Value,
-                fit:instrengthScale)
-
-df_in = setDT(df_in)[Type == "fit"]
-
-
 col <- c("#f1a340", "#998ec3")
 
-png("figures/FigS10.png", width = 8000, height = 4000, units = "px", res = 600)
-FigS10A <- ggplot(data = df_fit_strength) +
-  geom_smooth(aes(spr_density, Value, group = as.factor(squirrel_id), color = grid),
-              #color = "darkgrey",
-              size = 0.25,
-              alpha = 0.5,
-              method = lm,
-              se = FALSE) +
-  geom_smooth(aes(spr_density, Value), 
-              method = lm, 
-              color = "black") +
+png("figures/FigS10.png", width = 6000, height = 3000, units = "px", res = 600)
+FigS10A <- ggplot(all) + 
+  geom_point(aes(outstrength_trap, outstrength_behav, 
+                 color = grid)) +
+  xlab("Outstrength (trapping data)") +
+  ylab("Outstrength (behavioural observation data)") +
   scale_color_manual(values = col) +
-  xlab("Spring density (squirrels/ha)") +
-  ylab("Out-intrusion-strength (Behavioural observations)") +
-  ggtitle('A)') +
+  ggtitle("A)") +
+  ylim(0, 7) +
+  xlim(0, 7) +
   theme(
-    legend.position = 'none',
+    legend.position = c(0.2, 0.8), 
+    legend.key = element_blank(),
     plot.title = element_text(size = 14, color = "black"),
     axis.text.x = element_text(size = 12, color = "black", hjust = 1),
     axis.text.y = element_text(size = 12, color = "black"),
@@ -81,21 +43,15 @@ FigS10A <- ggplot(data = df_fit_strength) +
       fill = NA,
       size = 0.5))
 
-FigS10B <- ggplot(data = df_in) +
-  geom_smooth(aes(spr_density, Value, group = as.factor(squirrel_id), color = grid),
-              #color = "darkgrey",
-              size = 0.25,
-              alpha = 0.5,
-              method = lm,
-              se = FALSE) +
-  geom_smooth(aes(spr_density, Value), 
-              method = lm, 
-              color = "black") +
+FigS10B <- ggplot(all) + 
+  geom_point(aes(instrength_trap, instrength_behav, 
+                 color = grid)) +
+  xlab("Instrength (trapping data)") +
+  ylab("Instrength (behavioural observation data)") +
   scale_color_manual(values = col) +
-  scale_y_continuous(labels = scales::number_format(accuracy = 0.1)) +
-  xlab("Spring density (squirrels/ha)") +
-  ylab("In-intrusion-strength (Behavioural observations)") +
-  ggtitle('B)') +
+  ggtitle("B)") +
+  ylim(0, 1) +
+  xlim(0, 1) +
   theme(
     legend.position = 'none',
     plot.title = element_text(size = 14, color = "black"),
