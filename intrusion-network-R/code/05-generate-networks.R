@@ -132,29 +132,5 @@ metrics_all <- merge(metrics2, metrics_behav2[,c("outstrength_behav", "instrengt
 metrics_all2 <- merge(metrics_all, metrics_trap2[,c("outstrength_trap", "instrength_trap", "id_gr_yr")], 
                       by = "id_gr_yr", all = T)
 
-fake <- data.table(x = 0:1000,
-                   y = 0:1000)
-
-fake2 <- data.table(x = 0:5500,
-                   y = 0:5500)
-
-aa <- ggplot(metrics_all2) + 
-  geom_point(aes(outstrength_trap, outstrength)) +
-  geom_line(data = fake, aes(x,y), color = "red") +
-  ggtitle("RED LINE IS 1:1 line") +
-  ylab("Outstrength (all data)") +
-  xlab("Outstrength (trapping data)") 
-bb <- ggplot(metrics_all2) + 
-  geom_point(aes(outstrength_trap, outstrength_behav)) +
-  geom_line(data = fake, aes(x,y), color = "red") +
-  xlab("Outstrength (trapping data)") +
-  ylab("Outstrength (behavioural obs data)") 
-cc <- ggplot(metrics_all2) + 
-  geom_point(aes(outstrength, outstrength_behav)) +
-  geom_line(data = fake2, aes(x,y), color = "red") +
-  ylab("Outstrength (behavioural obs data)") +
-  xlab("Outstrength (all data)") 
-grid.arrange(aa,bb,cc, nrow = 1)
-
 saveRDS(metrics_all2, "output/metrics.RDS")
 
