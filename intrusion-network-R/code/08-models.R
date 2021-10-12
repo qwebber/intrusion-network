@@ -44,26 +44,26 @@ all[year == 1998 |
       year == 2005 | 
       year == 2010 | 
       year == 2014 | 
-      year == 2019][, median(area_ha)]
+      year == 2019][, median(area_ha), by = "sex"]
 
 all[year == 1998 |
       year == 2005 | 
       year == 2010 | 
       year == 2014 | 
-      year == 2019][, sd(area_ha)]
+      year == 2019][, sd(area_ha), by = "sex"]
 
 ## average territory size non-mast years
 all[year != 1998 |
       year != 2005 | 
       year != 2010 | 
       year != 2014 | 
-      year != 2019][, median(area_ha)]
+      year != 2019][, median(area_ha), by = "sex"]
 
 all[year != 1998 |
       year != 2005 | 
       year != 2010 | 
       year != 2014 | 
-      year != 2019][, sd(area_ha)]
+      year != 2019][, sd(area_ha), by = "sex"]
 
 
 ## average out-strength for mast years
@@ -71,26 +71,26 @@ all[year == 1998 |
       year == 2005 | 
       year == 2010 | 
       year == 2014 | 
-      year == 2019][, median(outstrength)]
+      year == 2019][, median(outstrength), by = "sex"]
 
 all[year == 1998 |
       year == 2005 | 
       year == 2010 | 
       year == 2014 | 
-      year == 2019][, sd(outstrength)]
+      year == 2019][, sd(outstrength), by = "sex"]
 
-## average intrusion strength non-mast years
+## average out-intrusion strength non-mast years
 all[year != 1998 |
       year != 2005 | 
       year != 2010 | 
       year != 2014 | 
-      year != 2019][, median(outstrength)]
+      year != 2019][, median(outstrength), by = "sex"]
 
 all[year != 1998 |
       year != 2005 | 
       year != 2010 | 
       year != 2014 | 
-      year != 2019][, sd(outstrength)]
+      year != 2019][, sd(outstrength), by = "sex"]
 
 
 ## average in-strength for mast years
@@ -98,26 +98,26 @@ all[year == 1998 |
        year == 2005 | 
        year == 2010 | 
        year == 2014 | 
-       year == 2019][, median(instrength)]
+       year == 2019][, median(instrength), by = "sex"]
 
 all[year == 1998 |
        year == 2005 | 
        year == 2010 | 
        year == 2014 | 
-       year == 2019][, sd(instrength)]
+       year == 2019][, sd(instrength), by = "sex"]
 
-## average intrusion strength non-mast years
+## average in-intrusion strength non-mast years
 all[year != 1998 |
        year != 2005 | 
        year != 2010 | 
        year != 2014 | 
-       year != 2019][, median(instrength)]
+       year != 2019][, median(instrength), by = "sex"]
 
 all[year != 1998 |
        year != 2005 | 
        year != 2010 | 
        year != 2014 | 
-       year != 2019][, sd(instrength)]
+       year != 2019][, sd(instrength), by = "sex"]
 
 
 
@@ -272,6 +272,66 @@ mcmc5 <- MCMCglmm(instrength_behav ~
                   saveZ = TRUE)
 
 saveRDS(mcmc5, "output/models/mcmc_instrength_behav.RDS")
+
+############################
+## OUT-STRENGTH TRAPPING ##
+#############################
+p.var_outT <- var(all$outstrength_trap, na.rm = TRUE)
+
+prior_outT <- list(G=list(G1=list(V=diag(2)*(p.var_outT/2), nu=4,
+                                  alpha.V=diag(2)*p.var_outT/2)),
+                   R=list(V=diag(1)*(p.var_outT/2), nu=4))
+
+mcmc6 <- MCMCglmm(outstrength_trap ~ 
+                     grid +
+                     sex + 
+                     age + 
+                     spr_density + 
+                     mast,
+                  random =~ us(1 + spr_density):squirrel_id,
+                  rcov = ~units,
+                  family = "gaussian",
+                  prior = prior_outT,
+                  #nitt=420000,
+                  #burnin=20000,
+                  #thin=100,
+                  verbose = TRUE,
+                  data = all,
+                  pr=TRUE,
+                  saveX = TRUE,
+                  saveZ = TRUE)
+
+saveRDS(mcmc6, "output/models/mcmc_outstrength_trap.RDS")
+
+############################
+## IN-STRENGTH BEHAV OBS ##
+#############################
+p.var_inT <- var(all$instrength_trap, na.rm = TRUE)
+
+prior_inT <- list(G=list(G1=list(V=diag(2)*(p.var_inT/2), nu=4,
+                                 alpha.V=diag(2)*p.var_inT/2)),
+                  R=list(V=diag(1)*(p.var_inT/2), nu=4))
+
+mcmc7 <- MCMCglmm(instrength_trap ~ 
+                     grid +
+                     sex + 
+                     age + 
+                     spr_density + 
+                     mast,
+                  random =~ us(1 + spr_density):squirrel_id,
+                  rcov = ~units,
+                  family = "gaussian",
+                  prior = prior_inT,
+                  #nitt=420000,
+                  #burnin=20000,
+                  #thin=100,
+                  verbose = TRUE,
+                  data = all,
+                  pr=TRUE,
+                  saveX = TRUE,
+                  saveZ = TRUE)
+
+saveRDS(mcmc7, "output/models/mcmc_instrength_trap.RDS")
 
 
 ## Tri-variate model
