@@ -101,6 +101,10 @@ behaviour_all <- behaviour_all[,c("squirrel_id", "locx", "locy", "grid",
 
 behaviour_all$data <- "behaviour"
 
+## remove modes 0, 6, and 7
+behaviour_all <- behaviour_all[mode != 0 & mode != 6 & mode != 7]
+
+
 df <- rbind(trp, behaviour_all, fill = T)
 
 ## filter for squirrels with at least 15 observations
@@ -110,7 +114,7 @@ df[, N := uniqueN(row), by = c("squirrel_id","grid", "year")]
 
 df$gr_year <- as.factor(paste(df$grid, df$year, sep = "_"))
 
-## compare data subsets with minimum 15 and minimum 30 observations
+## drop individuals with fewer than 20 obs per year
 df2 <- df[N > 21]
 
 ## drop instances where >10 observatioHns in a day
