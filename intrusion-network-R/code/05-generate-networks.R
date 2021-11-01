@@ -43,6 +43,8 @@ for(i in 1:n){
   
   metrics[[i]] <- data.table(outstrength = graph.strength(g, mode = c("out")),
                              instrength = graph.strength(g, mode = c("in")),
+                             outdegree = degree(g, mode = c("out")),
+                             indegree = degree(g, mode = c("in")),
                              squirrel_id = adj$nodelist,
                              gr_year = k)
 
@@ -51,8 +53,6 @@ for(i in 1:n){
 metrics2 <- rbindlist(metrics, fill = T)
 metrics2[, c("year", "grid") := tstrsplit(gr_year, "_", fixed=TRUE)]#[,c("gr_year") := NULL]
 metrics2$id_gr_yr <- as.factor(paste(metrics2$squirrel_id, metrics2$gr_year, sep = "_"))
-
-
 
 ## generate metrics only using behavioural data
 metrics_behav <- c()
