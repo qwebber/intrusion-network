@@ -71,26 +71,26 @@ all[year == 1998 |
       year == 2005 | 
       year == 2010 | 
       year == 2014 | 
-      year == 2019][, median(outstrength), by = "sex"]
+      year == 2019][, median(outdegree), by = "sex"]
 
 all[year == 1998 |
       year == 2005 | 
       year == 2010 | 
       year == 2014 | 
-      year == 2019][, sd(outstrength), by = "sex"]
+      year == 2019][, sd(outdegree), by = "sex"]
 
 ## average out-intrusion strength non-mast years
 all[year != 1998 |
       year != 2005 | 
       year != 2010 | 
       year != 2014 | 
-      year != 2019][, median(outstrength), by = "sex"]
+      year != 2019][, median(outdegree), by = "sex"]
 
 all[year != 1998 |
       year != 2005 | 
       year != 2010 | 
       year != 2014 | 
-      year != 2019][, sd(outstrength), by = "sex"]
+      year != 2019][, sd(outdegree), by = "sex"]
 
 
 ## average in-strength for mast years
@@ -98,26 +98,26 @@ all[year == 1998 |
        year == 2005 | 
        year == 2010 | 
        year == 2014 | 
-       year == 2019][, median(instrength), by = "sex"]
+       year == 2019][, median(indegree), by = "sex"]
 
 all[year == 1998 |
        year == 2005 | 
        year == 2010 | 
        year == 2014 | 
-       year == 2019][, sd(instrength), by = "sex"]
+       year == 2019][, sd(indegree), by = "sex"]
 
 ## average in-intrusion strength non-mast years
 all[year != 1998 |
        year != 2005 | 
        year != 2010 | 
        year != 2014 | 
-       year != 2019][, median(instrength), by = "sex"]
+       year != 2019][, median(indegree), by = "sex"]
 
 all[year != 1998 |
        year != 2005 | 
        year != 2010 | 
        year != 2014 | 
-       year != 2019][, sd(instrength), by = "sex"]
+       year != 2019][, sd(indegree), by = "sex"]
 
 
 
