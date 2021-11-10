@@ -22,7 +22,7 @@ all[, instrengthScale := scale(instrength)]
 all[, areaScale := scale(area_ha)]
 all[, densityScale := scale(spr_density)]
 all[, NScale := scale(N)]
-
+all[, yrScale := scale(as.numeric(year))]
 
 ########################
 #### SUMMARY STATS ####
@@ -124,11 +124,9 @@ all[year != 1998 |
 ############################ 
 #### INTRUSION STRENGTH ####
 ############################ 
-p.var_str <- var(all$outstrength, na.rm = TRUE)
-
-prior_out <- list(G=list(G1=list(V=diag(2)*(p.var_str/2), nu=4,
-                                 alpha.V=diag(2)*p.var_str/2)),
-                  R=list(V=diag(1)*(p.var_str/2), nu=4))
+prior_out <- list(G=list(G1=list(V=diag(2)*1, nu=1,
+                                 alpha.V=diag(2)*25^2)),
+                  R=list(V=diag(1)*1, nu=1))
 
 mcmc1 <- MCMCglmm(outstrength ~ 
                       grid +
@@ -140,9 +138,9 @@ mcmc1 <- MCMCglmm(outstrength ~
                     rcov = ~units,
                     family = "gaussian",
                     prior = prior_out,
-                    #nitt=420000,
-                    #burnin=20000,
-                    #thin=100,
+                    nitt=420000,
+                    burnin=20000,
+                    thin=100,
                     verbose = TRUE,
                     data = all,
                     pr=TRUE,
@@ -154,12 +152,6 @@ saveRDS(mcmc1, "output/models/mcmc_strength.RDS")
 #####################
 ## TERRITORY SIZE ##
 #####################
-p.var_area <- var(all$area_ha, na.rm = TRUE)
-
-prior_area <- list(G=list(G1=list(V=diag(2)*(p.var_area/2), nu=4,
-                                 alpha.V=diag(2)*p.var_area/2)),
-                  R=list(V=diag(1)*(p.var_area/2), nu=4))
-
 mcmc2 <- MCMCglmm(area_ha ~ 
                     grid +
                     sex + 
@@ -169,10 +161,10 @@ mcmc2 <- MCMCglmm(area_ha ~
                   random =~ us(1 + spr_density):squirrel_id,
                   rcov = ~units,
                   family = "gaussian",
-                  prior = prior_area,
-                  #nitt=420000,
-                  #burnin=20000,
-                  #thin=100,
+                  prior = prior_out,
+                  nitt=420000,
+                  burnin=20000,
+                  thin=100,
                   verbose = TRUE,
                   data = all,
                   pr=TRUE,
@@ -185,12 +177,6 @@ saveRDS(mcmc2, "output/models/mcmc_territory.RDS")
 #####################
 ## IN-STRENGTH ##
 #####################
-p.var_in <- var(all$instrength, na.rm = TRUE)
-
-prior_in <- list(G=list(G1=list(V=diag(2)*(p.var_in/2), nu=4,
-                                  alpha.V=diag(2)*p.var_in/2)),
-                   R=list(V=diag(1)*(p.var_in/2), nu=4))
-
 mcmc3 <- MCMCglmm(instrength ~ 
                     grid +
                     sex + 
@@ -200,10 +186,10 @@ mcmc3 <- MCMCglmm(instrength ~
                   random =~ us(1 + spr_density):squirrel_id,
                   rcov = ~units,
                   family = "gaussian",
-                  prior = prior_in,
-                  #nitt=420000,
-                  #burnin=20000,
-                  #thin=100,
+                  prior = prior_out,
+                  nitt=420000,
+                  burnin=20000,
+                  thin=100,
                   verbose = TRUE,
                   data = all,
                   pr=TRUE,
@@ -216,12 +202,6 @@ saveRDS(mcmc3, "output/models/mcmc_instrength.RDS")
 ############################
 ## OUT-STRENGTH BEHAV OBS ##
 #############################
-p.var_outB <- var(all$outstrength_behav, na.rm = TRUE)
-
-prior_outB <- list(G=list(G1=list(V=diag(2)*(p.var_outB/2), nu=4,
-                                alpha.V=diag(2)*p.var_outB/2)),
-                 R=list(V=diag(1)*(p.var_outB/2), nu=4))
-
 mcmc4 <- MCMCglmm(outstrength_behav ~ 
                      grid +
                      sex + 
@@ -231,10 +211,10 @@ mcmc4 <- MCMCglmm(outstrength_behav ~
                   random =~ us(1 + spr_density):squirrel_id,
                   rcov = ~units,
                   family = "gaussian",
-                  prior = prior_outB,
-                  #nitt=420000,
-                  #burnin=20000,
-                  #thin=100,
+                  prior = prior_out,
+                  nitt=420000,
+                  burnin=20000,
+                  thin=100,
                   verbose = TRUE,
                   data = all,
                   pr=TRUE,
@@ -246,12 +226,6 @@ saveRDS(mcmc4, "output/models/mcmc_outstrength_behav.RDS")
 ############################
 ## IN-STRENGTH BEHAV OBS ##
 #############################
-p.var_inB <- var(all$instrength_behav, na.rm = TRUE)
-
-prior_inB <- list(G=list(G1=list(V=diag(2)*(p.var_inB/2), nu=4,
-                                  alpha.V=diag(2)*p.var_inB/2)),
-                   R=list(V=diag(1)*(p.var_inB/2), nu=4))
-
 mcmc5 <- MCMCglmm(instrength_behav ~ 
                      grid +
                      sex + 
@@ -261,10 +235,10 @@ mcmc5 <- MCMCglmm(instrength_behav ~
                   random =~ us(1 + spr_density):squirrel_id,
                   rcov = ~units,
                   family = "gaussian",
-                  prior = prior_inB,
-                  #nitt=420000,
-                  #burnin=20000,
-                  #thin=100,
+                  prior = prior_out,
+                  nitt=420000,
+                  burnin=20000,
+                  thin=100,
                   verbose = TRUE,
                   data = all,
                   pr=TRUE,
@@ -276,12 +250,6 @@ saveRDS(mcmc5, "output/models/mcmc_instrength_behav.RDS")
 ############################
 ## OUT-STRENGTH TRAPPING ##
 #############################
-p.var_outT <- var(all$outstrength_trap, na.rm = TRUE)
-
-prior_outT <- list(G=list(G1=list(V=diag(2)*(p.var_outT/2), nu=4,
-                                  alpha.V=diag(2)*p.var_outT/2)),
-                   R=list(V=diag(1)*(p.var_outT/2), nu=4))
-
 mcmc6 <- MCMCglmm(outstrength_trap ~ 
                      grid +
                      sex + 
@@ -291,10 +259,10 @@ mcmc6 <- MCMCglmm(outstrength_trap ~
                   random =~ us(1 + spr_density):squirrel_id,
                   rcov = ~units,
                   family = "gaussian",
-                  prior = prior_outT,
-                  #nitt=420000,
-                  #burnin=20000,
-                  #thin=100,
+                  prior = prior_out,
+                  nitt=420000,
+                  burnin=20000,
+                  thin=100,
                   verbose = TRUE,
                   data = all,
                   pr=TRUE,
@@ -306,12 +274,6 @@ saveRDS(mcmc6, "output/models/mcmc_outstrength_trap.RDS")
 ############################
 ## IN-STRENGTH BEHAV OBS ##
 #############################
-p.var_inT <- var(all$instrength_trap, na.rm = TRUE)
-
-prior_inT <- list(G=list(G1=list(V=diag(2)*(p.var_inT/2), nu=4,
-                                 alpha.V=diag(2)*p.var_inT/2)),
-                  R=list(V=diag(1)*(p.var_inT/2), nu=4))
-
 mcmc7 <- MCMCglmm(instrength_trap ~ 
                      grid +
                      sex + 
@@ -321,10 +283,10 @@ mcmc7 <- MCMCglmm(instrength_trap ~
                   random =~ us(1 + spr_density):squirrel_id,
                   rcov = ~units,
                   family = "gaussian",
-                  prior = prior_inT,
-                  #nitt=420000,
-                  #burnin=20000,
-                  #thin=100,
+                  prior = prior_out,
+                  nitt=420000,
+                  burnin=20000,
+                  thin=100,
                   verbose = TRUE,
                   data = all,
                   pr=TRUE,
@@ -333,37 +295,120 @@ mcmc7 <- MCMCglmm(instrength_trap ~
 
 saveRDS(mcmc7, "output/models/mcmc_instrength_trap.RDS")
 
+## Bi-variate model - area - outstrength
+prior1 <- list(R = list(V=diag(2)*1, nu=1), ## 3x3 matrix for random effects 
+               G = list(G1 = list(V = diag(4)*1, nu=1, ## 6x6 matrix for among-individual section
+                                  alpha.V = diag(4)*25^2)))
 
-## Tri-variate model
-p.var_str <- var(all$outstrength, na.rm = TRUE)
-prior2 <- list(R = list(V=diag(3)*(p.var_str/2), nu=4), ## 2x2 matrix for random effects 
-               G = list(G1 = list(V = diag(6)*(p.var_str/2), nu=4, ## 4x4 matrix for among-individual section
-                                      alpha.V = diag(6)*p.var_str/2)))
+mcmc8 <- MCMCglmm(cbind(outstrengthScale,
+                         areaScale) ~ 
+                      trait-1 + 
+                      trait:grid +
+                      trait:sex + 
+                      trait:age + 
+                      trait:spr_density + 
+                      trait:mast +
+                      trait:yrScale, 
+                   random =~ us(trait + spr_density:trait):squirrel_id,
+                   rcov =~ idh(trait):units,
+                   family = c("gaussian","gaussian"),
+                   prior = prior1,
+                   nitt=420000,
+                   burnin=20000,
+                   thin=100,
+                   verbose = TRUE,
+                   data = all,
+                   pr=TRUE,
+                   saveX = TRUE,
+                   saveZ = TRUE)
 
-mcmc4 <- MCMCglmm(cbind(instrengthScale, 
-                        outstrengthScale,
+summary(mcmc8)
+saveRDS(mcmc8, "output/models/mcmc_area-outstrength.RDS")
+
+## Bi-variate model - area - instrength
+mcmc9 <- MCMCglmm(cbind(instrengthScale,
                         areaScale) ~ 
-                    trait-1 + 
-                    trait:grid +
-                    trait:sex + 
-                    trait:poly(age, degree = 2) + 
-                    trait:spr_density + 
-                    trait:mast, 
+                     trait-1 + 
+                     trait:grid +
+                     trait:sex + 
+                     trait:age + 
+                     trait:spr_density + 
+                     trait:mast +
+                     trait:yrScale, 
                   random =~ us(trait + spr_density:trait):squirrel_id,
                   rcov =~ idh(trait):units,
-                  family = c("gaussian","gaussian", "gaussian"),
-                  prior = prior2,
-                  #nitt=420000,
-                  #burnin=20000,
-                  #thin=100,
+                  family = c("gaussian","gaussian"),
+                  prior = prior1,
+                  nitt=420000,
+                  burnin=20000,
+                  thin=100,
                   verbose = TRUE,
                   data = all,
                   pr=TRUE,
                   saveX = TRUE,
                   saveZ = TRUE)
 
-summary(mcmc4)
-saveRDS(mcmc4, "output/models/mcmc_all.RDS")
+summary(mcmc9)
+saveRDS(mcmc9, "output/models/mcmc_area-instrength.RDS")
+
+
+## Bi-variate model - area - instrength
+mcmc10 <- MCMCglmm(cbind(instrengthScale,
+                         outstrengthScale) ~ 
+                     trait-1 + 
+                     trait:grid +
+                     trait:sex + 
+                     trait:age + 
+                     trait:spr_density + 
+                     trait:mast +
+                     trait:yrScale, 
+                  random =~ us(trait + spr_density:trait):squirrel_id,
+                  rcov =~ idh(trait):units,
+                  family = c("gaussian","gaussian"),
+                  prior = prior1,
+                  nitt=420000,
+                  burnin=20000,
+                  thin=100,
+                  verbose = TRUE,
+                  data = all,
+                  pr=TRUE,
+                  saveX = TRUE,
+                  saveZ = TRUE)
+
+summary(mcmc10)
+saveRDS(mcmc10, "output/models/mcmc_instrength-outstrengthScale.RDS")
+
+
+
+## Tri-variate model
+prior2 <- list(R = list(V=diag(3)*1, nu=1), ## 3x3 matrix for random effects 
+               G = list(G1 = list(V = diag(6)*1, nu=1, ## 6x6 matrix for among-individual section
+                                      alpha.V = diag(6)*25^2)))
+mcmc11 <- MCMCglmm(cbind(instrengthScale, 
+                        outstrengthScale,
+                        areaScale) ~ 
+                    trait-1 + 
+                    trait:grid +
+                    trait:sex + 
+                    trait:age + 
+                    trait:spr_density + 
+                    trait:mast +
+                    trait:yrScale, 
+                  random =~ us(trait + spr_density:trait):squirrel_id,
+                  rcov =~ idh(trait):units,
+                  family = c("gaussian","gaussian", "gaussian"),
+                  prior = prior2,
+                  nitt=420000,
+                  burnin=20000,
+                  thin=100,
+                  verbose = TRUE,
+                  data = all,
+                  pr=TRUE,
+                  saveX = TRUE,
+                  saveZ = TRUE)
+
+summary(mcmc11)
+saveRDS(mcmc11, "output/models/mcmc_all.RDS")
 
 library(broom.mixed)
 
@@ -413,3 +458,14 @@ ggplot(coefs2, aes(variable, estimate)) +
       panel.grid.minor = element_blank(),
       panel.background = element_blank(), 
       panel.border = element_rect(colour = "black", fill=NA, size = 1))
+
+
+a1 <- lmer(outstrengthScale ~ grid +
+              #sex + 
+              poly(age, degree = 2) + 
+              spr_density + 
+              mast + 
+              (1|squirrel_id), 
+              data = all[sex == "M"])
+
+visreg(a1)
