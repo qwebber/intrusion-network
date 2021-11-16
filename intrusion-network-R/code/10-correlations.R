@@ -9,13 +9,16 @@ libs <- c('data.table', 'dplyr', 'MCMCglmm',
           'ggplot2', 'gridExtra')
 lapply(libs, require, character.only = TRUE)
 
-## load model
-mcmc_all <- readRDS("output/models/mcmc_all.RDS")
+## load models
+mcmc_in_out <- readRDS("output/models/mcmc_instrength-outstrengthScale.RDS")
+mcmc_in_terr <- readRDS("output/models/mcmc_area-instrength.RDS")
+mcmc_out_terr <- readRDS("output/models/mcmc_area-outstrength.RDS")
+
 
 ## out-strength - in-strength
-df_outIn <- data.table(Trait = attr(colMeans(mcmc_all$Sol), "names"),
-                               Value = colMeans(mcmc_all$Sol)) 
-df_outIn2 <- df_outIn[19:length(df_outIn$Trait),]
+df_outIn <- data.table(Trait = attr(colMeans(mcmc_in_out$Sol), "names"),
+                               Value = colMeans(mcmc_in_out$Sol)) 
+df_outIn2 <- df_outIn[15:length(df_outIn$Trait),]
 df_outIn2[, c('Trait' ,'xx' ,'squirrel_id') := tstrsplit(Trait, '.', fixed = TRUE)][,c("xx") := NULL]
 
 df_outIn2$Trait[df_outIn2$Trait == "traitinstrengthScale"] <- 'inStrength'  
@@ -31,18 +34,18 @@ outInDF <- data.table(interceptIn = df_outIn2[Trait == "inStrength"]$Value,
                     squirrel_id = df_outIn2[Trait == "inStrength"]$squirrel_id)
  
 ## CORRELATIONS between Intercept in-strength and Intercept out-strength:
-cor_in_out <- mcmc_all$VCV[,"traitinstrengthScale:traitoutstrengthScale.squirrel_id"]/
-  (sqrt(mcmc_all$VCV[,"traitinstrengthScale:traitinstrengthScale.squirrel_id"])*
-     sqrt(mcmc_all$VCV[,"traitoutstrengthScale:traitoutstrengthScale.squirrel_id"]))
+cor_in_out <- mcmc_in_out$VCV[,"traitinstrengthScale:traitoutstrengthScale.squirrel_id"]/
+  (sqrt(mcmc_in_out$VCV[,"traitinstrengthScale:traitinstrengthScale.squirrel_id"])*
+     sqrt(mcmc_in_out$VCV[,"traitoutstrengthScale:traitoutstrengthScale.squirrel_id"]))
 
 mean(cor_in_out)
 HPDinterval(cor_in_out)
 
 
 ## out-strength - territory size
-df_outArea <- data.table(Trait = attr(colMeans(mcmc_all$Sol), "names"),
-                       Value = colMeans(mcmc_all$Sol)) 
-df_outArea2 <- df_outArea[19:length(df_outArea$Trait),]
+df_outArea <- data.table(Trait = attr(colMeans(mcmc_out_terr$Sol), "names"),
+                       Value = colMeans(mcmc_out_terr$Sol)) 
+df_outArea2 <- df_outArea[15:length(df_outArea$Trait),]
 df_outArea2[, c('Trait' ,'xx' ,'squirrel_id') := tstrsplit(Trait, '.', fixed = TRUE)][,c("xx") := NULL]
 
 df_outArea2$Trait[df_outArea2$Trait == "traitareaScale"] <- 'area'  
@@ -58,18 +61,18 @@ outAreaDF <- data.table(interceptArea = df_outArea2[Trait == "area"]$Value,
                       squirrel_id = df_outArea2[Trait == "outStrength"]$squirrel_id)
 
 ## CORRELATIONS between Intercept in-strength and Intercept out-strength:
-cor_area_out <- mcmc_all$VCV[,"traitareaScale:traitoutstrengthScale.squirrel_id"]/
-  (sqrt(mcmc_all$VCV[,"traitareaScale:traitareaScale.squirrel_id"])*
-     sqrt(mcmc_all$VCV[,"traitoutstrengthScale:traitoutstrengthScale.squirrel_id"]))
+cor_area_out <- mcmc_out_terr$VCV[,"traitareaScale:traitoutstrengthScale.squirrel_id"]/
+  (sqrt(mcmc_out_terr$VCV[,"traitareaScale:traitareaScale.squirrel_id"])*
+     sqrt(mcmc_out_terr$VCV[,"traitoutstrengthScale:traitoutstrengthScale.squirrel_id"]))
 
 mean(cor_area_out)
 HPDinterval(cor_area_out)
 
 
 ## in-strength - territory size
-df_inArea <- data.table(Trait = attr(colMeans(mcmc_all$Sol), "names"),
-                         Value = colMeans(mcmc_all$Sol)) 
-df_inArea2 <- df_inArea[19:length(df_inArea$Trait),]
+df_inArea <- data.table(Trait = attr(colMeans(mcmc_in_terr$Sol), "names"),
+                         Value = colMeans(mcmc_in_terr$Sol)) 
+df_inArea2 <- df_inArea[15:length(df_inArea$Trait),]
 df_inArea2[, c('Trait' ,'xx' ,'squirrel_id') := tstrsplit(Trait, '.', fixed = TRUE)][,c("xx") := NULL]
 
 df_inArea2$Trait[df_inArea2$Trait == "traitareaScale"] <- 'area'  
@@ -85,9 +88,9 @@ inAreaDF <- data.table(interceptArea = df_inArea2[Trait == "area"]$Value,
                         squirrel_id = df_inArea2[Trait == "inStrength"]$squirrel_id)
 
 ## CORRELATIONS between Intercept area and Intercept in-strength:
-cor_area_in <- mcmc_all$VCV[,"traitareaScale:traitinstrengthScale.squirrel_id"]/
-  (sqrt(mcmc_all$VCV[,"traitareaScale:traitareaScale.squirrel_id"])*
-     sqrt(mcmc_all$VCV[,"traitinstrengthScale:traitinstrengthScale.squirrel_id"]))
+cor_area_in <- mcmc_in_terr$VCV[,"traitareaScale:traitinstrengthScale.squirrel_id"]/
+  (sqrt(mcmc_in_terr$VCV[,"traitareaScale:traitareaScale.squirrel_id"])*
+     sqrt(mcmc_in_terr$VCV[,"traitinstrengthScale:traitinstrengthScale.squirrel_id"]))
 
 mean(cor_area_in)
 HPDinterval(cor_area_in)
