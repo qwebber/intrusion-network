@@ -18,6 +18,7 @@ all$area_ha <- all$area_m2/10000
 all <- all[!is.na(all$sex)]
 all <- all[!is.na(all$grid)]
 
+all[, uniqueN(squirrel_id), by = "gr_year"]
 
 ## load territory polygons
 polys <- readRDS("output/edge-list-inputs/polygons-all.RDS")
@@ -100,7 +101,7 @@ ggplot() +
   geom_sf(data = polys_KL, 
           aes(fill = id_polygons), 
           alpha = 0.5) +
-  geom_sf(data = subset(polys_KL, gr_year == "1998 (n = 0)"),
+  geom_sf(data = subset(polys_KL, gr_year == "1998 (n = 0)*"),
           aes(fill = id_polygons),
           fill = "white", color = "white") +
   scale_fill_viridis_d() +
