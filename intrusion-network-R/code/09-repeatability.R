@@ -5,35 +5,56 @@
 libs <- c('data.table', 'dplyr', 'MCMCglmm')
 lapply(libs, require, character.only = TRUE)
 
-## load model
-mcmc_all <- readRDS("output/models/mcmc_all.RDS")
+## load models
+mcmc_in_out <- readRDS("output/models/mcmc_instrength-outstrengthScale.RDS")
+mcmc_in_terr <- readRDS("output/models/mcmc_area-instrength.RDS")
+mcmc_out_terr <- readRDS("output/models/mcmc_area-outstrength.RDS")
 
 ## rep from out/in-strength model
-rep_out <- mcmc_all$VCV[,"traitoutstrengthScale:traitoutstrengthScale.squirrel_id"]/
-  (mcmc_all$VCV[,"traitoutstrengthScale:traitoutstrengthScale.squirrel_id"] +
-     mcmc_all$VCV[,"traitoutstrengthScale.units"])
+rep_out <- mcmc_in_out$VCV[,"traitoutstrengthScale:traitoutstrengthScale.squirrel_id"]/
+  (mcmc_in_out$VCV[,"traitoutstrengthScale:traitoutstrengthScale.squirrel_id"] +
+     mcmc_in_out$VCV[,"traitoutstrengthScale.units"])
 
-rep_in <- mcmc_all$VCV[,"traitinstrengthScale:traitinstrengthScale.squirrel_id"]/
-  (mcmc_all$VCV[,"traitinstrengthScale:traitinstrengthScale.squirrel_id"] +
-     mcmc_all$VCV[,"traitinstrengthScale.units"])
+rep_in <- mcmc_in_out$VCV[,"traitinstrengthScale:traitinstrengthScale.squirrel_id"]/
+  (mcmc_in_out$VCV[,"traitinstrengthScale:traitinstrengthScale.squirrel_id"] +
+     mcmc_in_out$VCV[,"traitinstrengthScale.units"])
 
-## repeatability for territory size
-rep_area <- mcmc_all$VCV[,"traitareaScale:traitareaScale.squirrel_id"]/
-  (mcmc_all$VCV[,"traitareaScale:traitareaScale.squirrel_id"] + 
-     mcmc_all$VCV[,"traitareaScale.units"])
 
-repAll <- data.table(rep = c(mean(rep_out), #mean(rep_out2),
-                             mean(rep_in), #mean(rep_in2), 
-                             mean(rep_area)), #mean(rep_area2)),
-                     lwr = c(HPDinterval(rep_out)[1], #HPDinterval(rep_out2)[1],
-                             HPDinterval(rep_in)[1], #HPDinterval(rep_in2)[1],
-                             HPDinterval(rep_area)[1]), #HPDinterval(rep_area2)[1]),
-                     upr = c(HPDinterval(rep_out)[2], #HPDinterval(rep_out2)[2],
-                             HPDinterval(rep_in)[2], #HPDinterval(rep_in2)[2],
-                             HPDinterval(rep_area)[2]), #HPDinterval(rep_area2)[2]),
-                     trait = c("Out-strength", #"Out-strength", 
-                               "In-strength", #"In-strength",
-                               "Territory size")) #"Territory size"),
+## rep from out-strength and territory size model
+rep_area <- mcmc_out_terr$VCV[,"traitareaScale:traitareaScale.squirrel_id"]/
+  (mcmc_out_terr$VCV[,"traitareaScale:traitareaScale.squirrel_id"] +
+     mcmc_out_terr$VCV[,"traitareaScale.units"])
+
+rep_out2 <- mcmc_out_terr$VCV[,"traitoutstrengthScale:traitoutstrengthScale.squirrel_id"]/
+  (mcmc_out_terr$VCV[,"traitoutstrengthScale:traitoutstrengthScale.squirrel_id"] +
+     mcmc_out_terr$VCV[,"traitoutstrengthScale.units"])
+
+## rep from in-strength and territory size model
+rep_area2 <- mcmc_in_terr$VCV[,"traitareaScale:traitareaScale.squirrel_id"]/
+  (mcmc_in_terr$VCV[,"traitareaScale:traitareaScale.squirrel_id"] +
+     mcmc_in_terr$VCV[,"traitareaScale.units"])
+
+rep_in2 <- mcmc_in_terr$VCV[,"traitinstrengthScale:traitinstrengthScale.squirrel_id"]/
+  (mcmc_in_terr$VCV[,"traitinstrengthScale:traitinstrengthScale.squirrel_id"] +
+     mcmc_in_terr$VCV[,"traitinstrengthScale.units"])
+
+
+
+repAll <- data.table(rep = c(mean(rep_out), mean(rep_out2),
+                             mean(rep_in), mean(rep_in2), 
+                             mean(rep_area), mean(rep_area2)),
+                     lwr = c(HPDinterval(rep_out)[1], HPDinterval(rep_out2)[1],
+                             HPDinterval(rep_in)[1], HPDinterval(rep_in2)[1],
+                             HPDinterval(rep_area)[1], HPDinterval(rep_area2)[1]),
+                     upr = c(HPDinterval(rep_out)[2], HPDinterval(rep_out2)[2],
+                             HPDinterval(rep_in)[2], HPDinterval(rep_in2)[2],
+                             HPDinterval(rep_area)[2], HPDinterval(rep_area2)[2]),
+                     trait = c("Out-strength", "Out-strength", 
+                               "In-strength", "In-strength",
+                               "Territory size", "Territory size"),
+                     Model = c("Outstrength-Instrength", "Outstrength-Territory Size", 
+                               "Outstrength-Instrength", "Instrength-Territory Size", 
+                               "Outstrength-Territory Size", "Instrength-Territory Size"))
 
 repAll                     
 
