@@ -332,3 +332,33 @@ ggplot(data = df_strength_behav) +
       colour = "black",
       fill = NA,
       size = 0.5))
+
+png("figures/extra.png", width = 3000, height = 3000, units = "px", res = 600)
+ggplot(data = setDT(df_strength)[grid == "KL"]) +
+  geom_smooth(aes(spr_density, Value, group = as.factor(squirrel_id)),
+              color = "darkgrey",
+              size = 0.25,
+              alpha = 0.5,
+              method = lm,
+              se = FALSE) +
+  geom_smooth(aes(spr_density, Value), 
+              method = lm, 
+              color = "black",
+              se = F) +
+  scale_color_manual(values = "grey") +
+  xlab("Spring density (squirrels/ha)") +
+  ylab("Intrusion rates") +
+  #ggtitle('A)') +
+  theme(
+    legend.position = 'none',
+    plot.title = element_text(size = 14, color = "black"),
+    axis.text.x = element_text(size = 12, color = "black", hjust = 1),
+    axis.text.y = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, color = "black"),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_rect(
+      colour = "black",
+      fill = NA,
+      size = 0.5))
+dev.off()
