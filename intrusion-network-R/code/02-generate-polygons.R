@@ -59,7 +59,7 @@ n90s = length(unique(yr90s$gr_year))
 out_polygon90s <- get_polygon(input = df_poly90s, 
                               n = n90s,
                               yr = yr90s,
-                              in.percent = 50,
+                              in.percent = 30,
                               params = params)
 
 names(out_polygon90s) <- yr90s$gr_year
@@ -76,7 +76,7 @@ n05 = length(unique(yr05$gr_year))
 out_polygon05 <- get_polygon(input = df_poly2005, 
                            n = n05,
                            yr = yr05,
-                            in.percent = 50,
+                            in.percent = 30,
                             params = params)
 
 names(out_polygon05) <- yr05$gr_year
@@ -93,7 +93,7 @@ n10 = length(unique(yr10$gr_year))
 out_polygon10 <- get_polygon(input = df_poly2010, 
                              n = n10,
                              yr = yr10,
-                             in.percent = 50,
+                             in.percent = 30,
                              params = params)
 
 names(out_polygon10) <- yr10$gr_year
@@ -101,7 +101,8 @@ names(out_polygon10) <- yr10$gr_year
 saveRDS(out_polygon10, "output/edge-list-inputs/polygons-2006-2010.RDS")
 
 ## 2011 - 2015
-df_poly2015 <- df[year >= 2011 & year <= 2015]
+df_poly2015 <- df[year >= 2011 & year <= 2015 &
+                    squirrel_id_yr != "12613_KL_2015"] ## problem squirrel
 
 yr15 <- data.table(gr_year = as.character(unique(df_poly2015$gr_year)))
 n15 = length(unique(yr15$gr_year))
@@ -110,7 +111,7 @@ n15 = length(unique(yr15$gr_year))
 out_polygon15 <- get_polygon(input = df_poly2015, 
                              n = n15,
                              yr = yr15,
-                             in.percent = 50,
+                             in.percent = 30,
                              params = params)
 
 names(out_polygon15) <- yr15$gr_year
@@ -140,7 +141,7 @@ n20 = length(unique(yr20$gr_year))
 out_polygon20 <- get_polygon(input = df_poly2020, 
                              n = n20,
                              yr = yr20,
-                             in.percent = 50,
+                             in.percent = 30,
                              params = params)
 
 names(out_polygon20) <- yr20$gr_year
