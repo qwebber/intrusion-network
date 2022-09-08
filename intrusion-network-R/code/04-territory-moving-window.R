@@ -107,9 +107,14 @@ edge_list2[,afterCut := (after == TRUE & ownedNextYear == FALSE)]
 edge_list2$beforeCut[is.na(edge_list2$beforeCut)] <- "unknown"
 edge_list2$afterCut[is.na(edge_list2$afterCut)] <- "unknown"
 
-edge_list2[, .N, by = "beforeCut"]
+## FOR FIGURE S1 - REMOVE KL_2006 TO CALCULATE HOW MANY INTRUSIONS
+edge_list2[gr_year != "2006_KL"][, .N, by = "beforeCut"]
 
 edge_list3 <- edge_list2[beforeCut != "TRUE" & afterCut != "TRUE"]
+
+## FOR FIGURE S1 - REMOVE KL_2006 TO CALCULATE HOW MANY OBSERVATIONS ON/OFF TERRITORY
+edge_list3[gr_year != "2006_KL"][, .N, by = "edge"]
+
 
 saveRDS(edge_list3, "output/edge-list-true.RDS")
 
