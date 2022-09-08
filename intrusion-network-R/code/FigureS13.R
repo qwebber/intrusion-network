@@ -27,7 +27,7 @@ FigS13A <- ggplot(metrics) +
   scale_color_manual(values = col) +
   ggtitle("A)") +
   theme(
-    legend.position = c(0.8, 0.8), 
+    legend.position = c(0.85, 0.85), 
     legend.key = element_blank(),
     plot.title = element_text(size = 14, color = "black"),
     axis.text.x = element_text(size = 12, color = "black", hjust = 1),
