@@ -131,10 +131,25 @@ aa3 <- aa3[!is.na(sex_intruder)]
 aa3 <- aa3[!is.na(sex_owner)]
 
 
-ggplot(aa3, aes(age_intruder, Nintruder)) +
+ggplot(aa3, aes(distance, Nintruder)) +
   geom_point() +
-  geom_smooth(method = "lm") +
-  facet_wrap(~grid)
+  geom_smooth() 
+
+aa3$distance <- round(aa3$distance)
+
+a2 <- lmer(Nintruder ~ poly(distance) + (1|dyad), data = aa3)
+
+plot(Nintruder ~ distance, data = aa3)
+
+predict(a2, newdata = data.frame(distance = seq(0, 819),
+                                 dyad = "NA"))
+  
+aa3$pred <- data.table(predict(a2))
+
+ggplot(aa3) +
+  geom_point(aes(distance, pred))
+
+        
 
 
 mdl1 <- lm(Nintruder ~ age_intruder, data = aa3[grid == "KL"])
