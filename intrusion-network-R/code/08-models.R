@@ -17,9 +17,9 @@ all <- all[!is.na(all$sex)]
 all <- all[!is.na(all$grid)]
 
 ## scale variables:
-all[, outstrengthScale := scale(outstrength)]
-all[, instrengthScale := scale(instrength)]
-all[, areaScale := scale(area_ha)]
+all[, outstrengthScale := log(outstrength)]
+all[, instrengthScale := log(instrength)]
+all[, areaScale := log(area_ha)]
 all[, densityScale := scale(spr_density)]
 all[, NScale := scale(N)]
 all[, yrScale := scale(as.numeric(year))]
@@ -118,7 +118,6 @@ all[year != 1998 |
        year != 2010 | 
        year != 2014 | 
        year != 2019][, sd(indegree), by = "sex"]
-
 
 
 ############################ 
