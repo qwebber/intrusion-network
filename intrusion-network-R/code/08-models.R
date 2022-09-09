@@ -17,12 +17,17 @@ all <- all[!is.na(all$sex)]
 all <- all[!is.na(all$grid)]
 
 ## scale variables:
-all[, outstrengthScale := log(outstrength)]
-all[, instrengthScale := log(instrength)]
-all[, areaScale := log(area_ha)]
+all[, outstrengthLog := log(outstrength + 0.125)]
+all[, instrengthLog := log(instrength + 0.125)]
+all[, areaLog := log(area_ha)]
 all[, densityScale := scale(spr_density)]
 all[, NScale := scale(N)]
 all[, yrScale := scale(as.numeric(year))]
+
+all[, outstrength_trapLog := log(outstrength_trap + 0.125)]
+all[, instrength_trapLog := log(instrength_trap + 0.125)]
+all[, outstrength_behavLog := log(outstrength_behav + 0.125)]
+all[, instrength_behavLog := log(instrength_behav + 0.125)]
 
 ########################
 #### SUMMARY STATS ####
@@ -127,7 +132,7 @@ prior_out <- list(G=list(G1=list(V=diag(2)*1, nu=1,
                                  alpha.V=diag(2)*25^2)),
                   R=list(V=diag(1)*1, nu=1))
 
-mcmc1 <- MCMCglmm(outstrength ~ 
+mcmc1 <- MCMCglmm(outstrengthLog ~ 
                       grid +
                       sex + 
                       age + 
@@ -151,7 +156,7 @@ saveRDS(mcmc1, "output/models/mcmc_strength.RDS")
 #####################
 ## TERRITORY SIZE ##
 #####################
-mcmc2 <- MCMCglmm(area_ha ~ 
+mcmc2 <- MCMCglmm(areaLog ~ 
                     grid +
                     sex + 
                     age + 
@@ -176,7 +181,7 @@ saveRDS(mcmc2, "output/models/mcmc_territory.RDS")
 #####################
 ## IN-STRENGTH ##
 #####################
-mcmc3 <- MCMCglmm(instrength ~ 
+mcmc3 <- MCMCglmm(instrengthLog ~ 
                     grid +
                     sex + 
                     age + 
@@ -201,7 +206,7 @@ saveRDS(mcmc3, "output/models/mcmc_instrength.RDS")
 ############################
 ## OUT-STRENGTH BEHAV OBS ##
 #############################
-mcmc4 <- MCMCglmm(outstrength_behav ~ 
+mcmc4 <- MCMCglmm(outstrength_behavLog ~ 
                      grid +
                      sex + 
                      age + 
@@ -225,7 +230,7 @@ saveRDS(mcmc4, "output/models/mcmc_outstrength_behav.RDS")
 ############################
 ## IN-STRENGTH BEHAV OBS ##
 #############################
-mcmc5 <- MCMCglmm(instrength_behav ~ 
+mcmc5 <- MCMCglmm(instrength_behavLog ~ 
                      grid +
                      sex + 
                      age + 
@@ -249,7 +254,7 @@ saveRDS(mcmc5, "output/models/mcmc_instrength_behav.RDS")
 ############################
 ## OUT-STRENGTH TRAPPING ##
 #############################
-mcmc6 <- MCMCglmm(outstrength_trap ~ 
+mcmc6 <- MCMCglmm(outstrength_trapLog ~ 
                      grid +
                      sex + 
                      age + 
@@ -273,7 +278,7 @@ saveRDS(mcmc6, "output/models/mcmc_outstrength_trap.RDS")
 ############################
 ## IN-STRENGTH BEHAV OBS ##
 #############################
-mcmc7 <- MCMCglmm(instrength_trap ~ 
+mcmc7 <- MCMCglmm(instrength_trapLog ~ 
                      grid +
                      sex + 
                      age + 
@@ -299,8 +304,8 @@ prior1 <- list(R = list(V=diag(2)*1, nu=1), ## 3x3 matrix for random effects
                G = list(G1 = list(V = diag(4)*1, nu=1, ## 6x6 matrix for among-individual section
                                   alpha.V = diag(4)*25^2)))
 
-mcmc8 <- MCMCglmm(cbind(outstrengthScale,
-                         areaScale) ~ 
+mcmc8 <- MCMCglmm(cbind(outstrengthLog,
+                         areaLog) ~ 
                       trait-1 + 
                       trait:grid +
                       trait:sex + 
@@ -325,8 +330,8 @@ summary(mcmc8)
 saveRDS(mcmc8, "output/models/mcmc_area-outstrength.RDS")
 
 ## Bi-variate model - area - instrength
-mcmc9 <- MCMCglmm(cbind(instrengthScale,
-                        areaScale) ~ 
+mcmc9 <- MCMCglmm(cbind(instrengthLog,
+                        areaLog) ~ 
                      trait-1 + 
                      trait:grid +
                      trait:sex + 
@@ -352,8 +357,8 @@ saveRDS(mcmc9, "output/models/mcmc_area-instrength.RDS")
 
 
 ## Bi-variate model - area - instrength
-mcmc10 <- MCMCglmm(cbind(instrengthScale,
-                         outstrengthScale) ~ 
+mcmc10 <- MCMCglmm(cbind(instrengthLog,
+                         outstrengthLog) ~ 
                      trait-1 + 
                      trait:grid +
                      trait:sex + 
@@ -383,9 +388,9 @@ saveRDS(mcmc10, "output/models/mcmc_instrength-outstrengthScale.RDS")
 prior2 <- list(R = list(V=diag(3)*1, nu=1), ## 3x3 matrix for random effects 
                G = list(G1 = list(V = diag(6)*1, nu=1, ## 6x6 matrix for among-individual section
                                       alpha.V = diag(6)*25^2)))
-mcmc11 <- MCMCglmm(cbind(instrengthScale, 
-                        outstrengthScale,
-                        areaScale) ~ 
+mcmc11 <- MCMCglmm(cbind(instrengthLog, 
+                        outstrengthLog,
+                        areaLog) ~ 
                     trait-1 + 
                     trait:grid +
                     trait:sex + 
