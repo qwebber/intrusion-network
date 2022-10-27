@@ -13,10 +13,11 @@ metrics$year <- as.factor(metrics$year)
 
 unique(metrics$gr_year)
 
-metrics <- metrics[!is.na(metrics$sex)]
-metrics <- metrics[!is.na(metrics$grid)]
-
 col <- c("#f1a340", "#998ec3")
+
+cor.test(metrics$indegree, metrics$instrength)
+cor.test(metrics$outdegree, metrics$outstrength)
+
 
 png("figures/FigS13.png", width = 6000, height = 3000, units = "px", res = 600)
 FigS13A <- ggplot(metrics) + 
