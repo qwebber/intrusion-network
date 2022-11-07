@@ -5,7 +5,8 @@
 # Output files
 spatial-data/
 auxilliary-data/
-code/generate auxilliary data
+models/
+code/generate auxilliary data/
 
 # Session Data files
 .RData
