@@ -3,7 +3,9 @@
 .Rapp.history
 
 # Output files
-output/
+spatial-data/
+auxilliary-data/
+code/generate auxilliary data
 
 # Session Data files
 .RData
