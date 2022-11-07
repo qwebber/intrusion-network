@@ -13,6 +13,10 @@ lapply(libs, require, character.only = TRUE)
 all <- readRDS("output/final-df.RDS")
 all <- all[gr_year != "KL_2006"]
 all$squirrel_id <- as.factor(all$squirrel_id)
+
+unique(all$gr_year)
+all$area_ha <- all$area_m2/10000
+
 ## scale variables:
 all[, outstrengthScale := scale(outstrength)]
 all[, instrengthScale := scale(instrength)]
@@ -21,8 +25,6 @@ all[, densityScale := scale(spr_density)]
 all[, NScale := scale(N)]
 all[, yrScale := scale(as.numeric(year))]
 
-unique(all$gr_year)
-all$area_ha <- all$area_m2/10000
 
 all <- all[!is.na(all$sex)]
 all <- all[!is.na(all$grid)]
@@ -35,43 +37,63 @@ summary(mcmc5)
 mcmc6 <- readRDS("output/models/mcmc_instrength-outstrengthScale.RDS")
 summary(mcmc6)
 
-y <- as.vector(all$outstrengthScale)   # the DV that was used for the MCMCglmm model
+y1 <- as.vector(all$outstrengthScale)   # the DV that was used for the MCMCglmm model
+y2 <- as.vector(all$areaScale) 
+y3 <- as.vector(all$instrengthScale) 
+
+
 
 # generating the simulated data using the simulate.MCMCglmm function from the MCMCglmm package
-yrep <- simulate.MCMCglmm(mcmc4, 1861) 
-
-#yrep <- t( yrep ) # transposing yrep for the bayesplot functions
+yrep1 <- simulate.MCMCglmm(mcmc4, 1861) 
+yrep2 <- simulate.MCMCglmm(mcmc5, 1861) 
+yrep3 <- simulate.MCMCglmm(mcmc6, 1861) 
 
 
 # ppc_stat: A histogram of the distribution of a test statistic computed by applying stat to each 
 #           dataset (row) in yrep. The value of the statistic in the observed data, stat(y), is 
 #           overlaid as a vertical line.
-ppc_dens_overlay(y, yrep)
-ppc_stat(y, yrep[1:1861])
+png("figures/FigS15a.png", width = 2500, height = 2500, units = "px", res = 600)
+ppc_dens_overlay(y1, yrep1) + ## outstrength
+  legend_text(size = 14) +
+  legend_move(c(0.75, 0.5)) +
+  yaxis_text() 
+dev.off()
+
+png("figures/FigS15b.png", width = 2500, height = 2500, units = "px", res = 600)
+ppc_dens_overlay(y2, yrep1) + ## area
+  legend_text(size = 14) +
+  legend_move(c(0.75, 0.5)) +
+  yaxis_text() 
+dev.off()
+
+png("figures/FigS15c.png", width = 2500, height = 2500, units = "px", res = 600)
+ppc_dens_overlay(y2, yrep2) + ## area
+  legend_text(size = 14) +
+  legend_move(c(0.75, 0.5)) +
+  yaxis_text() 
+dev.off()
+
+png("figures/FigS15d.png", width = 2500, height = 2500, units = "px", res = 600)
+ppc_dens_overlay(y3, yrep2) + ## instrength
+  legend_text(size = 14) +
+  legend_move(c(0.75, 0.5)) +
+  yaxis_text() 
+dev.off()
 
 
-hist(log(y))
-hist(yrep)
-## calculate e means
-df <- mcmc4 %>%
-  emmeans(~ grid + sex + mast, data = all) %>%
-  gather_emmeans_draws() %>%
-  median_qi()
+png("figures/FigS15e.png", width = 2500, height = 2500, units = "px", res = 600)
+ppc_dens_overlay(y1, yrep3) + ## outstrength
+  legend_text(size = 14) +
+  legend_move(c(0.75, 0.5)) +
+  yaxis_text() 
+dev.off()
 
-
-## Plot the posterior distributions of the 2 response variables from the bivariate model
-ggplot(df, aes(.value, sex, color = grid, shape = mast)) +
-  geom_point(position = position_dodge(width = 0.4)) +
-  geom_vline(xintercept = 0, lty = 2) +
-  geom_errorbarh(aes(xmin = .lower, 
-                     xmax = .upper, 
-                     color = grid, 
-                     height = 0),
-                 position = position_dodge(width = 0.4)) +
-  ylab("") +
-  xlab("Posterior distribution") +
-  theme_bw() +
-  facet_wrap(~trait)
+png("figures/FigS15f.png", width = 2500, height = 2500, units = "px", res = 600)
+ppc_dens_overlay(y3, yrep3) + ## instrength
+  legend_text(size = 14) +
+  legend_move(c(0.75, 0.5)) +
+  yaxis_text() 
+dev.off()
 
 # Visualize posterior distributions for outstrength - territory size model
 
