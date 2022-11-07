@@ -7,7 +7,7 @@ libs <- c('data.table',
           'ggplot2', 'krsp')
 lapply(libs, require, character.only = TRUE)
 
-df <- readRDS("output/spatial-locs.RDS")
+df <- readRDS("output/spatial-data/spatial-locs.RDS")
 df$squirrel_id <- as.character(df$squirrel_id)
 df$gr_year <- as.character(df$gr_year)
 
