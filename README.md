@@ -1,7 +1,7 @@
 
 
 
-## Red squirrel territory mapping and intrusion networks
+## Density-dependent plasticity in territoriality revealed using social network analysis
 
 
   - Authors:
