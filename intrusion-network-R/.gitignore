@@ -6,6 +6,7 @@
 spatial-data/
 auxilliary-data/
 models/
+edge-list-inputs/
 code/generate auxilliary data/
 
 # Session Data files
